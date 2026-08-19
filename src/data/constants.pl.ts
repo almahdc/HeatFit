@@ -163,6 +163,62 @@ export const HEAT_PUMP_OFFPEAK_SHARE: SourcedBand = {
   note: "Unsourced. Needs a real load profile or an installer's view. Flag on any slide using it.",
 };
 
+// --- capital cost of each option -------------------------------------------
+// Turnkey, VAT included. Polish installers quote "with installation" so these
+// are whole-job prices, not equipment-only.
+
+export const HEAT_PUMP_INSTALLED_COST: SourcedBand = {
+  low: 28000,
+  mid: 42000,
+  high: 60000,
+  unit: "zł, turnkey incl. VAT",
+  source:
+    "Polish installer pricing 2026: air-to-water quoted 25 000-55 000 zł with installation; " +
+    "8-12 kW for a 120-160 m2 house quoted 28 000-48 000 zł; one source gives 38 000-65 000 zł",
+  readOn: "2026-08-19",
+  certainty: "medium",
+  note:
+    "Old radiators push toward the high end - several sources price heat pump plus radiator " +
+    "modernisation at 40 000-70 000 zł. Sizing should move this, but does not yet.",
+};
+
+export const PELLET_BOILER_INSTALLED_COST: SourcedBand = {
+  low: 18000,
+  mid: 24000,
+  high: 32000,
+  unit: "zł, turnkey incl. VAT",
+  source: "Polish installer pricing 2026; ekogroszek boilers quoted 15 000-25 000 zł installed",
+  readOn: "2026-08-19",
+  certainty: "low",
+  note:
+    "Class 5 plus a buffer tank of at least 30 l/kW is mandatory for Czyste Powietrze, which " +
+    "lifts this above a bare boiler swap. Needs a real quote.",
+};
+
+export const PV_INSTALLED_COST_PER_KWP: SourcedBand = {
+  low: 3500,
+  mid: 4200,
+  high: 5000,
+  unit: "zł/kWp, turnkey incl. VAT",
+  source: "Polish PV market pricing 2026",
+  readOn: "2026-08-19",
+  certainty: "low",
+  note: "Unverified this session. Confirm before any slide quotes a heat pump plus PV figure.",
+};
+
+export const COAL_BOILER_REPLACEMENT_COST: SourcedBand = {
+  low: 0,
+  mid: 0,
+  high: 0,
+  unit: "zł",
+  source: "Not a legal option in the beachhead - kopciuch replacement is mandatory",
+  readOn: "2026-08-19",
+  certainty: "high",
+  note:
+    "Scenario A is 'keep burning coal', priced at zero capital deliberately. It is the " +
+    "counterfactual, not a recommendation, and the UI must say the swap is not optional.",
+};
+
 // --- equipment life ---------------------------------------------------------
 
 export const HEAT_PUMP_LIFE_YEARS: Sourced<number> = {
@@ -212,6 +268,10 @@ export const ALL_CONSTANTS: Record<string, Sourced<unknown> | SourcedBand> = {
   ELECTRICITY_G12W_PEAK_PER_KWH,
   G12W_STANDING_CHARGE_PREMIUM,
   HEAT_PUMP_OFFPEAK_SHARE,
+  HEAT_PUMP_INSTALLED_COST,
+  PELLET_BOILER_INSTALLED_COST,
+  PV_INSTALLED_COST_PER_KWP,
+  COAL_BOILER_REPLACEMENT_COST,
   HEAT_PUMP_LIFE_YEARS,
   PELLET_BOILER_LIFE_YEARS,
   INSULATE_FIRST_THRESHOLD,

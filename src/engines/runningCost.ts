@@ -14,6 +14,7 @@
  */
 
 import {
+  Confidence,
   Range,
   add,
   divide,
@@ -54,6 +55,12 @@ export interface RunningCost {
   /** Annual energy purchased, in the unit that fuel is sold in. */
   fuelQuantity: Range;
   fuelUnit: string;
+  /**
+   * Confidence in this scenario's cost, lifted from the annual band.
+   * Present so callers cannot accidentally read `.confidence` off the wrapper
+   * and get undefined. It is derived, never set independently.
+   */
+  confidence: Confidence;
 }
 
 // --- helpers ----------------------------------------------------------------
@@ -63,7 +70,13 @@ function band(b: C.SourcedBand): Range {
 }
 
 function toRunningCost(annual: Range, fuelQuantity: Range, fuelUnit: string): RunningCost {
-  return { annual, monthly: scale(annual, 1 / 12), fuelQuantity, fuelUnit };
+  return {
+    annual,
+    monthly: scale(annual, 1 / 12),
+    fuelQuantity,
+    fuelUnit,
+    confidence: annual.confidence,
+  };
 }
 
 // --- step 1: what does this house actually need? ----------------------------

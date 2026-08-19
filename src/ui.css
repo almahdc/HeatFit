@@ -1,0 +1,328 @@
+/* Design brief: a Silesian homeowner in their fifties, facing a legal deadline,
+   reading this once. Every rule below comes from the PRD's accessibility floor:
+   18px minimum, 7:1 contrast, no grey-on-grey, no hover-only information,
+   money always written out.
+
+   The look is borrowed from the municipal notice and the energy bill — documents
+   this reader already trusts — rather than from a fintech dashboard. Heavy rules,
+   flat blocks, ink on paper. The one bold move is the scale of the monthly figure:
+   it is the only thing on the page anyone truly needs, so it is enormous. */
+
+:root {
+  --ink: #14171a;
+  --ink-soft: #3d444b;
+  --paper: #f7f6f3;
+  --card: #ffffff;
+  --line: #14171a;
+  --ember: #a8321a; /* coal fire, used only for the verdict */
+  --cold: #12496b; /* the after-the-loan figure */
+  --best: #f2f7ef;
+  --best-line: #2f6b2c;
+
+  --step-0: 1.125rem; /* 18px floor */
+  --step-1: 1.375rem;
+  --step-2: 1.75rem;
+  --step-3: 2.5rem;
+  --figure: 3.75rem;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Söhne", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
+    system-ui, sans-serif;
+  font-size: var(--step-0);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+main {
+  max-width: 76rem;
+  margin: 0 auto;
+  padding: 3rem 1.5rem 5rem;
+}
+
+/* --- masthead ----------------------------------------------------------- */
+
+.masthead {
+  border-bottom: 4px solid var(--line);
+  padding-bottom: 1.75rem;
+  margin-bottom: 2.5rem;
+}
+
+.eyebrow {
+  font-size: 0.9375rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  font-weight: 650;
+  color: var(--ink-soft);
+  margin: 0 0 0.75rem;
+}
+
+h1 {
+  font-size: var(--step-3);
+  line-height: 1.1;
+  margin: 0 0 1rem;
+  letter-spacing: -0.02em;
+  font-weight: 700;
+  max-width: 20ch;
+}
+
+.lede {
+  margin: 0;
+  max-width: 54ch;
+  font-size: var(--step-1);
+  color: var(--ink-soft);
+}
+
+/* --- controls ------------------------------------------------------------ */
+
+.controls {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1.25rem;
+  padding: 1.75rem;
+  background: var(--card);
+  border: 2px solid var(--line);
+  margin-bottom: 2rem;
+}
+
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.field-label {
+  font-weight: 650;
+  font-size: var(--step-0);
+}
+
+.field-hint {
+  font-size: 1rem;
+  color: var(--ink-soft);
+}
+
+input,
+select {
+  font: inherit;
+  font-size: var(--step-1);
+  padding: 0.625rem 0.75rem;
+  border: 2px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  border-radius: 0;
+  min-height: 3rem;
+}
+
+input:focus-visible,
+select:focus-visible {
+  outline: 4px solid var(--ember);
+  outline-offset: 2px;
+}
+
+.demand {
+  font-size: var(--step-1);
+  margin: 0 0 2.5rem;
+  padding-left: 1rem;
+  border-left: 6px solid var(--ink);
+  max-width: 60ch;
+}
+
+/* --- the four options ---------------------------------------------------- */
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16.5rem, 1fr));
+  gap: 1.25rem;
+  margin-bottom: 3rem;
+}
+
+.card {
+  background: var(--card);
+  border: 2px solid var(--line);
+  padding: 1.5rem 1.375rem 1.75rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.card.best {
+  background: var(--best);
+  border-color: var(--best-line);
+  border-width: 4px;
+}
+
+.card h2 {
+  font-size: var(--step-2);
+  margin: 0 0 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid currentColor;
+  letter-spacing: -0.01em;
+}
+
+.stat-label {
+  font-size: 1rem;
+  font-weight: 650;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+  margin: 0 0 0.25rem;
+}
+
+/* The signature: the monthly number at a size nobody can miss or misread. */
+.figure {
+  font-size: var(--figure);
+  line-height: 1;
+  font-weight: 750;
+  letter-spacing: -0.035em;
+  font-variant-numeric: tabular-nums;
+  margin: 0 0 0.25rem;
+}
+
+.figure.second {
+  color: var(--cold);
+}
+
+.unit {
+  display: block;
+  font-size: 1.0625rem;
+  font-weight: 550;
+  letter-spacing: 0;
+  color: var(--ink-soft);
+  margin-top: 0.25rem;
+}
+
+.range {
+  font-size: 1rem;
+  color: var(--ink-soft);
+  margin: 0 0 1.5rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.detail {
+  margin: auto 0 0;
+  padding-top: 1rem;
+  border-top: 2px solid var(--ink);
+  font-size: 1.0625rem;
+}
+
+.detail > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.25rem 0;
+}
+
+.detail dt {
+  color: var(--ink-soft);
+}
+
+.detail dd {
+  margin: 0;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.detail .grant {
+  color: var(--best-line);
+}
+
+.note {
+  margin: auto 0 0;
+  padding-top: 1rem;
+  border-top: 2px solid var(--ink);
+  font-size: 1rem;
+  color: var(--ink-soft);
+}
+
+/* --- verdict ------------------------------------------------------------- */
+
+.verdict {
+  border: 4px solid var(--ember);
+  padding: 2rem 1.75rem;
+  background: var(--card);
+  margin-bottom: 2.5rem;
+}
+
+.verdict h2 {
+  font-size: var(--step-3);
+  line-height: 1.15;
+  margin: 0 0 1rem;
+  letter-spacing: -0.02em;
+  max-width: 24ch;
+}
+
+.because {
+  font-size: var(--step-1);
+  margin: 0 0 1.75rem;
+  max-width: 62ch;
+}
+
+.verdict ul {
+  margin: 0;
+  padding-left: 1.25rem;
+  max-width: 62ch;
+}
+
+.verdict li {
+  margin-bottom: 0.5rem;
+}
+
+/* --- future panel, deliberately inert ------------------------------------ */
+
+.future {
+  border: 2px dashed var(--ink-soft);
+  padding: 1.5rem;
+  color: var(--ink-soft);
+  margin-bottom: 3rem;
+  max-width: 62ch;
+}
+
+.future p:last-child {
+  margin: 0;
+  font-size: var(--step-1);
+}
+
+/* --- sources ------------------------------------------------------------- */
+
+footer {
+  border-top: 4px solid var(--line);
+  padding-top: 1.75rem;
+}
+
+.sources {
+  margin: 0 0 1.5rem;
+  padding-left: 1.25rem;
+  max-width: 76ch;
+  font-size: 1.0625rem;
+  color: var(--ink-soft);
+}
+
+.sources li {
+  margin-bottom: 0.625rem;
+}
+
+.sources strong {
+  color: var(--ink);
+}
+
+.warn {
+  max-width: 70ch;
+  padding: 1rem 1.25rem;
+  border-left: 6px solid var(--ember);
+  background: var(--card);
+  margin: 0 0 1rem;
+  font-size: 1.0625rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+    animation: none !important;
+  }
+}

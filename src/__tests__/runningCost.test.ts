@@ -104,8 +104,26 @@ describe("running costs per scenario", () => {
 
   it("gives pellet a wide band, because pellet prices are volatile", () => {
     const p = pelletRunningCost(heatDemandFromCoal(4));
-    expect(p.confidence).not.toBe("good");
+    expect(p.annual.confidence).not.toBe("good");
+    expect(p.confidence).toBe(p.annual.confidence);
     expect(spread(p.annual)).toBeGreaterThan(0.25);
+  });
+
+  it("never reports a confidence the underlying band does not support", () => {
+    // Guards the trap this test suite already fell into once: reading
+    // .confidence off the wrapper instead of the Range and silently getting
+    // undefined, which compares unequal to everything and passes.
+    const demand = heatDemandFromCoal(4);
+    const all = [
+      coalRunningCost(4),
+      pelletRunningCost(demand),
+      heatPumpRunningCost(demand, range(2.6, 3.0, 3.4), "G11"),
+    ];
+    for (const s of all) {
+      expect(s.confidence).toBeDefined();
+      expect(s.confidence).toBe(s.annual.confidence);
+      expect(["good", "rough", "tooRough"]).toContain(s.confidence);
+    }
   });
 
   it("makes the heat pump cheaper to run than coal at a decent SCOP", () => {

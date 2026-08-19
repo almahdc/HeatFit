@@ -2,6 +2,28 @@
   "name": "hp-engines",
   "private": true,
   "type": "module",
-  "scripts": { "test": "vitest run", "watch": "vitest" },
-  "devDependencies": { "vitest": "^2.1.8", "typescript": "^5.6.3" }
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "test": "tsc --noEmit && vitest run",
+    "watch": "vitest",
+    "typecheck": "tsc --noEmit",
+    "build:pages": "tsc --noEmit && cross-env GH_PAGES=true vite build",
+    "deploy": "npm run build:pages && gh-pages -d dist"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.31",
+    "@types/react-dom": "^18.3.7",
+    "@vitejs/plugin-react": "^4.7.0",
+    "cross-env": "^10.1.0",
+    "gh-pages": "^6.3.0",
+    "typescript": "^5.6.3",
+    "vite": "^5.4.21",
+    "vitest": "^2.1.8"
+  },
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  }
 }
