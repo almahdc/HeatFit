@@ -1,0 +1,7 @@
+{
+  "name": "hp-engines",
+  "private": true,
+  "type": "module",
+  "scripts": { "test": "vitest run", "watch": "vitest" },
+  "devDependencies": { "vitest": "^2.1.8", "typescript": "^5.6.3" }
+}
