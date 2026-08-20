@@ -30,8 +30,6 @@ export interface StepShellProps {
 }
 
 export function StepShell({
-  stepIndex,
-  totalSteps,
   title,
   helper,
   children,
@@ -44,8 +42,6 @@ export function StepShell({
   onActivate,
   innerRef,
 }: StepShellProps) {
-  const progress = ((stepIndex + 1) / totalSteps) * 100;
-
   return (
     <div
       ref={innerRef}
@@ -111,35 +107,6 @@ export function ChoiceGroup<T extends string>({
           {opt.sublabel && (
             <span className="choice-sublabel">{opt.sublabel}</span>
           )}
-        </button>
-      ))}
-    </div>
-  );
-}
-
-/** Same idea for multi-select (checkboxes as cards), used by fuel access
- *  and the "what's been done to the house" question. */
-export function MultiChoiceGroup<T extends string>({
-  value,
-  onToggle,
-  options,
-}: {
-  value: T[];
-  onToggle: (v: T) => void;
-  options: { value: T; label: string }[];
-}) {
-  return (
-    <div className="choice-group">
-      {options.map((opt) => (
-        <button
-          key={opt.value}
-          type="button"
-          role="checkbox"
-          aria-checked={value.includes(opt.value)}
-          className={value.includes(opt.value) ? "choice selected" : "choice"}
-          onClick={() => onToggle(opt.value)}
-        >
-          <span className="choice-label">{opt.label}</span>
         </button>
       ))}
     </div>

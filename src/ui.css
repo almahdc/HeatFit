@@ -614,3 +614,91 @@ footer {
   margin-top: 0.75rem;
   padding-top: 0.75rem;
 }
+
+/* --- breakdown: the workings, collapsed by default ------------------------ */
+/* Native <details> so it works without JS, keyboard-operates for free, and is
+   announced correctly by screen readers. No hover-only information. */
+
+.breakdown {
+  margin: auto 0 0;
+  padding-top: 1rem;
+  border-top: 2px solid var(--ink);
+}
+
+.breakdown > summary {
+  font-size: 1.0625rem;
+  font-weight: 650;
+  cursor: pointer;
+  padding: 0.5rem 0;
+  min-height: 2.75rem;
+  display: flex;
+  align-items: center;
+}
+
+.breakdown > summary:focus-visible {
+  outline: 4px solid var(--ember);
+  outline-offset: 2px;
+}
+
+.breakdown[open] > summary {
+  margin-bottom: 0.75rem;
+  border-bottom: 2px solid var(--line);
+}
+
+.breakdown .stat-label {
+  margin-top: 1.25rem;
+}
+
+.breakdown .detail {
+  border-top: none;
+  padding-top: 0;
+  margin: 0 0 0.5rem;
+}
+
+.breakdown .detail dd {
+  text-align: right;
+}
+
+.breakdown .warn {
+  margin-top: 1rem;
+  font-size: 1rem;
+}
+
+.programme-list {
+  list-style: none;
+  margin: 0.5rem 0 0;
+  padding: 0;
+  font-size: 1rem;
+}
+
+.programme-list li {
+  padding: 0.5rem 0 0.5rem 1.25rem;
+  border-top: 1px solid var(--ink-soft);
+  position: relative;
+}
+
+/* Marks, not colour alone — colour is not the only signal for anyone. */
+.programme-list li.applied::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  font-weight: 700;
+  color: var(--best-line);
+}
+
+.programme-list li.refused {
+  color: var(--ink-soft);
+}
+
+.programme-list li.refused::before {
+  content: "×";
+  position: absolute;
+  left: 0;
+  font-weight: 700;
+}
+
+.note-inline {
+  font-size: 1rem;
+  color: var(--ink-soft);
+  margin: 0.5rem 0 0;
+}

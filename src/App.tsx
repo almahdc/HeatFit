@@ -2,8 +2,13 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { StepShell, ChoiceGroup } from "./wizard/StepShell";
 import { Range, exact, range } from "./engines/range";
 import { runningCosts, Tariff } from "./engines/runningCost";
-import { Applicant, subsidiesFor } from "./engines/subsidy";
-import { ROUTES, financingPlan, headlineMonthly } from "./engines/financing";
+import { Applicant, SubsidyOutcome, subsidiesFor } from "./engines/subsidy";
+import {
+  FinancingPlan,
+  ROUTES,
+  financingPlan,
+  headlineMonthly,
+} from "./engines/financing";
 import { ScenarioSummary, verdict } from "./engines/verdict";
 import { BuildingType, Ownership, screenHousehold } from "./engines/screening";
 import {
@@ -16,6 +21,14 @@ import * as C from "./data/constants.pl";
 const zl = (n: number) => Math.round(n).toLocaleString("pl-PL");
 const band = (r: Range) => `${zl(r.low)} \u2013 ${zl(r.high)}`;
 
+// The demo assumes every gate is already cleared, which is optimistic and
+// deliberately so — it isolates the money question from the paperwork question.
+//
+// taxpayerCount and marginalTaxRate are what the thermal-modernisation relief
+// is actually worth. The relief reduces taxable income, so a household in the
+// 12% band gets 12 grosz back per złoty deducted, not a złoty. One owner in the
+// lowest band is the conservative assumption; both fields should become wizard
+// questions before this decides anything a homeowner pays for.
 const READY: Applicant = {
   incomeLevel: "basic",
   gatesSatisfied: [
@@ -25,6 +38,8 @@ const READY: Applicant = {
     "replacingKopciuch",
     "incomeEvidenced",
   ],
+  taxpayerCount: 1,
+  marginalTaxRate: 0.12,
 };
 
 function toBand(b: C.SourcedBand): Range {
@@ -145,12 +160,18 @@ export default function App() {
       device: "heatPump" | "pelletBoiler" | null,
       running: Range,
     ) => {
+      // Staying on coal buys nothing, so there is no capital, no grant and no
+      // loan. duringLoan and afterLoan are both just the fuel bill. The results
+      // card must not print loan wording over these — see hasLoan below.
       if (!capital || !device) {
         return {
           id,
           label,
           capital: exact(0),
           grant: exact(0),
+          sub: null,
+          plan: null,
+          running,
           summary: {
             id,
             label,
@@ -173,6 +194,9 @@ export default function App() {
         label,
         capital,
         grant: sub.upfrontGrant,
+        sub,
+        plan,
+        running,
         summary: {
           id,
           label,
@@ -590,7 +614,163 @@ interface ResultRow {
   label: string;
   capital: Range;
   grant: Range;
+  /** Null for "stay on coal" — nothing is bought, so nothing is subsidised. */
+  sub: SubsidyOutcome | null;
+  /** Null for "stay on coal" — nothing is bought, so nothing is borrowed. */
+  plan: FinancingPlan | null;
+  /** Fuel and electricity only, no repayment. */
+  running: Range;
   summary: ScenarioSummary;
+}
+
+/**
+ * Everything the engines worked out and the card used to throw away.
+ *
+ * Three questions, in the order a homeowner asks them:
+ *   What am I getting?   — every grant, and for the ones that do not apply, why
+ *   What do I get back?  — the tax relief, with the deduction and the cash kept
+ *                          visibly apart, because they differ by about eight times
+ *   What am I signing?   — rate, term, what is borrowed, what it costs in total
+ *
+ * Collapsed by default. The headline monthly figure is what most people need;
+ * this is for the one in five who will not act without seeing the workings, and
+ * for the installer or auditor reading over their shoulder.
+ */
+function OptionBreakdown({
+  row,
+  sub,
+  plan,
+}: {
+  row: ResultRow;
+  sub: SubsidyOutcome;
+  plan: FinancingPlan;
+}) {
+  const pct = (n: number) => `${(n * 100).toFixed(2).replace(".", ",")}%`;
+  const stepsDown =
+    Math.round(plan.monthlyAfterGrant.mid) <
+    Math.round(plan.monthlyBeforeGrant.mid);
+
+  const grants = sub.detail.filter((d) => !d.programme.isTaxRelief);
+  const reliefs = sub.detail.filter((d) => d.programme.isTaxRelief);
+
+  return (
+    <details className="breakdown">
+      <summary>See what you get and what you sign</summary>
+
+      {/* --- what am I getting --------------------------------------------- */}
+      <p className="stat-label">What you are getting</p>
+      <dl className="detail">
+        <div>
+          <dt>The work costs</dt>
+          <dd>{zl(row.capital.mid)} zł</dd>
+        </div>
+        <div>
+          <dt>Grants pay</dt>
+          <dd className="grant">- {zl(sub.upfrontGrant.mid)} zł</dd>
+        </div>
+        <div>
+          <dt>You pay</dt>
+          <dd>{zl(sub.ownSpend.mid)} zł</dd>
+        </div>
+      </dl>
+
+      <ul className="programme-list">
+        {grants.map((d) => (
+          <li
+            key={d.programme.id}
+            className={d.applied ? "applied" : "refused"}
+          >
+            <strong>{d.programme.label}</strong>
+            {d.applied ? <> pays {zl(d.amount.mid)} zł</> : <> — {d.reason}</>}
+          </li>
+        ))}
+      </ul>
+
+      {/* --- what do I get back later -------------------------------------- */}
+      <p className="stat-label">Money back later, through your tax return</p>
+      {reliefs.map((d) => (
+        <div key={d.programme.id}>
+          <dl className="detail">
+            <div>
+              <dt>You subtract from taxable income</dt>
+              <dd>{zl(d.deductionBase?.mid ?? 0)} zł</dd>
+            </div>
+            <div>
+              <dt>Which returns, in cash</dt>
+              <dd className="grant">{zl(d.amount.mid)} zł</dd>
+            </div>
+          </dl>
+          <p className="note-inline">
+            {d.applied
+              ? "This is a deduction, not a payment. You get back your tax rate on it, spread over up to six tax years — not the whole amount, and not up front."
+              : d.reason}
+          </p>
+        </div>
+      ))}
+
+      {/* --- what am I signing --------------------------------------------- */}
+      <p className="stat-label">What you would be signing</p>
+      <dl className="detail">
+        <div>
+          <dt>Lender and product</dt>
+          <dd>{plan.route.label}</dd>
+        </div>
+        <div>
+          <dt>Interest rate</dt>
+          <dd>{pct(plan.route.annualRate)} a year</dd>
+        </div>
+        <div>
+          <dt>You borrow</dt>
+          <dd>{zl(plan.amountBorrowed.mid)} zł</dd>
+        </div>
+        {plan.arrangementFee.mid > 0 && (
+          <div>
+            <dt>Arrangement fee, paid up front</dt>
+            <dd>{zl(plan.arrangementFee.mid)} zł</dd>
+          </div>
+        )}
+        <div>
+          <dt>Monthly repayment</dt>
+          <dd>
+            {stepsDown
+              ? `${zl(plan.monthlyBeforeGrant.mid)} zł, then ${zl(plan.monthlyAfterGrant.mid)} zł`
+              : `${zl(plan.monthlyBeforeGrant.mid)} zł`}
+          </dd>
+        </div>
+        <div>
+          <dt>Interest over the whole loan</dt>
+          <dd>{zl(plan.totalInterest.mid)} zł</dd>
+        </div>
+        <div>
+          <dt>Repayments you hand over in total</dt>
+          <dd>{zl(plan.paidByHomeowner.mid)} zł</dd>
+        </div>
+      </dl>
+
+      <p className="note-inline">
+        {plan.grantAppliedToCapital.mid > 0
+          ? `The grant of ${zl(plan.grantAppliedToCapital.mid)} zł goes straight to the bank and shrinks what you owe, which is why the repayment steps down. You never handle that money.`
+          : `The grant of ${zl(plan.grantReimbursed.mid)} zł is paid to you after the work is settled. Your repayments do not change — unless you use it to pay the loan down early, which most people do.`}
+      </p>
+
+      <p className="note-inline">
+        Net cost across the whole term, after the grant and the tax relief:{" "}
+        <strong>{zl(plan.netCapitalCost.mid)} zł</strong>.
+      </p>
+
+      {plan.warnings.map((w) => (
+        <p className="warn" key={w}>
+          {w}
+        </p>
+      ))}
+      {sub.hasUnverifiedAmounts && (
+        <p className="warn">
+          The grant amounts above have not yet been checked against the
+          programme document. Treat them as an estimate, not a promise.
+        </p>
+      )}
+    </details>
+  );
 }
 
 function ResultsScreen({
@@ -644,37 +824,57 @@ function ResultsScreen({
       <section className="grid" aria-label="Your four options">
         {rows.map((r) => {
           const isBest = r.summary.afterLoan.mid === best;
+          // Staying on coal borrows nothing, and neither does paying cash.
+          // Printing "while you repay the loan" over a fuel bill invented a
+          // debt the household does not have.
+          const hasLoan = r.plan !== null && r.plan.amountBorrowed.mid > 0;
+
           return (
             <article key={r.id} className={isBest ? "card best" : "card"}>
               <h2>{r.label}</h2>
 
-              <p className="stat-label">While you repay the loan</p>
-              <p className="figure">
-                {zl(r.summary.duringLoan.mid)}{" "}
-                <span className="unit">zł a month</span>
-              </p>
-              <p className="range">could be {band(r.summary.duringLoan)} zł</p>
+              {hasLoan ? (
+                <>
+                  <p className="stat-label">While you repay the loan</p>
+                  <p className="figure">
+                    {zl(r.summary.duringLoan.mid)}{" "}
+                    <span className="unit">zł a month</span>
+                  </p>
+                  <p className="range">
+                    could be {band(r.summary.duringLoan)} zł
+                  </p>
 
-              <p className="stat-label">Once the loan is paid off</p>
-              <p className="figure second">
-                {zl(r.summary.afterLoan.mid)}{" "}
-                <span className="unit">zł a month</span>
-              </p>
-              <p className="range">could be {band(r.summary.afterLoan)} zł</p>
-
-              {r.capital.mid > 0 && (
-                <dl className="detail">
-                  <div>
-                    <dt>The work costs</dt>
-                    <dd>{zl(r.capital.mid)} zł</dd>
-                  </div>
-                  <div>
-                    <dt>Grant pays</dt>
-                    <dd className="grant">- {zl(r.grant.mid)} zł</dd>
-                  </div>
-                </dl>
+                  <p className="stat-label">Once the loan is paid off</p>
+                  <p className="figure second">
+                    {zl(r.summary.afterLoan.mid)}{" "}
+                    <span className="unit">zł a month</span>
+                  </p>
+                  <p className="range">
+                    could be {band(r.summary.afterLoan)} zł
+                  </p>
+                </>
+              ) : (
+                <>
+                  <p className="stat-label">
+                    {r.id === "coal"
+                      ? "What you pay today"
+                      : "What you would pay"}
+                  </p>
+                  <p className="figure">
+                    {zl(r.running.mid)} <span className="unit">zł a month</span>
+                  </p>
+                  <p className="range">could be {band(r.running)} zł</p>
+                  <p className="note-inline">
+                    {r.id === "coal"
+                      ? "Fuel only. There is nothing to repay, because you are not buying anything."
+                      : "Paid from savings, so there is no repayment — only running cost."}
+                  </p>
+                </>
               )}
-              {r.id === "coal" && (
+
+              {r.sub && r.plan ? (
+                <OptionBreakdown row={r} sub={r.sub} plan={r.plan} />
+              ) : (
                 <p className="note">
                   Your boiler's age and class decide when this has to go. This
                   column is here so you can see what you pay today.

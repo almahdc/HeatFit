@@ -14,6 +14,24 @@
  *    homeowner borrows the full amount and is reimbursed later. Same grant,
  *    different monthly number. This is the kind of thing an honest tool shows
  *    and a marketing calculator flattens.
+ *
+ * --- On counting the grant exactly once -------------------------------------
+ *
+ * A grant reaches the homeowner by one of two paths, never both:
+ *
+ *   grantAppliedToCapital — it went to the bank and shrank the balance. The
+ *     homeowner never touched it. It already shows up as smaller instalments,
+ *     so it must NOT be subtracted again from net cost.
+ *
+ *   grantReimbursed — it landed in the homeowner's account after settlement.
+ *     Instalments were unaffected, so this IS subtracted from net cost.
+ *
+ * An earlier version subtracted the grant from net cost on both paths. On the
+ * bank route a 42 000 zł grant came back as minus 39 389 zł of net cost — the
+ * tool claimed a heat pump pays you to install it — and interest carried the
+ * mirror-image error and went negative. The two fields below exist so this
+ * cannot recur: every złoty of grant is assigned to exactly one of them, and a
+ * test asserts they sum back to the grant.
  */
 
 import { Range, add, exact, range, scale, subtract } from "./range";
@@ -145,6 +163,18 @@ export interface FinancingPlan {
   monthlyAfterGrant: Range;
   /** Zero once the loan is repaid — the "after the loan ends" number. */
   monthlyAfterLoan: Range;
+  /** Every złoty of instalment the homeowner hands over across the term. */
+  paidByHomeowner: Range;
+  /**
+   * Grant that went straight to the bank and shrank the balance. Already
+   * reflected in the instalments — never subtract this from net cost again.
+   */
+  grantAppliedToCapital: Range;
+  /**
+   * Grant that reached the homeowner as cash. Instalments were unaffected,
+   * so this DOES come off net cost.
+   */
+  grantReimbursed: Range;
   totalInterest: Range;
   /** Net out-of-pocket capital across the whole term, relief included. */
   netCapitalCost: Range;
@@ -174,7 +204,8 @@ export function financingPlan(input: FinancingInput): FinancingPlan {
     );
   }
 
-  // Cash purchase: no loan, no interest.
+  // Cash purchase: no loan, no interest. The grant always arrives as cash here,
+  // because there is no capital for it to pay down.
   if (route.id === "cash" || route.maxTermMonths === 0) {
     const net = subtract(
       subtract(input.capitalCost, input.upfrontGrant),
@@ -187,18 +218,20 @@ export function financingPlan(input: FinancingInput): FinancingPlan {
       monthlyBeforeGrant: exact(0),
       monthlyAfterGrant: exact(0),
       monthlyAfterLoan: exact(0),
+      paidByHomeowner: input.capitalCost,
+      grantAppliedToCapital: exact(0),
+      grantReimbursed: input.upfrontGrant,
       totalInterest: exact(0),
       netCapitalCost: net,
       warnings,
     };
   }
 
-  // What gets borrowed depends on the route.
-  const principal = route.grantPaysDownCapital
-    ? input.capitalCost // grant arrives later and reduces the balance
-    : input.capitalCost; // homeowner borrows the full cost either way
+  // Both routes borrow the full turnkey cost. What differs is where the grant
+  // goes afterwards, which is handled below — not here.
+  const borrowed = input.capitalCost;
 
-  if (principal.high > route.maxPrincipal) {
+  if (borrowed.high > route.maxPrincipal) {
     warnings.push(
       `Cost may exceed this route's ceiling of ${route.maxPrincipal.toLocaleString("pl-PL")} zł.`,
     );
@@ -208,57 +241,89 @@ export function financingPlan(input: FinancingInput): FinancingPlan {
   // example: amortising the principal alone at 6.76% over 84 months reproduces
   // their stated total interest of 12 097,99 zł to the grosz. Rolling the fee
   // into the loan does not. The fee is paid up front and shows up in net cost.
-  const fee = scale(principal, route.arrangementFee);
-  const borrowed = principal;
+  const fee = scale(borrowed, route.arrangementFee);
 
   const before = bandMap(borrowed, (p) =>
     monthlyPayment(p, route.annualRate, termMonths),
   );
 
-  let after = before;
-  if (route.grantPaysDownCapital) {
-    const monthsIn = input.grantArrivesAfterMonths ?? 12;
-    const remaining = Math.max(1, termMonths - monthsIn);
+  const monthsIn = route.grantPaysDownCapital
+    ? Math.min(input.grantArrivesAfterMonths ?? 12, termMonths)
+    : termMonths;
+  const monthsAfter = termMonths - monthsIn;
 
-    const lo = Math.max(
-      0,
-      balanceAfter(borrowed.low, route.annualRate, termMonths, monthsIn) -
-        input.upfrontGrant.high,
-    );
-    const mid = Math.max(
-      0,
-      balanceAfter(borrowed.mid, route.annualRate, termMonths, monthsIn) -
-        input.upfrontGrant.mid,
-    );
-    const hi = Math.max(
-      0,
-      balanceAfter(borrowed.high, route.annualRate, termMonths, monthsIn) -
-        input.upfrontGrant.low,
-    );
+  let after = before;
+  let appliedToCapital = exact(0);
+  let reimbursed = input.upfrontGrant;
+
+  if (route.grantPaysDownCapital && monthsAfter > 0) {
+    // Pair each corner so the band stays honest: the cheapest outcome is the
+    // smallest balance meeting the largest grant, and the dearest is the
+    // largest balance meeting the smallest grant.
+    const corners: { bal: number; grant: number }[] = [
+      {
+        bal: balanceAfter(borrowed.low, route.annualRate, termMonths, monthsIn),
+        grant: input.upfrontGrant.high,
+      },
+      {
+        bal: balanceAfter(borrowed.mid, route.annualRate, termMonths, monthsIn),
+        grant: input.upfrontGrant.mid,
+      },
+      {
+        bal: balanceAfter(
+          borrowed.high,
+          route.annualRate,
+          termMonths,
+          monthsIn,
+        ),
+        grant: input.upfrontGrant.low,
+      },
+    ];
+
+    // A grant larger than the outstanding balance clears the loan and the
+    // remainder is paid out to the homeowner. Dropping that surplus would
+    // silently understate the benefit on a small job with a large grant.
+    const settled = corners.map(({ bal, grant }) => {
+      const applied = Math.min(bal, grant);
+      return { newBalance: bal - applied, applied, surplus: grant - applied };
+    });
+
+    const lo = settled[0]!;
+    const mid = settled[1]!;
+    const hi = settled[2]!;
 
     after = range(
-      monthlyPayment(lo, route.annualRate, remaining),
-      monthlyPayment(mid, route.annualRate, remaining),
-      monthlyPayment(hi, route.annualRate, remaining),
+      monthlyPayment(lo.newBalance, route.annualRate, monthsAfter),
+      monthlyPayment(mid.newBalance, route.annualRate, monthsAfter),
+      monthlyPayment(hi.newBalance, route.annualRate, monthsAfter),
+    );
+
+    appliedToCapital = range(
+      Math.min(lo.applied, hi.applied),
+      mid.applied,
+      Math.max(lo.applied, hi.applied),
+    );
+    reimbursed = range(
+      Math.min(lo.surplus, hi.surplus),
+      mid.surplus,
+      Math.max(lo.surplus, hi.surplus),
     );
   }
 
-  const totalPaid = add(
-    scale(
-      before,
-      route.grantPaysDownCapital
-        ? (input.grantArrivesAfterMonths ?? 12)
-        : termMonths,
-    ),
-    route.grantPaysDownCapital
-      ? scale(after, termMonths - (input.grantArrivesAfterMonths ?? 12))
-      : exact(0),
+  const paidByHomeowner = add(
+    scale(before, monthsIn),
+    monthsAfter > 0 ? scale(after, monthsAfter) : exact(0),
   );
 
-  const interest = subtract(totalPaid, borrowed);
+  // Interest is everything the bank received above the capital it lent. Grant
+  // paid onto the capital is money the bank received, so it sits on the same
+  // side as the instalments.
+  const interest = subtract(add(paidByHomeowner, appliedToCapital), borrowed);
 
+  // Net cost is what leaves the homeowner's pocket, less what comes back to it.
+  // Only the reimbursed slice of the grant ever reaches their pocket.
   const net = subtract(
-    subtract(add(totalPaid, fee), input.upfrontGrant),
+    subtract(add(paidByHomeowner, fee), reimbursed),
     input.taxRelief,
   );
 
@@ -269,6 +334,9 @@ export function financingPlan(input: FinancingInput): FinancingPlan {
     monthlyBeforeGrant: before,
     monthlyAfterGrant: after,
     monthlyAfterLoan: exact(0),
+    paidByHomeowner,
+    grantAppliedToCapital: appliedToCapital,
+    grantReimbursed: reimbursed,
     totalInterest: interest,
     netCapitalCost: net,
     warnings,
@@ -278,6 +346,12 @@ export function financingPlan(input: FinancingInput): FinancingPlan {
 /**
  * The headline the homeowner reads: loan repayment plus running cost.
  * Two numbers, both visible — during the loan, and after it is repaid.
+ *
+ * Note on the open routes: the homeowner pays the full instalment for the whole
+ * term and receives the grant as cash partway through. This function shows that
+ * literally. If they use the grant to overpay the loan — which most people
+ * would — the real monthly figure steps down. That is a product decision, not a
+ * modelling one, and it is deliberately not assumed here.
  */
 export function headlineMonthly(
   plan: FinancingPlan,
