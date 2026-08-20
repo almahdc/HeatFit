@@ -79,7 +79,9 @@ export function verdict(input: VerdictInput): Verdict {
 
   // 2. Overlapping bands: no ranking.
   const contenders = [pellet, hp, hpPv];
-  const cheapest = [...contenders].sort((a, b) => a.duringLoan.mid - b.duringLoan.mid)[0]!;
+  const cheapest = [...contenders].sort(
+    (a, b) => a.duringLoan.mid - b.duringLoan.mid,
+  )[0]!;
   const runnerUp = [...contenders]
     .filter((s) => s.id !== cheapest.id)
     .sort((a, b) => a.duringLoan.mid - b.duringLoan.mid)[0]!;
@@ -88,12 +90,11 @@ export function verdict(input: VerdictInput): Verdict {
     return {
       kind: "tooCloseToCall",
       headline: `${cheapest.label} and ${runnerUp.label} are too close for us to call apart.`,
-      because:
-        `Both land somewhere between ${Math.round(
-          Math.min(cheapest.duringLoan.low, runnerUp.duringLoan.low)
-        )} and ${Math.round(
-          Math.max(cheapest.duringLoan.high, runnerUp.duringLoan.high)
-        )} zł a month. The gap between them is smaller than what we do not know.`,
+      because: `Both land somewhere between ${Math.round(
+        Math.min(cheapest.duringLoan.low, runnerUp.duringLoan.low),
+      )} and ${Math.round(
+        Math.max(cheapest.duringLoan.high, runnerUp.duringLoan.high),
+      )} zł a month. The gap between them is smaller than what we do not know.`,
       wouldChangeIt: [
         "A firm quote from an installer, which replaces our cost estimate",
         "A fixed-price pellet contract, which is the main reason the range is this wide",
@@ -104,7 +105,7 @@ export function verdict(input: VerdictInput): Verdict {
 
   // 3. Nothing beats coal, and there is time.
   const nothingBeatsCoal = contenders.every(
-    (s) => s.afterLoan.mid >= coal.afterLoan.mid
+    (s) => s.afterLoan.mid >= coal.afterLoan.mid,
   );
   if (nothingBeatsCoal && (input.monthsUntilDeadline ?? 0) > 12) {
     return {
@@ -122,7 +123,9 @@ export function verdict(input: VerdictInput): Verdict {
   }
 
   // 4. A winner, named by what it costs after the loan is repaid.
-  const winner = [...contenders].sort((a, b) => a.afterLoan.mid - b.afterLoan.mid)[0]!;
+  const winner = [...contenders].sort(
+    (a, b) => a.afterLoan.mid - b.afterLoan.mid,
+  )[0]!;
   const kind: VerdictKind =
     winner.id === "pellet"
       ? "pellet"

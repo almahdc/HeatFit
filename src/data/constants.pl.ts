@@ -117,7 +117,8 @@ export const PELLET_BOILER_EFFICIENCY: SourcedBand = {
   mid: 0.88,
   high: 0.9,
   unit: "fraction",
-  source: "Class 5 / Ecodesign requirement, mandatory for Czyste Powietrze eligibility",
+  source:
+    "Class 5 / Ecodesign requirement, mandatory for Czyste Powietrze eligibility",
   readOn: "2026-08-19",
   certainty: "medium",
 };
@@ -205,7 +206,8 @@ export const PELLET_BOILER_INSTALLED_COST: SourcedBand = {
   mid: 24000,
   high: 32000,
   unit: "zł, turnkey incl. VAT",
-  source: "Polish installer pricing 2026; ekogroszek boilers quoted 15 000-25 000 zł installed",
+  source:
+    "Polish installer pricing 2026; ekogroszek boilers quoted 15 000-25 000 zł installed",
   readOn: "2026-08-19",
   certainty: "low",
   note:
@@ -229,7 +231,8 @@ export const COAL_BOILER_REPLACEMENT_COST: SourcedBand = {
   mid: 0,
   high: 0,
   unit: "zł",
-  source: "Not a legal option in the beachhead - kopciuch replacement is mandatory",
+  source:
+    "Not a legal option in the beachhead - kopciuch replacement is mandatory",
   readOn: "2026-08-19",
   certainty: "high",
   note:
@@ -241,7 +244,8 @@ export const COAL_BOILER_REPLACEMENT_COST: SourcedBand = {
 
 export const HEAT_PUMP_LIFE_YEARS: Sourced<number> = {
   value: 15,
-  source: "Polish industry sources, 2026 (range given as 10-20, one claims 20-30)",
+  source:
+    "Polish industry sources, 2026 (range given as 10-20, one claims 20-30)",
   readOn: "2026-08-19",
   certainty: "medium",
   note: "Conservative end chosen deliberately, so 'crossover too late to matter' fires more often.",

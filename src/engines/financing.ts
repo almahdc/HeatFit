@@ -93,7 +93,7 @@ export const ROUTES: Record<string, FinancingRoute> = {
 export function monthlyPayment(
   principal: number,
   annualRate: number,
-  termMonths: number
+  termMonths: number,
 ): number {
   if (principal <= 0) return 0;
   if (termMonths <= 0) throw new Error("monthlyPayment: term must be positive");
@@ -108,7 +108,7 @@ export function balanceAfter(
   principal: number,
   annualRate: number,
   termMonths: number,
-  paymentsMade: number
+  paymentsMade: number,
 ): number {
   if (annualRate === 0) {
     return Math.max(0, principal * (1 - paymentsMade / termMonths));
@@ -162,7 +162,7 @@ export function financingPlan(input: FinancingInput): FinancingPlan {
 
   if (route.status === "suspended") {
     warnings.push(
-      `${route.label} is not available today — applications are suspended. Shown for comparison only.`
+      `${route.label} is not available today — applications are suspended. Shown for comparison only.`,
     );
   }
   if (route.note?.includes("EXPIRES")) {
@@ -170,13 +170,16 @@ export function financingPlan(input: FinancingInput): FinancingPlan {
   }
   if (termMonths > route.maxTermMonths && route.maxTermMonths > 0) {
     warnings.push(
-      `Term of ${termMonths} months exceeds this route's maximum of ${route.maxTermMonths}.`
+      `Term of ${termMonths} months exceeds this route's maximum of ${route.maxTermMonths}.`,
     );
   }
 
   // Cash purchase: no loan, no interest.
   if (route.id === "cash" || route.maxTermMonths === 0) {
-    const net = subtract(subtract(input.capitalCost, input.upfrontGrant), input.taxRelief);
+    const net = subtract(
+      subtract(input.capitalCost, input.upfrontGrant),
+      input.taxRelief,
+    );
     return {
       route,
       amountBorrowed: exact(0),
@@ -197,7 +200,7 @@ export function financingPlan(input: FinancingInput): FinancingPlan {
 
   if (principal.high > route.maxPrincipal) {
     warnings.push(
-      `Cost may exceed this route's ceiling of ${route.maxPrincipal.toLocaleString("pl-PL")} zł.`
+      `Cost may exceed this route's ceiling of ${route.maxPrincipal.toLocaleString("pl-PL")} zł.`,
     );
   }
 
@@ -209,7 +212,7 @@ export function financingPlan(input: FinancingInput): FinancingPlan {
   const borrowed = principal;
 
   const before = bandMap(borrowed, (p) =>
-    monthlyPayment(p, route.annualRate, termMonths)
+    monthlyPayment(p, route.annualRate, termMonths),
   );
 
   let after = before;
@@ -220,38 +223,43 @@ export function financingPlan(input: FinancingInput): FinancingPlan {
     const lo = Math.max(
       0,
       balanceAfter(borrowed.low, route.annualRate, termMonths, monthsIn) -
-        input.upfrontGrant.high
+        input.upfrontGrant.high,
     );
     const mid = Math.max(
       0,
       balanceAfter(borrowed.mid, route.annualRate, termMonths, monthsIn) -
-        input.upfrontGrant.mid
+        input.upfrontGrant.mid,
     );
     const hi = Math.max(
       0,
       balanceAfter(borrowed.high, route.annualRate, termMonths, monthsIn) -
-        input.upfrontGrant.low
+        input.upfrontGrant.low,
     );
 
     after = range(
       monthlyPayment(lo, route.annualRate, remaining),
       monthlyPayment(mid, route.annualRate, remaining),
-      monthlyPayment(hi, route.annualRate, remaining)
+      monthlyPayment(hi, route.annualRate, remaining),
     );
   }
 
   const totalPaid = add(
-    scale(before, route.grantPaysDownCapital ? (input.grantArrivesAfterMonths ?? 12) : termMonths),
+    scale(
+      before,
+      route.grantPaysDownCapital
+        ? (input.grantArrivesAfterMonths ?? 12)
+        : termMonths,
+    ),
     route.grantPaysDownCapital
       ? scale(after, termMonths - (input.grantArrivesAfterMonths ?? 12))
-      : exact(0)
+      : exact(0),
   );
 
   const interest = subtract(totalPaid, borrowed);
 
   const net = subtract(
     subtract(add(totalPaid, fee), input.upfrontGrant),
-    input.taxRelief
+    input.taxRelief,
   );
 
   return {
@@ -273,7 +281,7 @@ export function financingPlan(input: FinancingInput): FinancingPlan {
  */
 export function headlineMonthly(
   plan: FinancingPlan,
-  runningMonthly: Range
+  runningMonthly: Range,
 ): { duringLoan: Range; afterLoan: Range } {
   return {
     duringLoan: add(plan.monthlyAfterGrant, runningMonthly),

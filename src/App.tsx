@@ -54,7 +54,7 @@ export default function App() {
       label: string,
       capital: Range | null,
       device: "heatPump" | "pelletBoiler" | null,
-      running: Range
+      running: Range,
     ) => {
       if (!capital || !device) {
         return {
@@ -79,7 +79,12 @@ export default function App() {
         label,
         capital,
         grant: sub.upfrontGrant,
-        summary: { id, label, duringLoan: h.duringLoan, afterLoan: h.afterLoan },
+        summary: {
+          id,
+          label,
+          duringLoan: h.duringLoan,
+          afterLoan: h.afterLoan,
+        },
         warnings: plan.warnings,
       };
     };
@@ -87,14 +92,30 @@ export default function App() {
     const pvCapital = toBand(C.HEAT_PUMP_INSTALLED_COST);
     const rows = [
       build("coal", "Coal", null, null, rc.coal.monthly),
-      build("pellet", "Pellet", toBand(C.PELLET_BOILER_INSTALLED_COST), "pelletBoiler", rc.pellet.monthly),
-      build("heatPump", "Heat pump", toBand(C.HEAT_PUMP_INSTALLED_COST), "heatPump", rc.heatPump.monthly),
+      build(
+        "pellet",
+        "Pellet",
+        toBand(C.PELLET_BOILER_INSTALLED_COST),
+        "pelletBoiler",
+        rc.pellet.monthly,
+      ),
+      build(
+        "heatPump",
+        "Heat pump",
+        toBand(C.HEAT_PUMP_INSTALLED_COST),
+        "heatPump",
+        rc.heatPump.monthly,
+      ),
       build(
         "heatPumpPlusPv",
         "Heat pump + solar",
-        range(pvCapital.low + 18000, pvCapital.mid + 22000, pvCapital.high + 28000),
+        range(
+          pvCapital.low + 18000,
+          pvCapital.mid + 22000,
+          pvCapital.high + 28000,
+        ),
         "heatPump",
-        rc.heatPumpPlusPv.monthly
+        rc.heatPumpPlusPv.monthly,
       ),
     ];
 
@@ -114,47 +135,52 @@ export default function App() {
     <main>
       <header className="masthead">
         <p className="eyebrow">Silesia · coal boiler replacement</p>
-        <h1>What's your coal boiler really costing you, and what would change it?</h1>
+        <h1>
+          What's your coal boiler really costing you, and what would change it?
+        </h1>
         <p className="lede">
-          Real monthly numbers for coal, pellet, or heat pump, priced from what you burned last winter. Loan and grant included. Solar lowers your bill, but not always your monthly payment. We'll show you which one makes most sense.
+          Real monthly numbers for coal, pellet, or heat pump, priced from what
+          you burned last winter. Loan and grant included. Solar lowers your
+          bill, but not always your monthly payment. We'll show you which one
+          makes most sense.
         </p>
       </header>
 
       <section className="" aria-label="Your house">
         <Field label="Where is the house?" hint="postcode">
           <p className="field-description">
-            Postcode is enough. It tells us your winter temperatures, your electricity distributor, and which deadline applies to you.
+            Postcode is enough. It tells us your winter temperatures, your
+            electricity distributor, and which deadline applies to you.
           </p>
           <input
-              type="text"
-              inputMode="numeric"
-              placeholder="40-001"
-              value={postcode}
-              onChange={(e) => setPostcode(maskPostcodeInput(e.target.value))}
-              aria-invalid={postcode.length === 6 && !postcodeResult.valid}
+            type="text"
+            inputMode="numeric"
+            placeholder="40-001"
+            value={postcode}
+            onChange={(e) => setPostcode(maskPostcodeInput(e.target.value))}
+            aria-invalid={postcode.length === 6 && !postcodeResult.valid}
           />
         </Field>
 
-
         {postcode.length === 6 && !postcodeResult.inSilesia && (
-            <p className="warn">
-              We only cover Silesia today. Your numbers here won't be accurate for
-              {" "}{postcode}.
-            </p>
+          <p className="warn">
+            We only cover Silesia today. Your numbers here won't be accurate for{" "}
+            {postcode}.
+          </p>
         )}
 
-            <Field label="How many people live in the house?" hint="">
-              <input
-                  type="number"
-                  min={1}
-                  max={10}
-                  step={1}
-                  value={householdSize}
-                  onChange={(e) =>
-                      setHouseholdSize(Math.max(1, Math.min(10, +e.target.value || 3)))
-                  }
-              />
-            </Field>
+        <Field label="How many people live in the house?" hint="">
+          <input
+            type="number"
+            min={1}
+            max={10}
+            step={1}
+            value={householdSize}
+            onChange={(e) =>
+              setHouseholdSize(Math.max(1, Math.min(10, +e.target.value || 3)))
+            }
+          />
+        </Field>
 
         <Field label="Coal burned last winter" hint="tonnes">
           <input
@@ -183,7 +209,10 @@ export default function App() {
           </select>
         </Field>
         <Field label="Electricity tariff" hint="">
-          <select value={tariff} onChange={(e) => setTariff(e.target.value as Tariff)}>
+          <select
+            value={tariff}
+            onChange={(e) => setTariff(e.target.value as Tariff)}
+          >
             <option value="G11">Flat, all day (G11)</option>
             <option value="G12w">Cheap nights and weekends (G12w)</option>
           </select>
@@ -199,7 +228,10 @@ export default function App() {
           </select>
         </Field>
         <Field label="Loan length" hint="years">
-          <select value={termYears} onChange={(e) => setTermYears(+e.target.value)}>
+          <select
+            value={termYears}
+            onChange={(e) => setTermYears(+e.target.value)}
+          >
             {[5, 8, 10, 12].map((y) => (
               <option key={y} value={y}>
                 {y} years
@@ -210,8 +242,9 @@ export default function App() {
       </section>
 
       <p className="demand">
-        Your house needs about <strong>{zl(rc.demand.mid)} kWh</strong> of heat a year.
-        That is <strong>{Math.round(rc.demandPerM2.mid)} kWh</strong> for every square metre.
+        Your house needs about <strong>{zl(rc.demand.mid)} kWh</strong> of heat
+        a year. That is <strong>{Math.round(rc.demandPerM2.mid)} kWh</strong>{" "}
+        for every square metre.
       </p>
 
       <section className="grid" aria-label="Your four options">
@@ -223,13 +256,15 @@ export default function App() {
 
               <p className="stat-label">While you repay the loan</p>
               <p className="figure">
-                {zl(r.summary.duringLoan.mid)} <span className="unit">zł a month</span>
+                {zl(r.summary.duringLoan.mid)}{" "}
+                <span className="unit">zł a month</span>
               </p>
               <p className="range">could be {band(r.summary.duringLoan)} zł</p>
 
               <p className="stat-label">Once the loan is paid off</p>
               <p className="figure second">
-                {zl(r.summary.afterLoan.mid)} <span className="unit">zł a month</span>
+                {zl(r.summary.afterLoan.mid)}{" "}
+                <span className="unit">zł a month</span>
               </p>
               <p className="range">could be {band(r.summary.afterLoan)} zł</p>
 
@@ -247,8 +282,8 @@ export default function App() {
               )}
               {r.id === "coal" && (
                 <p className="note">
-                  You cannot keep this. Replacing the boiler is required — this is only here
-                  so you can see what you pay today.
+                  You cannot keep this. Replacing the boiler is required — this
+                  is only here so you can see what you pay today.
                 </p>
               )}
             </article>
@@ -271,8 +306,8 @@ export default function App() {
       <section className="future" aria-hidden="false">
         <p className="eyebrow">Coming</p>
         <p>
-          At 500 houses nearby, this will show what a house like yours actually pays —
-          measured, not estimated.
+          At 500 houses nearby, this will show what a house like yours actually
+          pays — measured, not estimated.
         </p>
       </section>
 
@@ -280,8 +315,8 @@ export default function App() {
         <p className="stat-label">Where these numbers come from</p>
         <ul className="sources">
           <li>
-            <strong>Electricity</strong> {C.ELECTRICITY_G11_PER_KWH.mid} zł/kWh ·{" "}
-            {C.ELECTRICITY_G11_PER_KWH.source}
+            <strong>Electricity</strong> {C.ELECTRICITY_G11_PER_KWH.mid} zł/kWh
+            · {C.ELECTRICITY_G11_PER_KWH.source}
           </li>
           <li>
             <strong>Coal</strong> {zl(C.COAL_PRICE_PER_TONNE.mid)} zł/t ·{" "}
@@ -297,13 +332,14 @@ export default function App() {
         </ul>
         {route.status === "suspended" && (
           <p className="warn">
-            This way of borrowing is suspended right now. The figures above show what it
-            would cost if it reopens.
+            This way of borrowing is suspended right now. The figures above show
+            what it would cost if it reopens.
           </p>
         )}
         <p className="warn">
-          Prices are held flat. Nobody knows what electricity or coal will cost in ten
-          years, and any tool that draws a clean line that far out is guessing.
+          Prices are held flat. Nobody knows what electricity or coal will cost
+          in ten years, and any tool that draws a clean line that far out is
+          guessing.
         </p>
       </footer>
     </main>

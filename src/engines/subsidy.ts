@@ -73,7 +73,12 @@ export const DEFAULT_PROGRAMMES: Programme[] = [
     maxByLevel: { basic: 68040, raised: 119070, highest: 119070 },
     shareOfCost: 1.0,
     excludesForSameDevice: ["mojeCiepło", "ciepłeMieszkanie"],
-    requires: ["ownedThreeYears", "deviceOnZumList", "energyAuditDone", "replacingKopciuch"],
+    requires: [
+      "ownedThreeYears",
+      "deviceOnZumList",
+      "energyAuditDone",
+      "replacingKopciuch",
+    ],
     source: "BOŚ Bank, Kredyt Czyste Powietrze page",
     readOn: "2026-08-19",
   },
@@ -144,7 +149,11 @@ function missingGates(p: Programme, a: Applicant): EligibilityGate[] {
   return p.requires.filter((g) => !a.gatesSatisfied.includes(g));
 }
 
-function valueOf(p: Programme, level: IncomeLevel, eligibleCost: number): number {
+function valueOf(
+  p: Programme,
+  level: IncomeLevel,
+  eligibleCost: number,
+): number {
   const cap = p.maxByLevel[level];
   if (cap === undefined) return 0;
   return Math.min(cap, eligibleCost * p.shareOfCost);
@@ -161,9 +170,10 @@ export function subsidiesFor(
   device: DeviceType,
   eligibleCost: number,
   applicant: Applicant,
-  programmes: Programme[] = DEFAULT_PROGRAMMES
+  programmes: Programme[] = DEFAULT_PROGRAMMES,
 ): SubsidyOutcome {
-  if (eligibleCost < 0) throw new Error("subsidiesFor: eligible cost cannot be negative");
+  if (eligibleCost < 0)
+    throw new Error("subsidiesFor: eligible cost cannot be negative");
 
   const candidates = programmes
     .filter((p) => p.appliesTo.includes(device))
@@ -182,7 +192,9 @@ export function subsidiesFor(
     .sort((a, b) => b.value - a.value);
 
   for (const c of eligible) {
-    const blockedBy = c.programme.excludesForSameDevice.find((id) => winners.has(id));
+    const blockedBy = c.programme.excludesForSameDevice.find((id) =>
+      winners.has(id),
+    );
     if (blockedBy) continue;
     winners.add(c.programme.id);
   }

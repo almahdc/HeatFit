@@ -69,7 +69,11 @@ function band(b: C.SourcedBand): Range {
   return range(b.low, b.mid, b.high);
 }
 
-function toRunningCost(annual: Range, fuelQuantity: Range, fuelUnit: string): RunningCost {
+function toRunningCost(
+  annual: Range,
+  fuelQuantity: Range,
+  fuelUnit: string,
+): RunningCost {
   return {
     annual,
     monthly: scale(annual, 1 / 12),
@@ -95,13 +99,17 @@ export function heatDemandFromCoal(coalTonnesPerYear: number): Range {
   }
 
   const kg = exact(coalTonnesPerYear * 1000);
-  const energyIn = scale(multiply(kg, band(C.COAL_CALORIFIC_VALUE)), 1 / C.MJ_PER_KWH);
+  const energyIn = scale(
+    multiply(kg, band(C.COAL_CALORIFIC_VALUE)),
+    1 / C.MJ_PER_KWH,
+  );
   return multiply(energyIn, band(C.OLD_COAL_BOILER_EFFICIENCY));
 }
 
 /** Useful heat per square metre. Feeds the insulate-first verdict. */
 export function heatDemandPerM2(demand: Range, heatedAreaM2: number): Range {
-  if (heatedAreaM2 <= 0) throw new Error("heatDemandPerM2: area must be positive");
+  if (heatedAreaM2 <= 0)
+    throw new Error("heatDemandPerM2: area must be positive");
   return scale(demand, 1 / heatedAreaM2);
 }
 
@@ -122,7 +130,10 @@ export function coalRunningCost(coalTonnesPerYear: number): RunningCost {
  * result given what happened to pellet prices last winter.
  */
 export function pelletRunningCost(demand: Range): RunningCost {
-  const energyNeededMj = scale(divide(demand, band(C.PELLET_BOILER_EFFICIENCY)), C.MJ_PER_KWH);
+  const energyNeededMj = scale(
+    divide(demand, band(C.PELLET_BOILER_EFFICIENCY)),
+    C.MJ_PER_KWH,
+  );
   const kg = divide(energyNeededMj, band(C.PELLET_CALORIFIC_VALUE));
   const tonnes = scale(kg, 1 / 1000);
   const annual = multiply(tonnes, band(C.PELLET_PRICE_PER_TONNE));
@@ -135,7 +146,8 @@ export function pelletRunningCost(demand: Range): RunningCost {
  * temperature, a low SCOP, and a heat pump that loses on cost.
  */
 export function heatPumpElectricityKwh(demand: Range, scop: Range): Range {
-  if (scop.low <= 0) throw new Error("heatPumpElectricityKwh: SCOP must be positive");
+  if (scop.low <= 0)
+    throw new Error("heatPumpElectricityKwh: SCOP must be positive");
   return divide(demand, scop);
 }
 
@@ -147,11 +159,11 @@ export function electricityPricePerKwh(tariff: Tariff): Range {
   const peakShare = range(
     1 - offpeakShare.high,
     1 - offpeakShare.mid,
-    1 - offpeakShare.low
+    1 - offpeakShare.low,
   );
   return add(
     multiply(offpeakShare, band(C.ELECTRICITY_G12W_OFFPEAK_PER_KWH)),
-    multiply(peakShare, band(C.ELECTRICITY_G12W_PEAK_PER_KWH))
+    multiply(peakShare, band(C.ELECTRICITY_G12W_PEAK_PER_KWH)),
   );
 }
 
@@ -168,7 +180,7 @@ export function heatPumpRunningCost(
   demand: Range,
   scop: Range,
   tariff: Tariff,
-  pvOffsetKwhPerYear?: Range
+  pvOffsetKwhPerYear?: Range,
 ): RunningCost {
   const gross = heatPumpElectricityKwh(demand, scop);
 
@@ -217,7 +229,7 @@ export function runningCosts(facts: HouseFacts): RunningCosts {
       demand,
       facts.heatPumpScop,
       facts.tariff,
-      facts.pvOffsetKwhPerYear ?? exact(0)
+      facts.pvOffsetKwhPerYear ?? exact(0),
     ),
   };
 }
@@ -235,5 +247,8 @@ export function dhwDemandKwh(people: number): Range {
   // litres/day x 365 x specific heat x deltaT, converted to kWh
   const deltaT = 35; // 10C mains to 45C usable, Polish convention
   const kwhPerLitre = (1 * 4.186 * deltaT) / 3600; // ~0.0407 kWh/litre
-  return scale(band(C.DHW_LITRES_PER_PERSON_PER_DAY), people * 365 * kwhPerLitre);
+  return scale(
+    band(C.DHW_LITRES_PER_PERSON_PER_DAY),
+    people * 365 * kwhPerLitre,
+  );
 }

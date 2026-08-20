@@ -53,7 +53,7 @@ describe("subsidy engine", () => {
     };
     const out = subsidiesFor("heatPump", 45000, applicant);
     const applied = out.detail.filter(
-      (d) => d.applied && !d.programme.isTaxRelief
+      (d) => d.applied && !d.programme.isTaxRelief,
     );
     expect(applied).toHaveLength(1);
     expect(applied[0]!.programme.id).toBe("czystePowietrze");
@@ -81,7 +81,11 @@ describe("subsidy engine", () => {
   it("names the specific missing gate rather than a generic refusal", () => {
     const noAudit: Applicant = {
       incomeLevel: "basic",
-      gatesSatisfied: ["ownedThreeYears", "deviceOnZumList", "replacingKopciuch"],
+      gatesSatisfied: [
+        "ownedThreeYears",
+        "deviceOnZumList",
+        "replacingKopciuch",
+      ],
     };
     const out = subsidiesFor("heatPump", 45000, noAudit);
     const cp = out.detail.find((d) => d.programme.id === "czystePowietrze");
@@ -98,7 +102,7 @@ describe("subsidy engine", () => {
     const edited = DEFAULT_PROGRAMMES.map((p) =>
       p.id === "czystePowietrze"
         ? { ...p, maxByLevel: { ...p.maxByLevel, basic: 30000 } }
-        : p
+        : p,
     );
     const out = subsidiesFor("heatPump", 45000, READY, edited);
     const cp = out.detail.find((d) => d.programme.id === "czystePowietrze");
@@ -144,7 +148,7 @@ describe("financing", () => {
     const open = financingPlan({ ...input, route: ROUTES.pozyczkaZielona! });
     const suspended = financingPlan({ ...input, route: ROUTES.bankRoute! });
     expect(open.monthlyAfterGrant.mid).toBeGreaterThan(
-      suspended.monthlyAfterGrant.mid
+      suspended.monthlyAfterGrant.mid,
     );
   });
 
@@ -179,7 +183,9 @@ describe("financing", () => {
       termMonths: 96,
       grantArrivesAfterMonths: 12,
     });
-    expect(plan.monthlyAfterGrant.mid).toBeLessThan(plan.monthlyBeforeGrant.mid);
+    expect(plan.monthlyAfterGrant.mid).toBeLessThan(
+      plan.monthlyBeforeGrant.mid,
+    );
   });
 
   it("does not step the payment down on a route where the grant is reimbursed later", () => {
@@ -190,7 +196,10 @@ describe("financing", () => {
       route: ROUTES.pozyczkaZielona!,
       termMonths: 96,
     });
-    expect(plan.monthlyAfterGrant.mid).toBeCloseTo(plan.monthlyBeforeGrant.mid, 6);
+    expect(plan.monthlyAfterGrant.mid).toBeCloseTo(
+      plan.monthlyBeforeGrant.mid,
+      6,
+    );
   });
 
   it("charges no interest when paying from savings", () => {

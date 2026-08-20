@@ -75,7 +75,10 @@ describe("heat demand from coal", () => {
   });
 
   it("scales linearly with tonnage", () => {
-    expect(heatDemandFromCoal(8).mid).toBeCloseTo(heatDemandFromCoal(4).mid * 2, 5);
+    expect(heatDemandFromCoal(8).mid).toBeCloseTo(
+      heatDemandFromCoal(4).mid * 2,
+      5,
+    );
   });
 
   it("carries the boiler efficiency uncertainty forward, not silently", () => {
@@ -142,7 +145,7 @@ describe("running costs per scenario", () => {
 
   it("blends the G12w price below flat G11 for a heat pump", () => {
     expect(electricityPricePerKwh("G12w").mid).toBeLessThan(
-      electricityPricePerKwh("G11").mid
+      electricityPricePerKwh("G11").mid,
     );
   });
 
@@ -151,7 +154,9 @@ describe("running costs per scenario", () => {
     const scop = range(2.6, 3.0, 3.4);
     const kwh = heatPumpElectricityKwh(demand, scop);
     const naive = kwh.mid * electricityPricePerKwh("G12w").mid;
-    expect(heatPumpRunningCost(demand, scop, "G12w").annual.mid).toBeGreaterThan(naive);
+    expect(
+      heatPumpRunningCost(demand, scop, "G12w").annual.mid,
+    ).toBeGreaterThan(naive);
   });
 
   it("never lets PV drive a bill below zero", () => {
@@ -186,7 +191,9 @@ describe("constants integrity", () => {
   it("every constant carries a source, a read date and a certainty", () => {
     for (const [name, c] of Object.entries(ALL_CONSTANTS)) {
       expect(c.source, `${name} has no source`).toBeTruthy();
-      expect(c.readOn, `${name} has no read date`).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(c.readOn, `${name} has no read date`).toMatch(
+        /^\d{4}-\d{2}-\d{2}$/,
+      );
       expect(["high", "medium", "low"]).toContain(c.certainty);
     }
   });

@@ -10,29 +10,27 @@
  */
 
 export interface PostcodeResult {
-    valid: boolean;
-    inSilesia: boolean;
-    /** The raw two-digit prefix, e.g. "40" from "40-001". */
-    prefix: string | null;
+  valid: boolean;
+  inSilesia: boolean;
+  /** The raw two-digit prefix, e.g. "40" from "40-001". */
+  prefix: string | null;
 }
 
 // Prefixes predominantly inside Śląskie. Approximate - see note above.
-const SILESIAN_PREFIXES = new Set([
-    "40", "41", "42", "43", "44",
-]);
+const SILESIAN_PREFIXES = new Set(["40", "41", "42", "43", "44"]);
 
 const POSTCODE_PATTERN = /^\d{2}-\d{3}$/;
 
 export function isValidPolishPostcode(value: string): boolean {
-    return POSTCODE_PATTERN.test(value);
+  return POSTCODE_PATTERN.test(value);
 }
 
 export function lookupPostcode(value: string): PostcodeResult {
-    if (!isValidPolishPostcode(value)) {
-        return { valid: false, inSilesia: false, prefix: null };
-    }
-    const prefix = value.slice(0, 2);
-    return { valid: true, inSilesia: SILESIAN_PREFIXES.has(prefix), prefix };
+  if (!isValidPolishPostcode(value)) {
+    return { valid: false, inSilesia: false, prefix: null };
+  }
+  const prefix = value.slice(0, 2);
+  return { valid: true, inSilesia: SILESIAN_PREFIXES.has(prefix), prefix };
 }
 
 /**
@@ -40,7 +38,7 @@ export function lookupPostcode(value: string): PostcodeResult {
  * Call this in an onChange handler with the raw input value.
  */
 export function maskPostcodeInput(raw: string): string {
-    const digits = raw.replace(/\D/g, "").slice(0, 5);
-    if (digits.length <= 2) return digits;
-    return `${digits.slice(0, 2)}-${digits.slice(2)}`;
+  const digits = raw.replace(/\D/g, "").slice(0, 5);
+  if (digits.length <= 2) return digits;
+  return `${digits.slice(0, 2)}-${digits.slice(2)}`;
 }

@@ -76,7 +76,12 @@ export function divide(a: Range, b: Range): Range {
   if (b.low <= 0 && b.high >= 0) {
     throw new Error("divide: denominator range spans zero");
   }
-  const corners = [a.low / b.low, a.low / b.high, a.high / b.low, a.high / b.high];
+  const corners = [
+    a.low / b.low,
+    a.low / b.high,
+    a.high / b.low,
+    a.high / b.high,
+  ];
   return range(Math.min(...corners), a.mid / b.mid, Math.max(...corners));
 }
 

@@ -34,8 +34,14 @@ body {
   margin: 0;
   background: var(--paper);
   color: var(--ink);
-  font-family: "Söhne", "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI",
-    system-ui, sans-serif;
+  font-family:
+    "Söhne",
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    system-ui,
+    sans-serif;
   font-size: var(--step-0);
   line-height: 1.55;
   -webkit-font-smoothing: antialiased;
