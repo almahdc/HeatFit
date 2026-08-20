@@ -12,9 +12,20 @@
 
 name: Deploy to GitHub Pages
 
-on:
+# Quoted deliberately. Unquoted, YAML reads `on` as the boolean true, because
+# YAML 1.1 treats on/off/yes/no as booleans. GitHub special-cases it so bare
+# `on:` does work, but quoting removes the ambiguity for anything else that
+# reads this file.
+"on":
   push:
-    branches: [main]
+    # Both listed because repositories differ: GitHub creates new ones with
+    # `main`, but older repos and some local git configs still use `master`.
+    # A workflow watching the wrong branch never runs and reports nothing at
+    # all, which is indistinguishable from the file being missing.
+    # Delete whichever branch you do not use.
+    branches: [main, master]
+  # Lets you start a run by hand from the Actions tab without pushing. The
+  # fastest way to prove the workflow is registered at all.
   workflow_dispatch:
 
 # Pages needs these. Without id-token the deploy step fails with a permissions
