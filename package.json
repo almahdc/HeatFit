@@ -10,7 +10,7 @@
     "watch": "vitest",
     "typecheck": "tsc --noEmit",
     "build:pages": "tsc --noEmit && vite build --mode pages",
-    "deploy": "npm run build:pages && gh-pages -d dist",
+    "deploy": "npm run build:pages && touch dist/.nojekyll && gh-pages -d dist -t",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,json,css,md}\""
   },
   "devDependencies": {
