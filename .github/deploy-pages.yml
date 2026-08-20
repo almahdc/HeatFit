@@ -1,0 +1,85 @@
+# Deploys the BUILT site to GitHub Pages.
+#
+# The failure this replaces: Pages was serving the repository's source
+# index.html, whose script tag points at /src/main.tsx. Browsers cannot execute
+# TypeScript, and the file does not exist on a built site, so the page loaded
+# an empty <div id="root"> and nothing else. The 404 path had no /HeatFit/
+# prefix either, which is the second half of the same problem: base was still
+# the placeholder.
+#
+# Running this from CI rather than by hand means the artifact that reaches
+# Pages is always the output of `vite build`, never the working tree.
+
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# Pages needs these. Without id-token the deploy step fails with a permissions
+# error that does not mention permissions.
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Never let two deploys race. Cancel the older one instead of interleaving.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - run: npm ci
+
+      # Typecheck and tests gate the deploy. A build that compiles but fails
+      # the money tests must never reach a homeowner.
+      - run: npm run typecheck
+      - run: npx vitest run
+
+      - name: Build for Pages
+        run: npx vite build --mode pages
+
+      # Belt and braces: Pages runs Jekyll by default, which skips files and
+      # folders beginning with an underscore. Vite does not emit any today, but
+      # this costs nothing and removes a whole class of silent 404.
+      - run: touch dist/.nojekyll
+
+      # Fail loudly here rather than shipping a blank page. If the built html
+      # still references a .tsx file, the build did not do its job.
+      - name: Refuse to deploy an unbuilt page
+        run: |
+          if grep -q "main.tsx" dist/index.html; then
+            echo "dist/index.html still references main.tsx — this is the source file, not a build."
+            exit 1
+          fi
+          if ! grep -q "/HeatFit/assets/" dist/index.html; then
+            echo "Asset paths are missing the /HeatFit/ base. Check REPO_NAME in vite.config.ts."
+            exit 1
+          fi
+          echo "Built index.html looks right:"
+          cat dist/index.html
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

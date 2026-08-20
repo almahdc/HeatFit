@@ -9,7 +9,7 @@
     "test": "tsc --noEmit && vitest run",
     "watch": "vitest",
     "typecheck": "tsc --noEmit",
-    "build:pages": "tsc --noEmit && cross-env GH_PAGES=true vite build",
+    "build:pages": "tsc --noEmit && vite build --mode pages",
     "deploy": "npm run build:pages && gh-pages -d dist",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,json,css,md}\""
   },
@@ -17,7 +17,6 @@
     "@types/react": "^18.3.31",
     "@types/react-dom": "^18.3.7",
     "@vitejs/plugin-react": "^4.7.0",
-    "cross-env": "^10.1.0",
     "gh-pages": "^6.3.0",
     "prettier": "^3.9.6",
     "typescript": "^5.6.3",
