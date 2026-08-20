@@ -349,7 +349,6 @@ footer {
   font-weight: 650;
   margin: 0 0 2rem;
   padding-bottom: 1rem;
-  border-bottom: 4px solid var(--line);
 }
 
 .step {
