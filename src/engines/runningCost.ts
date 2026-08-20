@@ -221,3 +221,19 @@ export function runningCosts(facts: HouseFacts): RunningCosts {
     ),
   };
 }
+
+/**
+ * Domestic hot water demand, in kWh/year, when it is NOT already inside the
+ * coal tonnage (Q6 = separate heater). Uses a simple ΔT model: heating mains
+ * water (assumed 10°C) to a usable 45°C.
+ */
+export function dhwDemandKwh(people: number): Range {
+  if (people <= 0) throw new Error("dhwDemandKwh: people must be positive");
+
+  const litresPerYear = exact(people * 365).mid; // people is exact, not a Range
+  const litres = fromSpread(litresPerYear, 0); // placeholder shape, see note below
+  // litres/day x 365 x specific heat x deltaT, converted to kWh
+  const deltaT = 35; // 10C mains to 45C usable, Polish convention
+  const kwhPerLitre = (1 * 4.186 * deltaT) / 3600; // ~0.0407 kWh/litre
+  return scale(band(C.DHW_LITRES_PER_PERSON_PER_DAY), people * 365 * kwhPerLitre);
+}

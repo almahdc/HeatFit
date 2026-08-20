@@ -101,6 +101,7 @@ h1 {
 .field-label {
   font-weight: 650;
   font-size: var(--step-0);
+  margin: 12px 0;
 }
 
 .field-hint {
@@ -132,6 +133,10 @@ select:focus-visible {
   padding-left: 1rem;
   border-left: 6px solid var(--ink);
   max-width: 60ch;
+}
+
+.field-description {
+  margin: 0 0 4px 0;
 }
 
 /* --- the four options ---------------------------------------------------- */

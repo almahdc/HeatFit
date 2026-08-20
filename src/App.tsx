@@ -5,6 +5,7 @@ import { Applicant, subsidiesFor } from "./engines/subsidy";
 import { ROUTES, financingPlan, headlineMonthly } from "./engines/financing";
 import { ScenarioSummary, verdict } from "./engines/verdict";
 import * as C from "./data/constants.pl";
+import { lookupPostcode, maskPostcodeInput } from "./data/postcodes.pl";
 
 const zl = (n: number) => Math.round(n).toLocaleString("pl-PL");
 const band = (r: Range) => `${zl(r.low)} – ${zl(r.high)}`;
@@ -31,6 +32,10 @@ export default function App() {
   const [tariff, setTariff] = useState<Tariff>("G11");
   const [routeId, setRouteId] = useState("pozyczkaZielona");
   const [termYears, setTermYears] = useState(8);
+  const [postcode, setPostcode] = useState("");
+  const postcodeResult = useMemo(() => lookupPostcode(postcode), [postcode]);
+  const [dhwSource, setDhwSource] = useState<"boiler" | "separate">("boiler");
+  const [householdSize, setHouseholdSize] = useState(3);
 
   const model = useMemo(() => {
     const rc = runningCosts({
@@ -109,14 +114,48 @@ export default function App() {
     <main>
       <header className="masthead">
         <p className="eyebrow">Silesia · coal boiler replacement</p>
-        <h1>What will it actually cost you?</h1>
+        <h1>What's your coal boiler really costing you, and what would change it?</h1>
         <p className="lede">
-          Four options, priced from the coal you burned last winter. Including the ones
-          where you should not switch yet.
+          Real monthly numbers for coal, pellet, or heat pump, priced from what you burned last winter. Loan and grant included. Solar lowers your bill, but not always your monthly payment. We'll show you which one makes most sense.
         </p>
       </header>
 
-      <section className="controls" aria-label="Your house">
+      <section className="" aria-label="Your house">
+        <Field label="Where is the house?" hint="postcode">
+          <p className="field-description">
+            Postcode is enough. It tells us your winter temperatures, your electricity distributor, and which deadline applies to you.
+          </p>
+          <input
+              type="text"
+              inputMode="numeric"
+              placeholder="40-001"
+              value={postcode}
+              onChange={(e) => setPostcode(maskPostcodeInput(e.target.value))}
+              aria-invalid={postcode.length === 6 && !postcodeResult.valid}
+          />
+        </Field>
+
+
+        {postcode.length === 6 && !postcodeResult.inSilesia && (
+            <p className="warn">
+              We only cover Silesia today. Your numbers here won't be accurate for
+              {" "}{postcode}.
+            </p>
+        )}
+
+            <Field label="How many people live in the house?" hint="">
+              <input
+                  type="number"
+                  min={1}
+                  max={10}
+                  step={1}
+                  value={householdSize}
+                  onChange={(e) =>
+                      setHouseholdSize(Math.max(1, Math.min(10, +e.target.value || 3)))
+                  }
+              />
+            </Field>
+
         <Field label="Coal burned last winter" hint="tonnes">
           <input
             type="number"

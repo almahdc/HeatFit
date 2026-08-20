@@ -30,6 +30,24 @@ export interface SourcedBand {
   note?: string;
 }
 
+export const DHW_LITRES_PER_PERSON_PER_DAY: SourcedBand = {
+  low: 40,
+  mid: 50,
+  high: 60,
+  unit: "l/person/day",
+  source: "Polish design convention for domestic hot water sizing",
+  readOn: "2026-08-19",
+  certainty: "medium",
+};
+
+export const DEFAULT_HOUSEHOLD_SIZE: Sourced<number> = {
+  value: 3,
+  source: "Polish average household size, used only when the person skips Q6a",
+  readOn: "2026-08-19",
+  certainty: "low",
+  note: "Widen the DHW band when this default is used rather than an answered value.",
+};
+
 // --- fuels ------------------------------------------------------------------
 
 export const COAL_PRICE_PER_TONNE: SourcedBand = {
@@ -257,6 +275,8 @@ export const MJ_PER_KWH = 3.6;
 
 /** Every constant above, for the test that asserts each one carries a source. */
 export const ALL_CONSTANTS: Record<string, Sourced<unknown> | SourcedBand> = {
+  DHW_LITRES_PER_PERSON_PER_DAY,
+  DEFAULT_HOUSEHOLD_SIZE,
   COAL_PRICE_PER_TONNE,
   COAL_CALORIFIC_VALUE,
   PELLET_PRICE_PER_TONNE,
