@@ -7,13 +7,9 @@
  */
 
 import { describe, expect, it } from "vitest";
-import { range, exact } from "./range";
-import { ROUTES, financingPlan } from "./financing";
-import {
-  subsidiesFor,
-  Applicant,
-  DEFAULT_PROGRAMMES,
-} from "../../../../Downloads/files 16/subsidy";
+import { range, exact } from "../engines/range";
+import { ROUTES, financingPlan } from "../engines/financing";
+import { subsidiesFor, Applicant, DEFAULT_PROGRAMMES } from "../engines/subsidy";
 
 const READY: Applicant = {
   incomeLevel: "basic",
@@ -42,7 +38,8 @@ describe("financing: the grant is counted exactly once", () => {
         termMonths: ROUTES[id]!.maxTermMonths === 0 ? 0 : 96,
         grantArrivesAfterMonths: 12,
       });
-      const total = plan.grantAppliedToCapital.mid + plan.grantReimbursed.mid;
+      const total =
+        plan.grantAppliedToCapital.mid + plan.grantReimbursed.mid;
       expect(total).toBeCloseTo(grant.mid, 6);
     }
   });

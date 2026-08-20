@@ -270,12 +270,7 @@ export function financingPlan(input: FinancingInput): FinancingPlan {
         grant: input.upfrontGrant.mid,
       },
       {
-        bal: balanceAfter(
-          borrowed.high,
-          route.annualRate,
-          termMonths,
-          monthsIn,
-        ),
+        bal: balanceAfter(borrowed.high, route.annualRate, termMonths, monthsIn),
         grant: input.upfrontGrant.low,
       },
     ];
@@ -360,5 +355,192 @@ export function headlineMonthly(
   return {
     duringLoan: add(plan.monthlyAfterGrant, runningMonthly),
     afterLoan: runningMonthly,
+  };
+}
+
+// --- T4: when am I free of this? --------------------------------------------
+
+/**
+ * The question behind "from which year am I loan free".
+ *
+ * A monthly figure is abstract. A year is not. People make this decision
+ * against their own retirement date, their children leaving, the age their
+ * boiler will be. So the schedule is returned in calendar years, not in
+ * months-from-now.
+ *
+ * Partial first and last years are handled honestly: if the loan starts in
+ * August, that year carries five payments, not twelve. Rounding those up is how
+ * a calculator quietly loses a year of cost.
+ */
+
+export interface ScheduleYear {
+  year: number;
+  /** Repayments falling in this calendar year. */
+  repayment: number;
+  /** Fuel and electricity for this year. */
+  running: number;
+  total: number;
+  /** True for the last year in which any repayment falls. */
+  isFinalLoanYear: boolean;
+  /** True for the year the payment steps down on the bank route. */
+  isStepDownYear: boolean;
+}
+
+export interface PayoffSchedule {
+  years: ScheduleYear[];
+  /** First calendar year with no repayment at all. The answer to the question. */
+  loanFreeYear: number | null;
+  /** Monthly cost from that year onward, running cost only. */
+  monthlyOnceFree: number;
+  /** Year the bank-route payment steps down, if it does. */
+  stepDownYear: number | null;
+}
+
+export function payoffSchedule(
+  plan: FinancingPlan,
+  runningMonthly: Range,
+  opts: {
+    termMonths: number;
+    startYear?: number;
+    /** 1-12. Defaults to the month the schedule is generated. */
+    startMonth?: number;
+    grantArrivesAfterMonths?: number;
+    /** Years to show after the loan ends. */
+    tailYears?: number;
+  },
+): PayoffSchedule {
+  const now = new Date();
+  const startYear = opts.startYear ?? now.getFullYear();
+  const startMonth = opts.startMonth ?? now.getMonth() + 1;
+  const term = Math.max(0, Math.round(opts.termMonths));
+  const tail = opts.tailYears ?? 3;
+
+  const stepAt = plan.route.grantPaysDownCapital
+    ? Math.min(opts.grantArrivesAfterMonths ?? 12, term)
+    : term;
+
+  const paymentAt = (monthIndex: number): number => {
+    if (monthIndex >= term) return 0;
+    return monthIndex < stepAt
+      ? plan.monthlyBeforeGrant.mid
+      : plan.monthlyAfterGrant.mid;
+  };
+
+  const lastLoanMonth = term - 1;
+  const yearOf = (monthIndex: number) =>
+    startYear + Math.floor((startMonth - 1 + monthIndex) / 12);
+
+  const finalLoanYear = term > 0 ? yearOf(lastLoanMonth) : startYear - 1;
+  const stepDownYear =
+    plan.route.grantPaysDownCapital && stepAt < term ? yearOf(stepAt) : null;
+
+  const lastYear = finalLoanYear + tail;
+  const years: ScheduleYear[] = [];
+
+  for (let y = startYear; y <= lastYear; y++) {
+    let repayment = 0;
+    let months = 0;
+    for (let m = 0; m < term + tail * 12 + 12; m++) {
+      if (yearOf(m) !== y) continue;
+      months++;
+      repayment += paymentAt(m);
+    }
+    // Months in this calendar year that fall inside the horizon at all.
+    const monthsInYear = Math.min(months, 12);
+    const running = runningMonthly.mid * monthsInYear;
+
+    years.push({
+      year: y,
+      repayment,
+      running,
+      total: repayment + running,
+      isFinalLoanYear: y === finalLoanYear && term > 0,
+      isStepDownYear: y === stepDownYear,
+    });
+  }
+
+  const firstFree = years.find((y) => y.repayment === 0);
+
+  return {
+    years,
+    loanFreeYear: term === 0 ? startYear : (firstFree?.year ?? null),
+    monthlyOnceFree: runningMonthly.mid,
+    stepDownYear,
+  };
+}
+
+// --- T5: what income would a bank want to see? ------------------------------
+
+/**
+ * We never ask for income. We tell them what a lender will look for.
+ *
+ * Two things banks do that a naive affordability sum misses:
+ *
+ *   THE STRESS TEST. The rate is not the rate they check you against. A margin
+ *     is added first, so a loan that is affordable at 8.43% is assessed at
+ *     roughly 11%. Quoting the unstressed instalment sets people up to be
+ *     refused.
+ *
+ *   DEBT SERVICE RATIO. Total repayments are capped as a share of net income,
+ *     and the household still has to eat. Both numbers below are assumptions
+ *     and both need checking against a Polish lender before this goes near a
+ *     real applicant.
+ *
+ * This is a rough guide, not credit advice, and the UI must say so.
+ */
+
+export const AFFORDABILITY = {
+  /** Points added to the rate before a lender tests you. */          // VERIFY
+  stressRateAddPct: 2.5,
+  /** Repayments as a share of net income. */                          // VERIFY
+  maxDebtServiceRatio: 0.45,
+  /** Assumed household living costs, monthly. */                      // VERIFY
+  assumedLivingCostsPln: 2500,
+};
+
+export interface AffordabilityGuide {
+  /** Instalment at the stressed rate. What the lender actually tests. */
+  stressedInstalment: number;
+  /** Net monthly household income the sum implies. */
+  impliedNetIncome: number;
+  /** Loan the stated running-cost saving alone could service over the term. */
+  loanServiceableBySaving: number;
+}
+
+export function impliedIncome(
+  plan: FinancingPlan,
+  termMonths: number,
+  monthlySavingVsToday = 0,
+): AffordabilityGuide {
+  const principal = plan.amountBorrowed.mid;
+  if (principal <= 0 || termMonths <= 0) {
+    return {
+      stressedInstalment: 0,
+      impliedNetIncome: 0,
+      loanServiceableBySaving: 0,
+    };
+  }
+
+  const stressedRate =
+    plan.route.annualRate + AFFORDABILITY.stressRateAddPct / 100;
+  const stressed = monthlyPayment(principal, stressedRate, termMonths);
+
+  const impliedNetIncome =
+    stressed / AFFORDABILITY.maxDebtServiceRatio +
+    AFFORDABILITY.assumedLivingCostsPln;
+
+  // Inverse annuity: what loan does the saving alone pay for?
+  const r = plan.route.annualRate / 12;
+  const serviceable =
+    monthlySavingVsToday <= 0
+      ? 0
+      : r === 0
+        ? monthlySavingVsToday * termMonths
+        : (monthlySavingVsToday * (1 - Math.pow(1 + r, -termMonths))) / r;
+
+  return {
+    stressedInstalment: stressed,
+    impliedNetIncome,
+    loanServiceableBySaving: serviceable,
   };
 }

@@ -1,14 +1,25 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { StepShell, ChoiceGroup } from "./wizard/StepShell";
-import { Range, exact, range } from "./engines/range";
+import { Range, exact, range, scale } from "./engines/range";
 import { runningCosts, Tariff } from "./engines/runningCost";
-import { Applicant, SubsidyOutcome, subsidiesFor } from "./engines/subsidy";
 import {
+  Applicant,
+  IncomeLevel,
+  SubsidyOutcome,
+  cleanAirShareOverride,
+  subsidiesFor,
+} from "./engines/subsidy";
+import {
+  AffordabilityGuide,
   FinancingPlan,
+  PayoffSchedule,
   ROUTES,
   financingPlan,
   headlineMonthly,
+  impliedIncome,
+  payoffSchedule,
 } from "./engines/financing";
+import { Driver, sensitivity, sensitivityHeadline } from "./engines/sensitivity";
 import { ScenarioSummary, verdict } from "./engines/verdict";
 import { BuildingType, Ownership, screenHousehold } from "./engines/screening";
 import {
@@ -21,26 +32,53 @@ import * as C from "./data/constants.pl";
 const zl = (n: number) => Math.round(n).toLocaleString("pl-PL");
 const band = (r: Range) => `${zl(r.low)} \u2013 ${zl(r.high)}`;
 
-// The demo assumes every gate is already cleared, which is optimistic and
-// deliberately so — it isolates the money question from the paperwork question.
+/**
+ * Re-price a running cost for a swung fuel price.
+ *
+ * Running cost is very close to linear in the fuel price — the standing charge
+ * is the only part that is not — so scaling is accurate enough for a
+ * sensitivity ranking and avoids threading overrides through every engine.
+ * If a driver ever needs to be exact rather than ranked, compute it properly.
+ */
+const scalePrice = (r: Range, override: number | undefined, baseline: number) =>
+  override === undefined || baseline === 0 ? r : scale(r, override / baseline);
+
+// T2 — the applicant is built from what the household answered, never assumed.
 //
-// taxpayerCount and marginalTaxRate are what the thermal-modernisation relief
-// is actually worth. The relief reduces taxable income, so a household in the
-// 12% band gets 12 grosz back per złoty deducted, not a złoty. One owner in the
-// lowest band is the conservative assumption; both fields should become wizard
-// questions before this decides anything a homeowner pays for.
-const READY: Applicant = {
-  incomeLevel: "basic",
-  gatesSatisfied: [
-    "ownedThreeYears",
-    "deviceOnZumList",
-    "energyAuditDone",
-    "replacingKopciuch",
-    "incomeEvidenced",
-  ],
-  taxpayerCount: 1,
-  marginalTaxRate: 0.12,
+// Nothing here needs a document. The income question is three buttons and no
+// figures, and it exists only because Clean Air pays a larger share to lower
+// earners — it is the single most sensitive input in the model. Skipping a
+// question means the least generous assumption, and the results say so.
+
+type TaxBand = "none" | "pit12" | "pit32" | "flat19";
+
+const TAX_RATE: Record<TaxBand, number> = {
+  none: 0,
+  pit12: 0.12,
+  pit32: 0.32,
+  flat19: 0.19,
 };
+
+function buildApplicant(a: {
+  incomeLevel: IncomeLevel;
+  ownedThreeYears: boolean;
+  scrappingSolidFuel: boolean;
+  taxBand: TaxBand;
+  taxpayerCount: 1 | 2;
+}): Applicant {
+  const gates: Applicant["gatesSatisfied"] = ["deviceOnZumList"];
+  if (a.ownedThreeYears) gates.push("ownedThreeYears");
+  if (a.scrappingSolidFuel) gates.push("replacingKopciuch");
+  // The audit gate is asserted here pending T9. If it turns out not to be
+  // required for the basic path, this line is the one to delete.
+  gates.push("energyAuditDone");
+  return {
+    incomeLevel: a.incomeLevel,
+    gatesSatisfied: gates,
+    taxpayerCount: a.taxpayerCount,
+    marginalTaxRate: TAX_RATE[a.taxBand],
+  };
+}
 
 function toBand(b: C.SourcedBand): Range {
   return range(b.low, b.mid, b.high);
@@ -62,6 +100,9 @@ const STEP_IDS = [
   "buildingType",
   "ownership",
   "tariff",
+  "incomeBand",
+  "ownedYears",
+  "taxBand",
   "financing",
   "results",
 ] as const;
@@ -87,6 +128,11 @@ export default function App() {
 
   // --- money ----------------------------------------------------------------
   const [tariff, setTariff] = useState<Tariff>("G11");
+  const [incomeLevel, setIncomeLevel] = useState<IncomeLevel>("basic");
+  const [ownedThreeYears, setOwnedThreeYears] = useState(true);
+  const [scrappingSolidFuel, setScrappingSolidFuel] = useState(true);
+  const [taxBand, setTaxBand] = useState<TaxBand>("pit12");
+  const [taxpayerCount, setTaxpayerCount] = useState<1 | 2>(1);
   const [routeId, setRouteId] = useState("pozyczkaZielona");
   const [termYears, setTermYears] = useState(8);
 
@@ -134,6 +180,18 @@ export default function App() {
   const showStep = (id: StepId) => idx(id) <= stepIndex;
   const isActive = (id: StepId) => idx(id) === stepIndex;
 
+  const applicant = useMemo(
+    () =>
+      buildApplicant({
+        incomeLevel,
+        ownedThreeYears,
+        scrappingSolidFuel,
+        taxBand,
+        taxpayerCount,
+      }),
+    [incomeLevel, ownedThreeYears, scrappingSolidFuel, taxBand, taxpayerCount],
+  );
+
   // --- model -----------------------------------------------------------------
   const model = useMemo(() => {
     const rc = runningCosts({
@@ -180,7 +238,7 @@ export default function App() {
           } as ScenarioSummary,
         };
       }
-      const sub = subsidiesFor(device, capital.mid, READY);
+      const sub = subsidiesFor(device, capital.mid, applicant);
       const plan = financingPlan({
         capitalCost: capital,
         upfrontGrant: sub.upfrontGrant,
@@ -242,8 +300,117 @@ export default function App() {
       monthsUntilDeadline: 16,
     });
 
-    return { rc, rows, verdict: v, route };
+    // --- T3: which numbers actually decide this ----------------------------
+    // The model is re-run against the winning scenario with one constant swung
+    // at a time. Rebuilding running costs from scratch inside the closure is
+    // what keeps the ranking honest: nothing is assumed to stay put.
+    const winner =
+      rows.find((r) => r.id === v.kind.replace("PlusPv", "PlusPv")) ??
+      rows.filter((r) => r.id !== "coal")[0]!;
+
+    const monthlyFor = (o: {
+      pelletPricePerTonne?: number;
+      electricityG11PerKwh?: number;
+      coalPricePerTonne?: number;
+      heatPumpInstalledCost?: number;
+      pelletBoilerInstalledCost?: number;
+      heatPumpScop?: number;
+      loanRatePct?: number;
+      cleanAirSharePct?: number;
+    }): number => {
+      const rcAlt = runningCosts({
+        coalTonnesBought: coalBought,
+        coalTonnesLeftOver: coalLeftOver,
+        coalType,
+        boilerClass,
+        feedType,
+        burntWoodToo,
+        coalPricePaidPerTonne:
+          o.coalPricePerTonne ?? (pricePaid ? Number(pricePaid) : undefined),
+        heatedAreaM2: area,
+        heatPumpScop: (() => {
+          const c = o.heatPumpScop ?? scop;
+          return range(c - 0.4, c, c + 0.4);
+        })(),
+        tariff,
+        pvOffsetKwhPerYear: range(2600, 3200, 3800),
+      });
+
+      const isPellet = winner.id === "pellet";
+      const runningAlt = isPellet
+        ? scalePrice(rcAlt.pellet.monthly, o.pelletPricePerTonne, C.PELLET_PRICE_PER_TONNE.mid)
+        : scalePrice(
+            winner.id === "heatPumpPlusPv"
+              ? rcAlt.heatPumpPlusPv.monthly
+              : rcAlt.heatPump.monthly,
+            o.electricityG11PerKwh,
+            C.ELECTRICITY_G11_PER_KWH.mid,
+          );
+
+      const capAlt = isPellet
+        ? o.pelletBoilerInstalledCost
+          ? exact(o.pelletBoilerInstalledCost)
+          : toBand(C.PELLET_BOILER_INSTALLED_COST)
+        : o.heatPumpInstalledCost
+          ? exact(o.heatPumpInstalledCost)
+          : toBand(C.HEAT_PUMP_INSTALLED_COST);
+
+      const subAlt = subsidiesFor(
+        isPellet ? "pelletBoiler" : "heatPump",
+        capAlt.mid,
+        applicant,
+        o.cleanAirSharePct === undefined
+          ? undefined
+          : cleanAirShareOverride(o.cleanAirSharePct / 100),
+      );
+
+      const routeAlt =
+        o.loanRatePct === undefined
+          ? route
+          : { ...route, annualRate: o.loanRatePct / 100 };
+
+      const planAlt = financingPlan({
+        capitalCost: capAlt,
+        upfrontGrant: subAlt.upfrontGrant,
+        taxRelief: subAlt.taxRelief,
+        route: routeAlt,
+        termMonths: months,
+      });
+
+      return headlineMonthly(planAlt, runningAlt).duringLoan.mid;
+    };
+
+    const drivers = sensitivity(monthlyFor, {
+      loanRatePct: route.annualRate * 100,
+    });
+
+    // --- T4 and T5 ----------------------------------------------------------
+    const schedule = winner.plan
+      ? payoffSchedule(winner.plan, winner.running, {
+          termMonths: months,
+          tailYears: 3,
+        })
+      : null;
+
+    const savingVsCoal = rc.coal.monthly.mid - winner.running.mid;
+    const affordability = winner.plan
+      ? impliedIncome(winner.plan, months, savingVsCoal)
+      : null;
+
+    return {
+      rc,
+      rows,
+      verdict: v,
+      route,
+      termYears,
+      drivers,
+      schedule,
+      affordability,
+      winnerLabel: winner.label,
+    };
   }, [
+    applicant,
+    termYears,
     coalBought,
     coalLeftOver,
     coalType,
@@ -556,6 +723,118 @@ export default function App() {
         </StepShell>
       )}
 
+      {showStep("incomeBand") && (
+        <StepShell
+          {...shared("incomeBand")}
+          title="Roughly, how much does your household bring in?"
+          helper="No figures, no proof, and we never store it. We ask because the Clean Air grant pays a bigger share to households that earn less, and that one fact changes the answer more than anything else on this page."
+        >
+          <ChoiceGroup
+            value={incomeLevel}
+            onChange={setIncomeLevel}
+            options={[
+              {
+                value: "basic",
+                label: "About average, or above",
+                sublabel: "The standard grant tier",
+              },
+              {
+                value: "raised",
+                label: "Below average",
+                sublabel: "A larger share is covered",
+              },
+              {
+                value: "highest",
+                label: "Well below average, or on benefits",
+                sublabel: "The largest share is covered",
+              },
+            ]}
+          />
+          {isActive("incomeBand") && (
+            <p className="inline-warn">
+              If you would rather not say, leave it on the first option. That is
+              the least generous assumption, so the real number can only be
+              better than what we show you.
+            </p>
+          )}
+        </StepShell>
+      )}
+
+      {showStep("ownedYears") && (
+        <StepShell
+          {...shared("ownedYears")}
+          title="Two things the grant office will check"
+          helper="Both are yes or no. Get either wrong and a grant can be clawed back later, with interest, so it is worth being honest with yourself here."
+        >
+          <p className="stat-label">Have you owned the house three years or more?</p>
+          <ChoiceGroup
+            value={ownedThreeYears ? "yes" : "no"}
+            onChange={(v) => setOwnedThreeYears(v === "yes")}
+            options={[
+              { value: "yes", label: "Yes, three years or more" },
+              { value: "no", label: "No, less than that" },
+            ]}
+          />
+          <div className="sub-question">
+            <p className="stat-label">
+              Will the old solid-fuel boiler be scrapped?
+            </p>
+            <ChoiceGroup
+              value={scrappingSolidFuel ? "yes" : "no"}
+              onChange={(v) => setScrappingSolidFuel(v === "yes")}
+              options={[
+                {
+                  value: "yes",
+                  label: "Yes, it goes",
+                  sublabel: "Required for the main grant",
+                },
+                {
+                  value: "no",
+                  label: "No, I want to keep it",
+                  sublabel: "Keeping it as a backup forfeits the grant",
+                },
+              ]}
+            />
+          </div>
+          {isActive("ownedYears") && !scrappingSolidFuel && (
+            <p className="inline-warn">
+              Keeping the old boiler as a backup is the single most common way
+              people lose this grant. It has to be removed and scrapped.
+            </p>
+          )}
+        </StepShell>
+      )}
+
+      {showStep("taxBand") && (
+        <StepShell
+          {...shared("taxBand")}
+          title="Do you pay income tax?"
+          helper="The thermal-modernisation relief is a deduction, not a payment. You subtract what you spent from your taxable income, and you get back your tax rate on it, over up to six years. So it is worth nothing if you pay no tax, and nearly three times more at the higher rate."
+        >
+          <ChoiceGroup
+            value={taxBand}
+            onChange={setTaxBand}
+            options={[
+              { value: "pit12", label: "Yes, the lower rate", sublabel: "12%" },
+              { value: "pit32", label: "Yes, the higher rate", sublabel: "32%" },
+              { value: "flat19", label: "Flat rate, self-employed", sublabel: "19%" },
+              { value: "none", label: "No income tax", sublabel: "The relief is worth nothing" },
+            ]}
+          />
+          <div className="sub-question">
+            <p className="stat-label">How many owners will claim it?</p>
+            <ChoiceGroup
+              value={taxpayerCount === 2 ? "two" : "one"}
+              onChange={(v) => setTaxpayerCount(v === "two" ? 2 : 1)}
+              options={[
+                { value: "one", label: "One", sublabel: "One allowance" },
+                { value: "two", label: "Two", sublabel: "Two allowances, twice the room" },
+              ]}
+            />
+          </div>
+        </StepShell>
+      )}
+
       {showStep("financing") && (
         <StepShell
           {...shared("financing")}
@@ -647,8 +926,7 @@ function OptionBreakdown({
 }) {
   const pct = (n: number) => `${(n * 100).toFixed(2).replace(".", ",")}%`;
   const stepsDown =
-    Math.round(plan.monthlyAfterGrant.mid) <
-    Math.round(plan.monthlyBeforeGrant.mid);
+    Math.round(plan.monthlyAfterGrant.mid) < Math.round(plan.monthlyBeforeGrant.mid);
 
   const grants = sub.detail.filter((d) => !d.programme.isTaxRelief);
   const reliefs = sub.detail.filter((d) => d.programme.isTaxRelief);
@@ -681,7 +959,11 @@ function OptionBreakdown({
             className={d.applied ? "applied" : "refused"}
           >
             <strong>{d.programme.label}</strong>
-            {d.applied ? <> pays {zl(d.amount.mid)} zł</> : <> — {d.reason}</>}
+            {d.applied ? (
+              <> pays {zl(d.amount.mid)} zł</>
+            ) : (
+              <> — {d.reason}</>
+            )}
           </li>
         ))}
       </ul>
@@ -782,10 +1064,24 @@ function ResultsScreen({
     rows: ResultRow[];
     verdict: ReturnType<typeof verdict>;
     route: (typeof ROUTES)[keyof typeof ROUTES];
+    termYears: number;
+    drivers: Driver[];
+    schedule: PayoffSchedule | null;
+    affordability: AffordabilityGuide | null;
+    winnerLabel: string;
   };
   onBack: () => void;
 }) {
-  const { rc, rows, verdict: v, route } = model;
+  const {
+    rc,
+    rows,
+    verdict: v,
+    route,
+    drivers,
+    schedule,
+    affordability,
+    winnerLabel,
+  } = model;
   const best = Math.min(...rows.map((r) => r.summary.afterLoan.mid));
 
   const confidenceLine =
@@ -861,7 +1157,8 @@ function ResultsScreen({
                       : "What you would pay"}
                   </p>
                   <p className="figure">
-                    {zl(r.running.mid)} <span className="unit">zł a month</span>
+                    {zl(r.running.mid)}{" "}
+                    <span className="unit">zł a month</span>
                   </p>
                   <p className="range">could be {band(r.running)} zł</p>
                   <p className="note-inline">
@@ -896,6 +1193,141 @@ function ResultsScreen({
           ))}
         </ul>
       </section>
+
+      {drivers.length > 0 && (
+        <section className="drivers">
+          <p className="eyebrow">What actually decides this</p>
+          <h2 className="panel-title">{sensitivityHeadline(drivers)}</h2>
+          <p className="because">
+            Each bar is how far the monthly figure for {winnerLabel} moves
+            between the cheap end and the dear end of what that number could be.
+            Nothing here is a forecast. It is the width of what nobody knows.
+          </p>
+          <ol className="driver-list">
+            {drivers.map((d) => {
+              const widest = drivers[0]!.swingPlnPerMonth || 1;
+              const pctWidth = Math.max(
+                4,
+                Math.round((d.swingPlnPerMonth / widest) * 100),
+              );
+              return (
+                <li key={d.label}>
+                  <div className="driver-head">
+                    <span className="driver-label">{d.label}</span>
+                    <span className="driver-amount">
+                      {zl(d.swingPlnPerMonth)} zł a month
+                    </span>
+                  </div>
+                  <div className="driver-track">
+                    <div
+                      className={
+                        d.withinTheirControl
+                          ? "driver-bar yours"
+                          : "driver-bar market"
+                      }
+                      style={{ width: `${pctWidth}%` }}
+                    />
+                  </div>
+                  <p className="driver-foot">
+                    {d.lowValue} to {d.highValue} ·{" "}
+                    {d.withinTheirControl
+                      ? "you have some say in this"
+                      : "not in your hands"}
+                  </p>
+                </li>
+              );
+            })}
+          </ol>
+          <p className="note-inline">
+            Bars in one shade are yours to move. The others are the market's.
+            If the top bar is not yours, treat any single confident number from
+            anyone as a sales figure.
+          </p>
+        </section>
+      )}
+
+      {schedule && (
+        <section className="timeline">
+          <p className="eyebrow">When you are free of it</p>
+          <h2 className="panel-title">
+            {schedule.loanFreeYear
+              ? `Loan-free in ${schedule.loanFreeYear}. From then, about ${zl(schedule.monthlyOnceFree)} zł a month.`
+              : "This never clears within the horizon we model."}
+          </h2>
+          <table className="years">
+            <thead>
+              <tr>
+                <th scope="col">Year</th>
+                <th scope="col">Repayment</th>
+                <th scope="col">Heating</th>
+                <th scope="col">Total that year</th>
+              </tr>
+            </thead>
+            <tbody>
+              {schedule.years.map((y) => (
+                <tr
+                  key={y.year}
+                  className={
+                    y.repayment === 0
+                      ? "free"
+                      : y.isFinalLoanYear
+                        ? "final"
+                        : undefined
+                  }
+                >
+                  <th scope="row">
+                    {y.year}
+                    {y.isStepDownYear && (
+                      <span className="year-tag">grant lands</span>
+                    )}
+                    {y.isFinalLoanYear && (
+                      <span className="year-tag">last payment</span>
+                    )}
+                  </th>
+                  <td>{y.repayment > 0 ? `${zl(y.repayment)} zł` : "—"}</td>
+                  <td>{zl(y.running)} zł</td>
+                  <td>{zl(y.total)} zł</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="note-inline">
+            Heating cost is held at today's prices, so the later rows are the
+            shape of the commitment, not a prediction of the bills.
+          </p>
+        </section>
+      )}
+
+      {affordability && affordability.impliedNetIncome > 0 && (
+        <section className="affordability">
+          <p className="eyebrow">Before you go to a bank</p>
+          <h2 className="panel-title">
+            A lender will want to see about{" "}
+            {zl(affordability.impliedNetIncome)} zł a month coming in.
+          </h2>
+          <p className="because">
+            We never asked what you earn and we are not going to. But a bank
+            does not test you at the advertised rate — it adds a margin first,
+            so this loan is assessed as if the repayment were{" "}
+            {zl(affordability.stressedInstalment)} zł, not{" "}
+            {zl(rows.find((r) => r.plan)?.plan?.monthlyBeforeGrant.mid ?? 0)} zł.
+            Then it caps total repayments at roughly a bit under half of what
+            comes in, and assumes you still have to live.
+          </p>
+          {affordability.loanServiceableBySaving > 0 && (
+            <p className="because">
+              Put the other way round: what you would stop spending on coal
+              could service a loan of about{" "}
+              <strong>{zl(affordability.loanServiceableBySaving)} zł</strong> on
+              its own. Anything above that comes out of the rest of your budget.
+            </p>
+          )}
+          <p className="warn">
+            This is a rough guide so you know what to expect, not credit advice,
+            and no lender has seen it. Your own bank decides.
+          </p>
+        </section>
+      )}
 
       <section className="future">
         <p className="eyebrow">Coming</p>

@@ -162,8 +162,7 @@ export const DEFAULT_PROGRAMMES: Programme[] = [
     excludesForSameDevice: ["czystePowietrze"],
     requires: ["replacingKopciuch", "deviceOnZumList"],
     verified: false,
-    source:
-      "Polish market reporting 2026 — UNVERIFIED. Amounts are set per gmina.",
+    source: "Polish market reporting 2026 — UNVERIFIED. Amounts are set per gmina.",
     readOn: "2026-08-19",
   },
   {
@@ -182,8 +181,7 @@ export const DEFAULT_PROGRAMMES: Programme[] = [
     isTaxRelief: true,
     capIsPerTaxpayer: true,
     verified: false,
-    source:
-      "Polish tax code, art. 26h PIT — cash value depends on the taxpayer's band",
+    source: "Polish tax code, art. 26h PIT — cash value depends on the taxpayer's band",
     readOn: "2026-08-19",
   },
 ];
@@ -373,9 +371,7 @@ export function subsidiesFor(
       continue;
     }
 
-    const cap = p.capIsPerTaxpayer
-      ? capPerTaxpayer * taxpayers
-      : capPerTaxpayer;
+    const cap = p.capIsPerTaxpayer ? capPerTaxpayer * taxpayers : capPerTaxpayer;
     const base = Math.min(cap, ownSpend * share);
     const cash = base * rate;
 
@@ -430,4 +426,155 @@ export function subsidiesFor(
     hasUnverifiedAmounts,
     detail: results,
   };
+}
+
+// --- T1: whole-project view -------------------------------------------------
+
+/**
+ * A real job is a heat pump AND panels AND sometimes insulation.
+ *
+ * Calling subsidiesFor() once per device and adding the answers up lets the
+ * same cap be claimed several times over: three devices against a 68 040 zł
+ * Clean Air cap would report up to 204 120 zł from a programme that pays it
+ * once. So the cap is applied once, at project level, and then shared out.
+ *
+ * The share-out order is deliberate. Devices are served in descending award
+ * size, so a limited grant lands on the heat pump before it lands on the
+ * panels. That is how a household actually spends it, and it keeps the largest
+ * and hardest-to-finance item covered.
+ *
+ * Tax relief is resolved once at the end over the project's whole own spend,
+ * because the deduction cap is per taxpayer per year — not per device.
+ */
+
+export interface ProjectItem {
+  device: DeviceType;
+  cost: number;
+}
+
+export interface ProjectItemAward {
+  device: DeviceType;
+  cost: number;
+  /** Grant this device receives after the project cap has been shared out. */
+  grant: Range;
+  /** What the household pays towards this device. */
+  ownSpend: Range;
+  /** Per-programme reasoning, so the UI can still say why something was refused. */
+  detail: ProgrammeResult[];
+  /** Grant this device lost to the project cap. Zero when nothing bit. */
+  reducedByCap: number;
+}
+
+export interface ProjectSubsidyOutcome {
+  items: ProjectItemAward[];
+  totalCost: number;
+  upfrontGrant: Range;
+  taxRelief: Range;
+  ownSpend: Range;
+  deductionBase: Range;
+  hasUnverifiedAmounts: boolean;
+  /** Present only when a cap actually bit. Shown to the user verbatim. */
+  capNote?: string;
+}
+
+export function projectSubsidies(
+  items: ProjectItem[],
+  applicant: Applicant,
+  programmes: Programme[] = DEFAULT_PROGRAMMES,
+): ProjectSubsidyOutcome {
+  const totalCost = items.reduce((a, i) => a + i.cost, 0);
+
+  const perDevice = items.map((i) => ({
+    item: i,
+    outcome: subsidiesFor(i.device, i.cost, applicant, programmes),
+  }));
+
+  const capUsed = new Map<string, number>();
+  const awards: ProjectItemAward[] = [];
+
+  const ordered = [...perDevice].sort(
+    (a, b) => b.outcome.upfrontGrant.mid - a.outcome.upfrontGrant.mid,
+  );
+
+  let grantTotal = 0;
+
+  for (const { item, outcome } of ordered) {
+    let granted = 0;
+    let lost = 0;
+
+    for (const d of outcome.detail) {
+      if (!d.applied || d.programme.isTaxRelief) continue;
+      const cap = d.programme.maxByLevel[applicant.incomeLevel];
+      const used = capUsed.get(d.programme.id) ?? 0;
+      const headroom =
+        cap === undefined ? d.amount.mid : Math.max(0, cap - used);
+      const allowed = Math.min(d.amount.mid, headroom);
+      capUsed.set(d.programme.id, used + allowed);
+      granted += allowed;
+      lost += d.amount.mid - allowed;
+    }
+
+    grantTotal += granted;
+    awards.push({
+      device: item.device,
+      cost: item.cost,
+      grant: scale(range(0.95, 1, 1), granted),
+      ownSpend: scale(range(1, 1, 1.05), Math.max(0, item.cost - granted)),
+      detail: outcome.detail,
+      reducedByCap: lost,
+    });
+  }
+
+  const ownSpendTotal = Math.max(0, totalCost - grantTotal);
+
+  // Relief once, over the whole project.
+  const taxpayers = Math.max(1, Math.floor(applicant.taxpayerCount ?? 1));
+  const rate = applicant.marginalTaxRate ?? DEFAULT_MARGINAL_TAX_RATE;
+  const reliefProgramme = programmes.find(
+    (p) => p.isTaxRelief && items.some((i) => p.appliesTo.includes(i.device)),
+  );
+
+  let deductionBase = 0;
+  if (reliefProgramme) {
+    const capPer = reliefProgramme.maxByLevel[applicant.incomeLevel] ?? 0;
+    const cap = reliefProgramme.capIsPerTaxpayer ? capPer * taxpayers : capPer;
+    deductionBase = Math.min(cap, ownSpendTotal);
+  }
+  const reliefCash = deductionBase * rate;
+
+  const lostTotal = awards.reduce((a, x) => a + x.reducedByCap, 0);
+  const capNote =
+    lostTotal > 0
+      ? `The grant is capped across the whole project, not per item, so ${Math.round(
+          lostTotal,
+        ).toLocaleString("pl-PL")} zł of it cannot be claimed.`
+      : undefined;
+
+  return {
+    items: awards,
+    totalCost,
+    upfrontGrant: scale(range(0.95, 1, 1), grantTotal),
+    taxRelief: scale(range(0.9, 1, 1.1), reliefCash),
+    ownSpend: scale(range(1, 1, 1.05), ownSpendTotal),
+    deductionBase: exact(deductionBase),
+    hasUnverifiedAmounts: perDevice.some((p) => p.outcome.hasUnverifiedAmounts),
+    capNote,
+  };
+}
+
+/**
+ * A copy of the default programmes with Clean Air's cost share overridden.
+ * Used by the sensitivity engine to answer "what if you landed in a different
+ * income tier", which is the one grant variable a household cannot change but
+ * badly needs to see.
+ */
+export function cleanAirShareOverride(share: number): Programme[] {
+  return DEFAULT_PROGRAMMES.map((p) =>
+    p.id === "czystePowietrze"
+      ? {
+          ...p,
+          shareByLevel: { basic: share, raised: share, highest: share },
+        }
+      : p,
+  );
 }
