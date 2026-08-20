@@ -108,7 +108,9 @@ export function ChoiceGroup<T extends string>({
           onClick={() => onChange(opt.value)}
         >
           <span className="choice-label">{opt.label}</span>
-          {opt.sublabel && <span className="choice-sublabel">{opt.sublabel}</span>}
+          {opt.sublabel && (
+            <span className="choice-sublabel">{opt.sublabel}</span>
+          )}
         </button>
       ))}
     </div>

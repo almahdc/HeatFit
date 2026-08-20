@@ -89,11 +89,15 @@ describe("guards", () => {
 
 describe("comparison", () => {
   it("refuses to rank two scenarios whose bands substantially overlap", () => {
-    expect(tooCloseToCall(range(900, 1000, 1100), range(950, 1050, 1150))).toBe(true);
+    expect(tooCloseToCall(range(900, 1000, 1100), range(950, 1050, 1150))).toBe(
+      true,
+    );
   });
 
   it("does rank scenarios that are clearly apart", () => {
-    expect(tooCloseToCall(range(900, 1000, 1100), range(1600, 1700, 1800))).toBe(false);
+    expect(
+      tooCloseToCall(range(900, 1000, 1100), range(1600, 1700, 1800)),
+    ).toBe(false);
   });
 
   it("treats two identical exact values as equal, not as unrankable noise", () => {

@@ -88,7 +88,11 @@ function band(b: C.SourcedBand): Range {
   return range(b.low, b.mid, b.high);
 }
 
-function toRunningCost(annual: Range, fuelQuantity: Range, fuelUnit: string): RunningCost {
+function toRunningCost(
+  annual: Range,
+  fuelQuantity: Range,
+  fuelUnit: string,
+): RunningCost {
   return {
     annual,
     monthly: scale(annual, 1 / 12),
@@ -104,7 +108,9 @@ function toRunningCost(annual: Range, fuelQuantity: Range, fuelUnit: string): Ru
 export function coalActuallyBurned(bought: number, leftOver = 0): number {
   const burned = bought - leftOver;
   if (burned <= 0) {
-    throw new Error("coalActuallyBurned: leftover coal cannot equal or exceed what was bought");
+    throw new Error(
+      "coalActuallyBurned: leftover coal cannot equal or exceed what was bought",
+    );
   }
   return burned;
 }
@@ -132,11 +138,16 @@ export interface HeatDemandInputs {
  * we say so honestly instead of inventing cubic metres.
  */
 export function heatDemandFromCoal(input: HeatDemandInputs): Range {
-  const tonnes = coalActuallyBurned(input.coalTonnesBought, input.coalTonnesLeftOver ?? 0);
+  const tonnes = coalActuallyBurned(
+    input.coalTonnesBought,
+    input.coalTonnesLeftOver ?? 0,
+  );
 
   const kg = exact(tonnes * 1000);
   const calorific = band(C.COAL_CALORIFIC_VALUE[input.coalType]);
-  const efficiency = band(C.coalBoilerEfficiency(input.boilerClass, input.feedType));
+  const efficiency = band(
+    C.coalBoilerEfficiency(input.boilerClass, input.feedType),
+  );
 
   const energyIn = scale(multiply(kg, calorific), 1 / C.MJ_PER_KWH);
   const fromCoal = multiply(energyIn, efficiency);
@@ -150,7 +161,8 @@ export function heatDemandFromCoal(input: HeatDemandInputs): Range {
 
 /** Useful heat per square metre. Feeds the insulate-first verdict. */
 export function heatDemandPerM2(demand: Range, heatedAreaM2: number): Range {
-  if (heatedAreaM2 <= 0) throw new Error("heatDemandPerM2: area must be positive");
+  if (heatedAreaM2 <= 0)
+    throw new Error("heatDemandPerM2: area must be positive");
   return scale(demand, 1 / heatedAreaM2);
 }
 
@@ -164,7 +176,7 @@ export function heatDemandPerM2(demand: Range, heatedAreaM2: number): Range {
  */
 export function coalRunningCost(
   coalTonnesBurnedPerYear: number,
-  pricePaidPerTonne?: number
+  pricePaidPerTonne?: number,
 ): RunningCost {
   const tonnes = fromSpread(coalTonnesBurnedPerYear, 0.05); // recall, not a meter
   const price = pricePaidPerTonne
@@ -182,7 +194,10 @@ export function coalRunningCost(
  * result given what happened to pellet prices last winter.
  */
 export function pelletRunningCost(demand: Range): RunningCost {
-  const energyNeededMj = scale(divide(demand, band(C.PELLET_BOILER_EFFICIENCY)), C.MJ_PER_KWH);
+  const energyNeededMj = scale(
+    divide(demand, band(C.PELLET_BOILER_EFFICIENCY)),
+    C.MJ_PER_KWH,
+  );
   const kg = divide(energyNeededMj, band(C.PELLET_CALORIFIC_VALUE));
   const tonnes = scale(kg, 1 / 1000);
   const annual = multiply(tonnes, band(C.PELLET_PRICE_PER_TONNE));
@@ -195,7 +210,8 @@ export function pelletRunningCost(demand: Range): RunningCost {
  * temperature, a low SCOP, and a heat pump that loses on cost.
  */
 export function heatPumpElectricityKwh(demand: Range, scop: Range): Range {
-  if (scop.low <= 0) throw new Error("heatPumpElectricityKwh: SCOP must be positive");
+  if (scop.low <= 0)
+    throw new Error("heatPumpElectricityKwh: SCOP must be positive");
   return divide(demand, scop);
 }
 
@@ -207,11 +223,11 @@ export function electricityPricePerKwh(tariff: Tariff): Range {
   const peakShare = range(
     1 - offpeakShare.high,
     1 - offpeakShare.mid,
-    1 - offpeakShare.low
+    1 - offpeakShare.low,
   );
   return add(
     multiply(offpeakShare, band(C.ELECTRICITY_G12W_OFFPEAK_PER_KWH)),
-    multiply(peakShare, band(C.ELECTRICITY_G12W_PEAK_PER_KWH))
+    multiply(peakShare, band(C.ELECTRICITY_G12W_PEAK_PER_KWH)),
   );
 }
 
@@ -228,7 +244,7 @@ export function heatPumpRunningCost(
   demand: Range,
   scop: Range,
   tariff: Tariff,
-  pvOffsetKwhPerYear?: Range
+  pvOffsetKwhPerYear?: Range,
 ): RunningCost {
   const gross = heatPumpElectricityKwh(demand, scop);
 
@@ -266,7 +282,10 @@ export interface RunningCosts {
  */
 export function runningCosts(facts: HouseFacts): RunningCosts {
   const demand = heatDemandFromCoal(facts);
-  const burned = coalActuallyBurned(facts.coalTonnesBought, facts.coalTonnesLeftOver ?? 0);
+  const burned = coalActuallyBurned(
+    facts.coalTonnesBought,
+    facts.coalTonnesLeftOver ?? 0,
+  );
 
   return {
     demand,
@@ -278,7 +297,7 @@ export function runningCosts(facts: HouseFacts): RunningCosts {
       demand,
       facts.heatPumpScop,
       facts.tariff,
-      facts.pvOffsetKwhPerYear ?? exact(0)
+      facts.pvOffsetKwhPerYear ?? exact(0),
     ),
   };
 }

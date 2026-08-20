@@ -57,7 +57,10 @@ export function screenHousehold(h: HouseholdScreen): ScreeningResult {
 
   paths.push(eligible("gas"));
 
-  if (h.fuelAccess.includes("truckAccess") && h.fuelAccess.includes("dryStorage")) {
+  if (
+    h.fuelAccess.includes("truckAccess") &&
+    h.fuelAccess.includes("dryStorage")
+  ) {
     paths.push(eligible("pellet"));
   } else if (!h.fuelAccess.includes("truckAccess")) {
     paths.push(blocked("pellet", "A delivery truck cannot reach the house."));
@@ -67,14 +70,17 @@ export function screenHousehold(h: HouseholdScreen): ScreeningResult {
 
   if (h.outdoorSpace === "none") {
     paths.push(
-      blocked("heatPump", "There is no outdoor space for the unit — not a garden, not even a balcony.")
+      blocked(
+        "heatPump",
+        "There is no outdoor space for the unit — not a garden, not even a balcony.",
+      ),
     );
   } else if (h.buildingType === "flat" && h.outdoorSpace === "balconyOnly") {
     paths.push(
       blocked(
         "heatPump",
-        "A balcony may work for a small unit, but a flat needs sign-off from the building — worth checking before going further."
-      )
+        "A balcony may work for a small unit, but a flat needs sign-off from the building — worth checking before going further.",
+      ),
     );
   } else {
     paths.push(eligible("heatPump"));
@@ -84,7 +90,10 @@ export function screenHousehold(h: HouseholdScreen): ScreeningResult {
     paths.push(blocked("solar", "There is no roof access for panels."));
   } else if (h.roofAccess === "sharedRoof") {
     paths.push(
-      blocked("solar", "The roof is shared — this needs agreement from the other owners first.")
+      blocked(
+        "solar",
+        "The roof is shared — this needs agreement from the other owners first.",
+      ),
     );
   } else {
     paths.push(eligible("solar"));
@@ -94,8 +103,8 @@ export function screenHousehold(h: HouseholdScreen): ScreeningResult {
     paths.push(
       blocked(
         "insulation",
-        "In a flat, wall and roof insulation is usually a building-wide decision, not yours alone."
-      )
+        "In a flat, wall and roof insulation is usually a building-wide decision, not yours alone.",
+      ),
     );
   } else {
     paths.push(eligible("insulation"));

@@ -1,19 +1,16 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { StepShell, ChoiceGroup, MultiChoiceGroup } from "./wizard/StepShell";
+import { StepShell, ChoiceGroup } from "./wizard/StepShell";
 import { Range, exact, range } from "./engines/range";
 import { runningCosts, Tariff } from "./engines/runningCost";
 import { Applicant, subsidiesFor } from "./engines/subsidy";
 import { ROUTES, financingPlan, headlineMonthly } from "./engines/financing";
 import { ScenarioSummary, verdict } from "./engines/verdict";
+import { BuildingType, Ownership, screenHousehold } from "./engines/screening";
 import {
-  BuildingType,
-  FuelAccess,
-  Ownership,
-  OutdoorSpace,
-  RoofAccess,
-  screenHousehold,
-} from "./engines/screening";
-import { isValidPolishPostcode, lookupPostcode, maskPostcodeInput } from "./data/postcodes.pl";
+  isValidPolishPostcode,
+  lookupPostcode,
+  maskPostcodeInput,
+} from "./data/postcodes.pl";
 import * as C from "./data/constants.pl";
 
 const zl = (n: number) => Math.round(n).toLocaleString("pl-PL");
@@ -34,61 +31,67 @@ function toBand(b: C.SourcedBand): Range {
   return range(b.low, b.mid, b.high);
 }
 
-// The step order. Everything upstream of "results" scrolls: each answered
-// step stays on screen, smaller, and clicking it jumps back to edit it.
+// Coal first. It is the question that signals this tool is different from every
+// calculator that asks for floor area, and asking it first means the valuable
+// answer is given before any admin questions have a chance to lose people.
 const STEP_IDS = [
+  "coalBought",
+  "coalLeftOver",
+  "coalType",
+  "boiler",
+  "burntWood",
+  "pricePaid",
+  "area",
+  "radiators",
+  "postcode",
   "buildingType",
   "ownership",
-  "outdoorSpace",
-  "roofAccess",
-  "fuelAccess",
-  "postcode",
-  "coalTonnes",
-  "dhwSource",
-  "householdSize",
-  "area",
-  "scop",
   "tariff",
-  "route",
-  "termYears",
+  "financing",
   "results",
 ] as const;
 type StepId = (typeof STEP_IDS)[number];
-
 const idx = (id: StepId) => STEP_IDS.indexOf(id);
 
 export default function App() {
-  // --- screening: not about heat, gates everything downstream ---------------
+  // --- what they burn -------------------------------------------------------
+  const [coalBought, setCoalBought] = useState(4);
+  const [coalLeftOver, setCoalLeftOver] = useState(0);
+  const [coalType, setCoalType] = useState<C.CoalType>("ekogroszek");
+  const [boilerClass, setBoilerClass] = useState<C.BoilerClass>("unknown");
+  const [feedType, setFeedType] = useState<C.FeedType>("handFed");
+  const [burntWoodToo, setBurntWoodToo] = useState(false);
+  const [pricePaid, setPricePaid] = useState<string>(""); // empty = don't remember
+
+  // --- the house ------------------------------------------------------------
+  const [area, setArea] = useState(140);
+  const [scop, setScop] = useState(3.0);
+  const [postcode, setPostcode] = useState("");
   const [buildingType, setBuildingType] = useState<BuildingType>("detached");
   const [ownership, setOwnership] = useState<Ownership>("ownedOutright");
-  const [outdoorSpace, setOutdoorSpace] = useState<OutdoorSpace>("garden");
-  const [roofAccess, setRoofAccess] = useState<RoofAccess>("ownRoof");
-  const [fuelAccess, setFuelAccess] = useState<FuelAccess[]>(["truckAccess", "dryStorage"]);
 
-  const screening = useMemo(
-    () => screenHousehold({ buildingType, ownership, outdoorSpace, roofAccess, fuelAccess }),
-    [buildingType, ownership, outdoorSpace, roofAccess, fuelAccess]
-  );
-
-  function toggleFuelAccess(v: FuelAccess) {
-    setFuelAccess((cur) => (cur.includes(v) ? cur.filter((x) => x !== v) : [...cur, v]));
-  }
-
-  // --- postcode ---------------------------------------------------------------
-  const [postcode, setPostcode] = useState("");
-  const postcodeResult = useMemo(() => lookupPostcode(postcode), [postcode]);
-
-  // --- coal baseline ------------------------------------------------------------
-  const [coalTonnes, setCoalTonnes] = useState(4);
-  const [area, setArea] = useState(140);
-  const [dhwSource, setDhwSource] = useState<"boiler" | "separate">("boiler");
-  const [householdSize, setHouseholdSize] = useState(3);
-  const [scop, setScop] = useState(3.0);
+  // --- money ----------------------------------------------------------------
   const [tariff, setTariff] = useState<Tariff>("G11");
   const [routeId, setRouteId] = useState("pozyczkaZielona");
   const [termYears, setTermYears] = useState(8);
 
-  // --- wizard position + scroll -------------------------------------------------
+  const postcodeResult = useMemo(() => lookupPostcode(postcode), [postcode]);
+
+  // Outdoor space, roof and fuel access are not asked in the demo — they gate
+  // paths we are not pricing yet. Defaulted permissively and flagged in the spec.
+  const screening = useMemo(
+    () =>
+      screenHousehold({
+        buildingType,
+        ownership,
+        outdoorSpace: "garden",
+        roofAccess: "ownRoof",
+        fuelAccess: ["truckAccess", "dryStorage"],
+      }),
+    [buildingType, ownership],
+  );
+
+  // --- wizard ----------------------------------------------------------------
   const [stepIndex, setStepIndex] = useState(0);
   const stepId: StepId = STEP_IDS[stepIndex]!;
   const totalSteps = STEP_IDS.length;
@@ -102,31 +105,30 @@ export default function App() {
   useEffect(() => {
     if (firstRender.current) {
       firstRender.current = false;
-      return; // don't scroll on initial mount, page is already at the top
+      return;
     }
-    const el = stepRefs.current[stepId];
-    el?.scrollIntoView({ behavior: "smooth", block: "start" });
+    stepRefs.current[stepId]?.scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    });
   }, [stepIndex]);
 
-  function next() {
-    setStepIndex((i) => Math.min(i + 1, STEP_IDS.length - 1));
-  }
-  function back() {
-    setStepIndex((i) => Math.max(i - 1, 0));
-  }
-  function jumpTo(id: StepId) {
-    setStepIndex(idx(id));
-  }
+  const next = () => setStepIndex((i) => Math.min(i + 1, STEP_IDS.length - 1));
+  const back = () => setStepIndex((i) => Math.max(i - 1, 0));
+  const jumpTo = (id: StepId) => setStepIndex(idx(id));
+  const showStep = (id: StepId) => idx(id) <= stepIndex;
+  const isActive = (id: StepId) => idx(id) === stepIndex;
 
-  const isPastScreening = (id: StepId) => idx(id) >= idx("postcode");
-
-  // --- the pricing model (unchanged logic) ---------------------------------------
+  // --- model -----------------------------------------------------------------
   const model = useMemo(() => {
     const rc = runningCosts({
-      coalTonnesBought: coalTonnes,
-      coalType: "ekogroszek",
-      boilerClass: "unknown",
-      feedType: "handFed",
+      coalTonnesBought: coalBought,
+      coalTonnesLeftOver: coalLeftOver,
+      coalType,
+      boilerClass,
+      feedType,
+      burntWoodToo,
+      coalPricePaidPerTonne: pricePaid ? Number(pricePaid) : undefined,
       heatedAreaM2: area,
       heatPumpScop: range(scop - 0.4, scop, scop + 0.4),
       tariff,
@@ -141,7 +143,7 @@ export default function App() {
       label: string,
       capital: Range | null,
       device: "heatPump" | "pelletBoiler" | null,
-      running: Range
+      running: Range,
     ) => {
       if (!capital || !device) {
         return {
@@ -149,7 +151,12 @@ export default function App() {
           label,
           capital: exact(0),
           grant: exact(0),
-          summary: { id, label, duringLoan: running, afterLoan: running } as ScenarioSummary,
+          summary: {
+            id,
+            label,
+            duringLoan: running,
+            afterLoan: running,
+          } as ScenarioSummary,
         };
       }
       const sub = subsidiesFor(device, capital.mid, READY);
@@ -166,21 +173,42 @@ export default function App() {
         label,
         capital,
         grant: sub.upfrontGrant,
-        summary: { id, label, duringLoan: h.duringLoan, afterLoan: h.afterLoan } as ScenarioSummary,
+        summary: {
+          id,
+          label,
+          duringLoan: h.duringLoan,
+          afterLoan: h.afterLoan,
+        } as ScenarioSummary,
       };
     };
 
-    const pvCapital = toBand(C.HEAT_PUMP_INSTALLED_COST);
+    const hpCapital = toBand(C.HEAT_PUMP_INSTALLED_COST);
     const rows = [
       build("coal", "Coal", null, null, rc.coal.monthly),
-      build("pellet", "Pellet", toBand(C.PELLET_BOILER_INSTALLED_COST), "pelletBoiler", rc.pellet.monthly),
-      build("heatPump", "Heat pump", toBand(C.HEAT_PUMP_INSTALLED_COST), "heatPump", rc.heatPump.monthly),
+      build(
+        "pellet",
+        "Pellet",
+        toBand(C.PELLET_BOILER_INSTALLED_COST),
+        "pelletBoiler",
+        rc.pellet.monthly,
+      ),
+      build(
+        "heatPump",
+        "Heat pump",
+        hpCapital,
+        "heatPump",
+        rc.heatPump.monthly,
+      ),
       build(
         "heatPumpPlusPv",
         "Heat pump + solar",
-        range(pvCapital.low + 18000, pvCapital.mid + 22000, pvCapital.high + 28000),
+        range(
+          hpCapital.low + 18000,
+          hpCapital.mid + 22000,
+          hpCapital.high + 28000,
+        ),
         "heatPump",
-        rc.heatPumpPlusPv.monthly
+        rc.heatPumpPlusPv.monthly,
       ),
     ];
 
@@ -191,34 +219,264 @@ export default function App() {
     });
 
     return { rc, rows, verdict: v, route };
-  }, [coalTonnes, area, scop, tariff, routeId, termYears]);
+  }, [
+    coalBought,
+    coalLeftOver,
+    coalType,
+    boilerClass,
+    feedType,
+    burntWoodToo,
+    pricePaid,
+    area,
+    scop,
+    tariff,
+    routeId,
+    termYears,
+  ]);
 
-  const showStep = (id: StepId) => idx(id) <= stepIndex;
-  const isActive = (id: StepId) => idx(id) === stepIndex;
+  const shared = (id: StepId) => ({
+    stepIndex: idx(id),
+    totalSteps,
+    active: isActive(id),
+    onActivate: () => jumpTo(id),
+    innerRef: setStepRef(id),
+    onBack: idx(id) === 0 ? undefined : back,
+    onNext: next,
+  });
 
   return (
     <main className="wizard-shell">
       {stepId !== "results" && (
         <div className="wizard-top">
-          <p className="masthead-mini">What's your coal boiler really costing you?</p>
+          <p className="masthead-mini">
+            What's your coal boiler really costing you?
+          </p>
           <div className="overall-progress-track">
             <div
               className="overall-progress-fill"
-              style={{ width: `${((stepIndex + 1) / (totalSteps - 1)) * 100}%` }}
+              style={{
+                width: `${((stepIndex + 1) / (totalSteps - 1)) * 100}%`,
+              }}
             />
           </div>
         </div>
       )}
 
+      {showStep("coalBought") && (
+        <StepShell
+          {...shared("coalBought")}
+          title="How much coal did you buy for last winter?"
+          helper="Tonnes, or how many deliveries. A rough number is fine we show you the range."
+        >
+          <input
+            type="number"
+            step={0.5}
+            min={0.5}
+            className="big-input"
+            value={coalBought}
+            onChange={(e) => setCoalBought(Math.max(0.5, +e.target.value))}
+          />
+          <span className="input-unit">tonnes</span>
+        </StepShell>
+      )}
+
+      {showStep("coalLeftOver") && (
+        <StepShell
+          {...shared("coalLeftOver")}
+          title="Anything still in the cellar?"
+          helper="Bought is not burned. A tonne left over would otherwise overstate what your house needs by a quarter."
+          nextDisabled={coalLeftOver >= coalBought}
+        >
+          <input
+            type="number"
+            step={0.5}
+            min={0}
+            className="big-input"
+            value={coalLeftOver}
+            onChange={(e) => setCoalLeftOver(Math.max(0, +e.target.value))}
+          />
+          <span className="input-unit">tonnes left</span>
+          {isActive("coalLeftOver") && coalLeftOver >= coalBought && (
+            <p className="inline-warn">
+              That's more than you bought have another look at the two numbers.
+            </p>
+          )}
+        </StepShell>
+      )}
+
+      {showStep("coalType") && (
+        <StepShell {...shared("coalType")} title="What do you burn?">
+          <ChoiceGroup
+            value={coalType}
+            onChange={setCoalType}
+            options={[
+              { value: "ekogroszek", label: "Ekogroszek" },
+              { value: "orzech", label: "Orzech" },
+              { value: "groszek", label: "Groszek" },
+              { value: "mial", label: "Miał" },
+              { value: "unknown", label: "A mix, or not sure" },
+            ]}
+          />
+          {isActive("coalType") && coalType === "mial" && (
+            <p className="inline-warn">
+              Miał is banned under the Silesian anti-smog resolution. Worth
+              knowing before an inspection finds it.
+            </p>
+          )}
+        </StepShell>
+      )}
+
+      {showStep("boiler") && (
+        <StepShell
+          {...shared("boiler")}
+          title="What class is your boiler?"
+          helper="Look for a nameplate on the front or side. This one question does more for the accuracy of your answer than any other."
+        >
+          <ChoiceGroup
+            value={boilerClass}
+            onChange={setBoilerClass}
+            options={[
+              {
+                value: "noClass",
+                label: "No class",
+                sublabel: "An old kopciuch",
+              },
+              { value: "class3", label: "Class 3" },
+              { value: "class4", label: "Class 4" },
+              { value: "class5", label: "Class 5" },
+              { value: "ecodesign", label: "Ecodesign" },
+              { value: "unknown", label: "I don't know" },
+            ]}
+          />
+          <div className="sub-question">
+            <p className="stat-label">And how is it fed?</p>
+            <ChoiceGroup
+              value={feedType}
+              onChange={setFeedType}
+              options={[
+                { value: "handFed", label: "By hand, with a shovel" },
+                { value: "automatic", label: "Automatic feeder" },
+              ]}
+            />
+          </div>
+          {isActive("boiler") && boilerClass === "unknown" && (
+            <p className="inline-warn">
+              Without the class we have to allow for anything from a very poor
+              boiler to a good one, which roughly triples the uncertainty in
+              your result. A photo of the nameplate would fix it.
+            </p>
+          )}
+        </StepShell>
+      )}
+
+      {showStep("burntWood") && (
+        <StepShell
+          {...shared("burntWood")}
+          title="Did you burn wood or offcuts as well?"
+          helper="We don't need an amount just whether it happened."
+        >
+          <ChoiceGroup
+            value={burntWoodToo ? "yes" : "no"}
+            onChange={(v) => setBurntWoodToo(v === "yes")}
+            options={[
+              { value: "no", label: "No, just coal" },
+              { value: "yes", label: "Yes, wood as well" },
+            ]}
+          />
+        </StepShell>
+      )}
+
+      {showStep("pricePaid") && (
+        <StepShell
+          {...shared("pricePaid")}
+          title="What did you pay per tonne?"
+          helper="If you remember. You know this better than any price list we could look up but skipping it is fine, we'll use the regional range."
+          nextLabel={pricePaid ? "Next" : "Skip"}
+        >
+          <input
+            type="number"
+            step={50}
+            min={0}
+            className="big-input"
+            placeholder="1 500"
+            value={pricePaid}
+            onChange={(e) => setPricePaid(e.target.value)}
+          />
+          <span className="input-unit">zł per tonne</span>
+        </StepShell>
+      )}
+
+      {showStep("area") && (
+        <StepShell
+          {...shared("area")}
+          title="How many square metres do you heat?"
+          helper="If you close off part of the house in winter, give the part you heat. We use this only to check whether insulation should come first."
+        >
+          <input
+            type="number"
+            step={10}
+            min={30}
+            className="big-input"
+            value={area}
+            onChange={(e) => setArea(Math.max(30, +e.target.value))}
+          />
+          <span className="input-unit">m²</span>
+        </StepShell>
+      )}
+
+      {showStep("radiators") && (
+        <StepShell
+          {...shared("radiators")}
+          title="What are your radiators like?"
+          helper="Coal boilers run hot, so coal-era radiators are small. A heat pump runs cooler, where the same radiator gives about half as much heat. This is the answer that decides the verdict."
+        >
+          <ChoiceGroup
+            value={String(scop)}
+            onChange={(v) => setScop(+v)}
+            options={[
+              {
+                value: "2",
+                label: "Small radiators",
+                sublabel: "The room takes a while to warm up",
+              },
+              { value: "2.6", label: "Mixed" },
+              { value: "3", label: "Generous radiators" },
+              { value: "3.6", label: "Underfloor, or oversized radiators" },
+            ]}
+          />
+        </StepShell>
+      )}
+
+      {showStep("postcode") && (
+        <StepShell
+          {...shared("postcode")}
+          title="Where is the house?"
+          helper="Postcode is enough. It sets your winter temperatures, your electricity distributor, and which deadline applies to you."
+          nextDisabled={!isValidPolishPostcode(postcode)}
+        >
+          <input
+            type="text"
+            inputMode="numeric"
+            placeholder="40-001"
+            className="big-input"
+            value={postcode}
+            onChange={(e) => setPostcode(maskPostcodeInput(e.target.value))}
+          />
+          {isActive("postcode") &&
+            postcode.length === 6 &&
+            !postcodeResult.inSilesia && (
+              <p className="inline-warn">
+                We only cover Silesia today the numbers won't be accurate for{" "}
+                {postcode}.
+              </p>
+            )}
+        </StepShell>
+      )}
+
       {showStep("buildingType") && (
         <StepShell
-          stepIndex={idx("buildingType")}
-          totalSteps={totalSteps}
+          {...shared("buildingType")}
           title="What kind of building is it?"
-          active={isActive("buildingType")}
-          onActivate={() => jumpTo("buildingType")}
-          innerRef={setStepRef("buildingType")}
-          onNext={next}
         >
           <ChoiceGroup
             value={buildingType}
@@ -234,16 +492,7 @@ export default function App() {
       )}
 
       {showStep("ownership") && (
-        <StepShell
-          stepIndex={idx("ownership")}
-          totalSteps={totalSteps}
-          title="Do you own it?"
-          active={isActive("ownership")}
-          onActivate={() => jumpTo("ownership")}
-          innerRef={setStepRef("ownership")}
-          onBack={back}
-          onNext={next}
-        >
+        <StepShell {...shared("ownership")} title="Do you own it?">
           <ChoiceGroup
             value={ownership}
             onChange={setOwnership}
@@ -255,278 +504,39 @@ export default function App() {
           />
           {isActive("ownership") && ownership === "renting" && (
             <p className="inline-warn">
-              This tool is for whoever decides on the heating system \u2014 as a tenant,
-              that's your landlord. Worth sharing this with them once you've had a look.
+              This tool is for whoever decides on the heating system as a tenant
+              that's your landlord. Worth sharing it with them.
             </p>
           )}
         </StepShell>
       )}
 
-      {showStep("outdoorSpace") && (
+      {showStep("tariff") && (
         <StepShell
-          stepIndex={idx("outdoorSpace")}
-          totalSteps={totalSteps}
-          title="Outdoor space?"
-          helper="For a heat pump's outdoor unit."
-          active={isActive("outdoorSpace")}
-          onActivate={() => jumpTo("outdoorSpace")}
-          innerRef={setStepRef("outdoorSpace")}
-          onBack={back}
-          onNext={next}
-        >
-          <ChoiceGroup
-            value={outdoorSpace}
-            onChange={setOutdoorSpace}
-            options={[
-              { value: "garden", label: "Garden or yard" },
-              { value: "balconyOnly", label: "Balcony only" },
-              { value: "none", label: "None" },
-            ]}
-          />
-        </StepShell>
-      )}
-
-      {showStep("roofAccess") && (
-        <StepShell
-          stepIndex={idx("roofAccess")}
-          totalSteps={totalSteps}
-          title="Roof?"
-          helper="For solar panels, if that turns out to make sense for you."
-          active={isActive("roofAccess")}
-          onActivate={() => jumpTo("roofAccess")}
-          innerRef={setStepRef("roofAccess")}
-          onBack={back}
-          onNext={next}
-        >
-          <ChoiceGroup
-            value={roofAccess}
-            onChange={setRoofAccess}
-            options={[
-              { value: "ownRoof", label: "My own roof" },
-              { value: "sharedRoof", label: "Shared with other owners" },
-              { value: "flatRoof", label: "Flat roof" },
-              { value: "none", label: "No roof access" },
-            ]}
-          />
-        </StepShell>
-      )}
-
-      {showStep("fuelAccess") && (
-        <StepShell
-          stepIndex={idx("fuelAccess")}
-          totalSteps={totalSteps}
-          title="Fuel delivery"
-          helper="Select anything that's true."
-          active={isActive("fuelAccess")}
-          onActivate={() => jumpTo("fuelAccess")}
-          innerRef={setStepRef("fuelAccess")}
-          onBack={back}
-          onNext={next}
-        >
-          <MultiChoiceGroup
-            value={fuelAccess}
-            onToggle={toggleFuelAccess}
-            options={[
-              { value: "truckAccess", label: "A delivery truck can reach the house" },
-              { value: "dryStorage", label: "There's dry storage space" },
-            ]}
-          />
-        </StepShell>
-      )}
-
-      {showStep("postcode") && (
-        <StepShell
-          stepIndex={idx("postcode")}
-          totalSteps={totalSteps}
-          title="Where is the house?"
-          helper="Postcode is enough. It tells us your winter temperatures, your electricity distributor, and which deadline applies to you."
-          active={isActive("postcode")}
-          onActivate={() => jumpTo("postcode")}
-          innerRef={setStepRef("postcode")}
-          onBack={back}
-          onNext={next}
-          nextDisabled={!isValidPolishPostcode(postcode)}
-        >
-          <input
-            type="text"
-            inputMode="numeric"
-            placeholder="40-001"
-            className="big-input"
-            value={postcode}
-            onChange={(e) => setPostcode(maskPostcodeInput(e.target.value))}
-          />
-          {isActive("postcode") && postcode.length === 6 && !postcodeResult.inSilesia && (
-            <p className="inline-warn">
-              We only cover Silesia today \u2014 your numbers here won't be accurate for {postcode}.
-            </p>
-          )}
-        </StepShell>
-      )}
-
-      {isPastScreening(stepId) && !screening.canProceed && (
-        <div className="step-block active">
-          <h2 className="step-title">This one isn't for you yet</h2>
-          <p className="inline-warn">{screening.stopReason}</p>
-          <div className="step-nav">
-            <button type="button" className="btn-secondary" onClick={back}>
-              Back
-            </button>
-            <span />
-          </div>
-        </div>
-      )}
-
-      {screening.canProceed && showStep("coalTonnes") && (
-        <StepShell
-          stepIndex={idx("coalTonnes")}
-          totalSteps={totalSteps}
-          title="How much coal did you burn last winter?"
-          helper="Tonnes, or your best guess. We'll show you the range."
-          active={isActive("coalTonnes")}
-          onActivate={() => jumpTo("coalTonnes")}
-          innerRef={setStepRef("coalTonnes")}
-          onBack={back}
-          onNext={next}
-        >
-          <input
-            type="number"
-            step={0.5}
-            min={0.5}
-            className="big-input"
-            value={coalTonnes}
-            onChange={(e) => setCoalTonnes(Math.max(0.5, +e.target.value))}
-          />
-          <span className="input-unit">tonnes</span>
-        </StepShell>
-      )}
-
-      {screening.canProceed && showStep("dhwSource") && (
-        <StepShell
-          stepIndex={idx("dhwSource")}
-          totalSteps={totalSteps}
-          title="Does this boiler heat your water too?"
-          active={isActive("dhwSource")}
-          onActivate={() => jumpTo("dhwSource")}
-          innerRef={setStepRef("dhwSource")}
-          onBack={back}
-          onNext={next}
-        >
-          <ChoiceGroup
-            value={dhwSource}
-            onChange={setDhwSource}
-            options={[
-              { value: "boiler", label: "Yes, the boiler heats the water" },
-              { value: "separate", label: "No, that's separate" },
-            ]}
-          />
-        </StepShell>
-      )}
-
-      {screening.canProceed && showStep("householdSize") && (
-        <StepShell
-          stepIndex={idx("householdSize")}
-          totalSteps={totalSteps}
-          title="How many people live in the house?"
-          helper="This decides how much hot water to add to the comparison."
-          active={isActive("householdSize")}
-          onActivate={() => jumpTo("householdSize")}
-          innerRef={setStepRef("householdSize")}
-          onBack={back}
-          onNext={next}
-        >
-          <input
-            type="number"
-            min={1}
-            max={10}
-            step={1}
-            className="big-input"
-            value={householdSize}
-            onChange={(e) => setHouseholdSize(Math.max(1, Math.min(10, +e.target.value || 3)))}
-          />
-        </StepShell>
-      )}
-
-      {screening.canProceed && showStep("area") && (
-        <StepShell
-          stepIndex={idx("area")}
-          totalSteps={totalSteps}
-          title="How many square metres do you actually heat?"
-          helper="If you close off part of the house in winter, give the part you heat."
-          active={isActive("area")}
-          onActivate={() => jumpTo("area")}
-          innerRef={setStepRef("area")}
-          onBack={back}
-          onNext={next}
-        >
-          <input
-            type="number"
-            step={10}
-            min={30}
-            className="big-input"
-            value={area}
-            onChange={(e) => setArea(Math.max(30, +e.target.value))}
-          />
-          <span className="input-unit">m\u00b2</span>
-        </StepShell>
-      )}
-
-      {screening.canProceed && showStep("scop") && (
-        <StepShell
-          stepIndex={idx("scop")}
-          totalSteps={totalSteps}
-          title="What are your radiators like?"
-          helper="From your photos, roughly."
-          active={isActive("scop")}
-          onActivate={() => jumpTo("scop")}
-          innerRef={setStepRef("scop")}
-          onBack={back}
-          onNext={next}
-        >
-          <ChoiceGroup
-            value={String(scop)}
-            onChange={(v) => setScop(+v)}
-            options={[
-              { value: "2", label: "Small radiators", sublabel: "Runs hot" },
-              { value: "2.6", label: "Mixed" },
-              { value: "3", label: "Generous radiators" },
-              { value: "3.6", label: "Underfloor or oversized" },
-            ]}
-          />
-        </StepShell>
-      )}
-
-      {screening.canProceed && showStep("tariff") && (
-        <StepShell
-          stepIndex={idx("tariff")}
-          totalSteps={totalSteps}
-          title="Electricity tariff"
-          active={isActive("tariff")}
-          onActivate={() => jumpTo("tariff")}
-          innerRef={setStepRef("tariff")}
-          onBack={back}
-          onNext={next}
+          {...shared("tariff")}
+          title="Which electricity tariff are you on?"
+          helper="If you're not sure, it's almost certainly the flat one."
         >
           <ChoiceGroup
             value={tariff}
             onChange={setTariff}
             options={[
-              { value: "G11", label: "Flat, all day (G11)" },
-              { value: "G12w", label: "Cheap nights and weekends (G12w)" },
+              { value: "G11", label: "Flat, all day", sublabel: "G11" },
+              {
+                value: "G12w",
+                label: "Cheaper nights and weekends",
+                sublabel: "G12w",
+              },
             ]}
           />
         </StepShell>
       )}
 
-      {screening.canProceed && showStep("route") && (
+      {showStep("financing") && (
         <StepShell
-          stepIndex={idx("route")}
-          totalSteps={totalSteps}
+          {...shared("financing")}
           title="How would you pay for it?"
-          active={isActive("route")}
-          onActivate={() => jumpTo("route")}
-          innerRef={setStepRef("route")}
-          onBack={back}
-          onNext={next}
+          nextLabel="See what it costs"
         >
           <ChoiceGroup
             value={routeId}
@@ -534,36 +544,43 @@ export default function App() {
             options={Object.values(ROUTES).map((r) => ({
               value: r.id,
               label: r.label,
-              sublabel: r.status === "suspended" ? "Not available now" : undefined,
+              sublabel:
+                r.status === "suspended"
+                  ? "Not available right now"
+                  : undefined,
             }))}
           />
+          <div className="sub-question">
+            <p className="stat-label">Over how long?</p>
+            <ChoiceGroup
+              value={String(termYears)}
+              onChange={(v) => setTermYears(+v)}
+              options={[5, 8, 10, 12].map((y) => ({
+                value: String(y),
+                label: `${y} years`,
+              }))}
+            />
+          </div>
         </StepShell>
       )}
 
-      {screening.canProceed && showStep("termYears") && (
-        <StepShell
-          stepIndex={idx("termYears")}
-          totalSteps={totalSteps}
-          title="Loan length"
-          active={isActive("termYears")}
-          onActivate={() => jumpTo("termYears")}
-          innerRef={setStepRef("termYears")}
-          onBack={back}
-          onNext={next}
-        >
-          <ChoiceGroup
-            value={String(termYears)}
-            onChange={(v) => setTermYears(+v)}
-            options={[5, 8, 10, 12].map((y) => ({ value: String(y), label: `${y} years` }))}
-          />
-        </StepShell>
-      )}
-
-      {screening.canProceed && showStep("results") && (
-        <div ref={setStepRef("results")}>
-          <ResultsScreen model={model} onBack={back} />
-        </div>
-      )}
+      {showStep("results") &&
+        (screening.canProceed ? (
+          <div ref={setStepRef("results")}>
+            <ResultsScreen model={model} onBack={back} />
+          </div>
+        ) : (
+          <div ref={setStepRef("results")} className="step-block active">
+            <h2 className="step-title">This one isn't for you yet</h2>
+            <p className="inline-warn">{screening.stopReason}</p>
+            <div className="step-nav">
+              <button type="button" className="btn-secondary" onClick={back}>
+                Back
+              </button>
+              <span />
+            </div>
+          </div>
+        ))}
     </main>
   );
 }
@@ -591,24 +608,37 @@ function ResultsScreen({
   const { rc, rows, verdict: v, route } = model;
   const best = Math.min(...rows.map((r) => r.summary.afterLoan.mid));
 
+  const confidenceLine =
+    rc.demand.confidence === "good"
+      ? "We're reasonably confident in this."
+      : rc.demand.confidence === "rough"
+        ? "This is a rough estimate knowing your boiler's class would tighten it."
+        : "This is too rough to lean on. Your boiler's class and coal type would fix it.";
+
   return (
     <div className="results">
-      <button type="button" className="btn-secondary back-link" onClick={onBack}>
-        \u2190 Back
+      <button
+        type="button"
+        className="btn-secondary back-link"
+        onClick={onBack}
+      >
+        ← Back
       </button>
 
       <header className="masthead">
-        <p className="eyebrow">Silesia \u00b7 coal boiler replacement</p>
+        <p className="eyebrow">Silesia · coal boiler replacement</p>
         <h1>What will it actually cost you?</h1>
         <p className="lede">
-          Real monthly numbers for coal, pellet, or heat pump \u2014 loan and grant included,
-          priced from what you actually burned last winter.
+          Real monthly numbers for coal, pellet, or heat pump loan and grant
+          included, priced from what you actually burned last winter.
         </p>
       </header>
 
       <p className="demand">
-        Your house needs about <strong>{zl(rc.demand.mid)} kWh</strong> of heat a year.
-        That is <strong>{Math.round(rc.demandPerM2.mid)} kWh</strong> for every square metre.
+        Your house needs about <strong>{zl(rc.demand.mid)} kWh</strong> of heat
+        a year, somewhere between {band(rc.demand)} kWh. That is{" "}
+        <strong>{Math.round(rc.demandPerM2.mid)} kWh</strong> for every square
+        metre. {confidenceLine}
       </p>
 
       <section className="grid" aria-label="Your four options">
@@ -620,32 +650,34 @@ function ResultsScreen({
 
               <p className="stat-label">While you repay the loan</p>
               <p className="figure">
-                {zl(r.summary.duringLoan.mid)} <span className="unit">z\u0142 a month</span>
+                {zl(r.summary.duringLoan.mid)}{" "}
+                <span className="unit">zł a month</span>
               </p>
-              <p className="range">could be {band(r.summary.duringLoan)} z\u0142</p>
+              <p className="range">could be {band(r.summary.duringLoan)} zł</p>
 
               <p className="stat-label">Once the loan is paid off</p>
               <p className="figure second">
-                {zl(r.summary.afterLoan.mid)} <span className="unit">z\u0142 a month</span>
+                {zl(r.summary.afterLoan.mid)}{" "}
+                <span className="unit">zł a month</span>
               </p>
-              <p className="range">could be {band(r.summary.afterLoan)} z\u0142</p>
+              <p className="range">could be {band(r.summary.afterLoan)} zł</p>
 
               {r.capital.mid > 0 && (
                 <dl className="detail">
                   <div>
                     <dt>The work costs</dt>
-                    <dd>{zl(r.capital.mid)} z\u0142</dd>
+                    <dd>{zl(r.capital.mid)} zł</dd>
                   </div>
                   <div>
                     <dt>Grant pays</dt>
-                    <dd className="grant">\u2212 {zl(r.grant.mid)} z\u0142</dd>
+                    <dd className="grant">- {zl(r.grant.mid)} zł</dd>
                   </div>
                 </dl>
               )}
               {r.id === "coal" && (
                 <p className="note">
-                  You cannot keep this. Replacing the boiler is required \u2014 this is only here
-                  so you can see what you pay today.
+                  Your boiler's age and class decide when this has to go. This
+                  column is here so you can see what you pay today.
                 </p>
               )}
             </article>
@@ -668,8 +700,8 @@ function ResultsScreen({
       <section className="future">
         <p className="eyebrow">Coming</p>
         <p>
-          At 500 houses nearby, this will show what a house like yours actually pays \u2014
-          measured, not estimated.
+          At 500 houses nearby, this will show what a house like yours actually
+          pays measured, not estimated.
         </p>
       </section>
 
@@ -677,30 +709,31 @@ function ResultsScreen({
         <p className="stat-label">Where these numbers come from</p>
         <ul className="sources">
           <li>
-            <strong>Electricity</strong> {C.ELECTRICITY_G11_PER_KWH.mid} z\u0142/kWh \u00b7{" "}
-            {C.ELECTRICITY_G11_PER_KWH.source}
+            <strong>Electricity</strong> {C.ELECTRICITY_G11_PER_KWH.mid} zł/kWh
+            · {C.ELECTRICITY_G11_PER_KWH.source}
           </li>
           <li>
-            <strong>Coal</strong> {zl(C.COAL_PRICE_PER_TONNE.mid)} z\u0142/t \u00b7{" "}
-            {C.COAL_PRICE_PER_TONNE.source}
+            <strong>Coal</strong> {zl(C.COAL_PRICE_GUS_NATIONAL.value)} zł/t ·{" "}
+            {C.COAL_PRICE_GUS_NATIONAL.source}
           </li>
           <li>
-            <strong>Pellet</strong> {zl(C.PELLET_PRICE_PER_TONNE.mid)} z\u0142/t \u00b7{" "}
+            <strong>Pellet</strong> {zl(C.PELLET_PRICE_PER_TONNE.mid)} zł/t ·{" "}
             {C.PELLET_PRICE_PER_TONNE.note}
           </li>
           <li>
-            <strong>Financing</strong> {route.label} \u00b7 {route.source}
+            <strong>Financing</strong> {route.label} · {route.source}
           </li>
         </ul>
         {route.status === "suspended" && (
           <p className="warn">
-            This way of borrowing is suspended right now. The figures above show what it
-            would cost if it reopens.
+            This way of borrowing is suspended right now. The figures above show
+            what it would cost if it reopens.
           </p>
         )}
         <p className="warn">
-          Prices are held flat. Nobody knows what electricity or coal will cost in ten
-          years, and any tool that draws a clean line that far out is guessing.
+          Prices are held flat. Nobody knows what electricity or coal will cost
+          in ten years, and any tool that draws a clean line that far out is
+          guessing.
         </p>
       </footer>
     </div>

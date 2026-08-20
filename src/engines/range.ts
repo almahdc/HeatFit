@@ -135,7 +135,12 @@ export function scale(a: Range, k: number): Range {
  * underlying unknown. Kept mainly to demonstrate the difference.
  */
 export function worstCase(a: Range, b: Range): Range {
-  const corners = [a.low * b.low, a.low * b.high, a.high * b.low, a.high * b.high];
+  const corners = [
+    a.low * b.low,
+    a.low * b.high,
+    a.high * b.low,
+    a.high * b.high,
+  ];
   return range(Math.min(...corners), a.mid * b.mid, Math.max(...corners));
 }
 

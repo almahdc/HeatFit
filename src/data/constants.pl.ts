@@ -51,7 +51,8 @@ export const COAL_PRICE_PER_TONNE: SourcedBand = {
  */
 export const COAL_PRICE_GUS_NATIONAL: Sourced<number> = {
   value: 1601.7,
-  source: "GUS average price of a tonne of coal, 2025, used as the deputat calculation basis",
+  source:
+    "GUS average price of a tonne of coal, 2025, used as the deputat calculation basis",
   readOn: "2026-08-20",
   certainty: "high",
   note: "Fallback anchor when the household does not remember what they paid.",
@@ -66,28 +67,36 @@ export type CoalType = "ekogroszek" | "orzech" | "groszek" | "mial" | "unknown";
 
 export const COAL_CALORIFIC_VALUE: Record<CoalType, SourcedBand> = {
   ekogroszek: {
-    low: 24, mid: 25.5, high: 27,
+    low: 24,
+    mid: 25.5,
+    high: 27,
     unit: "MJ/kg",
     source: "Ekogroszek specification, typical Polish retail grade",
     readOn: "2026-08-20",
     certainty: "medium",
   },
   orzech: {
-    low: 26, mid: 28, high: 30,
+    low: 26,
+    mid: 28,
+    high: 30,
     unit: "MJ/kg",
     source: "Węgiel orzech specification, typical Polish retail grade",
     readOn: "2026-08-20",
     certainty: "medium",
   },
   groszek: {
-    low: 24, mid: 26, high: 28,
+    low: 24,
+    mid: 26,
+    high: 28,
     unit: "MJ/kg",
     source: "Węgiel groszek specification, typical Polish retail grade",
     readOn: "2026-08-20",
     certainty: "medium",
   },
   mial: {
-    low: 18, mid: 20.5, high: 23,
+    low: 18,
+    mid: 20.5,
+    high: 23,
     unit: "MJ/kg",
     source: "Miał węglowy specification",
     readOn: "2026-08-20",
@@ -97,7 +106,9 @@ export const COAL_CALORIFIC_VALUE: Record<CoalType, SourcedBand> = {
       "selects this, they have a compliance problem as well as a heating decision.",
   },
   unknown: {
-    low: 21, mid: 25, high: 28,
+    low: 21,
+    mid: 25,
+    high: 28,
     unit: "MJ/kg",
     source: "Derived envelope across the grades above",
     readOn: "2026-08-20",
@@ -151,13 +162,19 @@ export const PELLET_CALORIFIC_VALUE: SourcedBand = {
  * answer: it roughly triples this factor's contribution to the band, which is
  * why the tool pushes the nameplate photo instead of accepting it.
  */
-export type BoilerClass = "noClass" | "class3" | "class4" | "class5" | "ecodesign" | "unknown";
+export type BoilerClass =
+  "noClass" | "class3" | "class4" | "class5" | "ecodesign" | "unknown";
 export type FeedType = "handFed" | "automatic";
 
-export const COAL_BOILER_EFFICIENCY: Record<BoilerClass, Record<FeedType, SourcedBand>> = {
+export const COAL_BOILER_EFFICIENCY: Record<
+  BoilerClass,
+  Record<FeedType, SourcedBand>
+> = {
   noClass: {
     handFed: {
-      low: 0.4, mid: 0.5, high: 0.6,
+      low: 0.4,
+      mid: 0.5,
+      high: 0.6,
       unit: "fraction",
       source: "Pre-class solid fuel boiler (kopciuch), hand-fed",
       readOn: "2026-08-20",
@@ -165,7 +182,9 @@ export const COAL_BOILER_EFFICIENCY: Record<BoilerClass, Record<FeedType, Source
       note: "A badly run hand-fed boiler can drop below 0.4. Replace with interview data.",
     },
     automatic: {
-      low: 0.55, mid: 0.62, high: 0.7,
+      low: 0.55,
+      mid: 0.62,
+      high: 0.7,
       unit: "fraction",
       source: "Pre-class solid fuel boiler with feeder",
       readOn: "2026-08-20",
@@ -174,14 +193,18 @@ export const COAL_BOILER_EFFICIENCY: Record<BoilerClass, Record<FeedType, Source
   },
   class3: {
     handFed: {
-      low: 0.6, mid: 0.66, high: 0.72,
+      low: 0.6,
+      mid: 0.66,
+      high: 0.72,
       unit: "fraction",
       source: "PN-EN 303-5 class 3 minimum, hand-fed",
       readOn: "2026-08-20",
       certainty: "medium",
     },
     automatic: {
-      low: 0.62, mid: 0.68, high: 0.74,
+      low: 0.62,
+      mid: 0.68,
+      high: 0.74,
       unit: "fraction",
       source: "PN-EN 303-5 class 3 minimum, with feeder",
       readOn: "2026-08-20",
@@ -190,14 +213,18 @@ export const COAL_BOILER_EFFICIENCY: Record<BoilerClass, Record<FeedType, Source
   },
   class4: {
     handFed: {
-      low: 0.72, mid: 0.77, high: 0.82,
+      low: 0.72,
+      mid: 0.77,
+      high: 0.82,
       unit: "fraction",
       source: "PN-EN 303-5 class 4 minimum, hand-fed",
       readOn: "2026-08-20",
       certainty: "medium",
     },
     automatic: {
-      low: 0.74, mid: 0.79, high: 0.84,
+      low: 0.74,
+      mid: 0.79,
+      high: 0.84,
       unit: "fraction",
       source: "PN-EN 303-5 class 4 minimum, with feeder",
       readOn: "2026-08-20",
@@ -206,14 +233,18 @@ export const COAL_BOILER_EFFICIENCY: Record<BoilerClass, Record<FeedType, Source
   },
   class5: {
     handFed: {
-      low: 0.78, mid: 0.83, high: 0.87,
+      low: 0.78,
+      mid: 0.83,
+      high: 0.87,
       unit: "fraction",
       source: "PN-EN 303-5 class 5; hand-fed class 5 units are uncommon",
       readOn: "2026-08-20",
       certainty: "medium",
     },
     automatic: {
-      low: 0.8, mid: 0.85, high: 0.89,
+      low: 0.8,
+      mid: 0.85,
+      high: 0.89,
       unit: "fraction",
       source: "PN-EN 303-5 class 5, with feeder",
       readOn: "2026-08-20",
@@ -222,14 +253,18 @@ export const COAL_BOILER_EFFICIENCY: Record<BoilerClass, Record<FeedType, Source
   },
   ecodesign: {
     handFed: {
-      low: 0.83, mid: 0.87, high: 0.9,
+      low: 0.83,
+      mid: 0.87,
+      high: 0.9,
       unit: "fraction",
       source: "Ecodesign regulation minimum",
       readOn: "2026-08-20",
       certainty: "medium",
     },
     automatic: {
-      low: 0.85, mid: 0.885, high: 0.92,
+      low: 0.85,
+      mid: 0.885,
+      high: 0.92,
       unit: "fraction",
       source: "Ecodesign regulation minimum, with feeder",
       readOn: "2026-08-20",
@@ -238,7 +273,9 @@ export const COAL_BOILER_EFFICIENCY: Record<BoilerClass, Record<FeedType, Source
   },
   unknown: {
     handFed: {
-      low: 0.45, mid: 0.6, high: 0.75,
+      low: 0.45,
+      mid: 0.6,
+      high: 0.75,
       unit: "fraction",
       source: "Derived envelope across all classes",
       readOn: "2026-08-20",
@@ -246,7 +283,9 @@ export const COAL_BOILER_EFFICIENCY: Record<BoilerClass, Record<FeedType, Source
       note: "The single biggest avoidable band-widener in the model. Route to the nameplate photo.",
     },
     automatic: {
-      low: 0.45, mid: 0.6, high: 0.75,
+      low: 0.45,
+      mid: 0.6,
+      high: 0.75,
       unit: "fraction",
       source: "Derived envelope across all classes",
       readOn: "2026-08-20",
@@ -256,7 +295,10 @@ export const COAL_BOILER_EFFICIENCY: Record<BoilerClass, Record<FeedType, Source
 };
 
 /** Convenience lookup so callers don't index a nested record by hand. */
-export function coalBoilerEfficiency(cls: BoilerClass, feed: FeedType): SourcedBand {
+export function coalBoilerEfficiency(
+  cls: BoilerClass,
+  feed: FeedType,
+): SourcedBand {
   return COAL_BOILER_EFFICIENCY[cls][feed];
 }
 
@@ -265,7 +307,8 @@ export const PELLET_BOILER_EFFICIENCY: SourcedBand = {
   mid: 0.88,
   high: 0.9,
   unit: "fraction",
-  source: "Class 5 / Ecodesign requirement, mandatory for Czyste Powietrze eligibility",
+  source:
+    "Class 5 / Ecodesign requirement, mandatory for Czyste Powietrze eligibility",
   readOn: "2026-08-19",
   certainty: "medium",
 };
@@ -353,7 +396,8 @@ export const PELLET_BOILER_INSTALLED_COST: SourcedBand = {
   mid: 24000,
   high: 32000,
   unit: "zł, turnkey incl. VAT",
-  source: "Polish installer pricing 2026; ekogroszek boilers quoted 15 000-25 000 zł installed",
+  source:
+    "Polish installer pricing 2026; ekogroszek boilers quoted 15 000-25 000 zł installed",
   readOn: "2026-08-19",
   certainty: "low",
   note:
@@ -377,7 +421,8 @@ export const COAL_BOILER_REPLACEMENT_COST: SourcedBand = {
   mid: 0,
   high: 0,
   unit: "zł",
-  source: "Not a legal option in the beachhead - kopciuch replacement is mandatory",
+  source:
+    "Not a legal option in the beachhead - kopciuch replacement is mandatory",
   readOn: "2026-08-19",
   certainty: "high",
   note:
@@ -389,7 +434,8 @@ export const COAL_BOILER_REPLACEMENT_COST: SourcedBand = {
 
 export const HEAT_PUMP_LIFE_YEARS: Sourced<number> = {
   value: 15,
-  source: "Polish industry sources, 2026 (range given as 10-20, one claims 20-30)",
+  source:
+    "Polish industry sources, 2026 (range given as 10-20, one claims 20-30)",
   readOn: "2026-08-19",
   certainty: "medium",
   note: "Conservative end chosen deliberately, so 'crossover too late to matter' fires more often.",
@@ -425,12 +471,18 @@ export const MJ_PER_KWH = 3.6;
 /** Flattened view of the nested tables, so the source-integrity test covers them. */
 export const TABLE_CONSTANTS: Record<string, SourcedBand> = {
   ...Object.fromEntries(
-    Object.entries(COAL_CALORIFIC_VALUE).map(([k, v]) => [`COAL_CALORIFIC_VALUE.${k}`, v])
+    Object.entries(COAL_CALORIFIC_VALUE).map(([k, v]) => [
+      `COAL_CALORIFIC_VALUE.${k}`,
+      v,
+    ]),
   ),
   ...Object.fromEntries(
     Object.entries(COAL_BOILER_EFFICIENCY).flatMap(([cls, feeds]) =>
-      Object.entries(feeds).map(([feed, v]) => [`COAL_BOILER_EFFICIENCY.${cls}.${feed}`, v])
-    )
+      Object.entries(feeds).map(([feed, v]) => [
+        `COAL_BOILER_EFFICIENCY.${cls}.${feed}`,
+        v,
+      ]),
+    ),
   ),
 };
 

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { HouseholdScreen, needsFlatGrantRoute, screenHousehold } from "../engines/screening";
+import {
+  HouseholdScreen,
+  needsFlatGrantRoute,
+  screenHousehold,
+} from "../engines/screening";
 
 const BASE: HouseholdScreen = {
   buildingType: "detached",
@@ -29,7 +33,11 @@ describe("screening", () => {
   });
 
   it("flags a balcony-only flat as needing sign-off, not a flat no", () => {
-    const r = screenHousehold({ ...BASE, buildingType: "flat", outdoorSpace: "balconyOnly" });
+    const r = screenHousehold({
+      ...BASE,
+      buildingType: "flat",
+      outdoorSpace: "balconyOnly",
+    });
     const hp = r.paths.find((p) => p.path === "heatPump");
     expect(hp?.eligible).toBe(false);
     expect(hp?.reason).toContain("sign-off");
@@ -45,12 +53,20 @@ describe("screening", () => {
   it("blocks solar on a shared roof, distinct from no roof at all", () => {
     const shared = screenHousehold({ ...BASE, roofAccess: "sharedRoof" });
     const none = screenHousehold({ ...BASE, roofAccess: "none" });
-    expect(shared.paths.find((p) => p.path === "solar")?.reason).toContain("agreement");
-    expect(none.paths.find((p) => p.path === "solar")?.reason).not.toContain("agreement");
+    expect(shared.paths.find((p) => p.path === "solar")?.reason).toContain(
+      "agreement",
+    );
+    expect(none.paths.find((p) => p.path === "solar")?.reason).not.toContain(
+      "agreement",
+    );
   });
 
   it("blocks insulation as a solo decision for a flat", () => {
-    const r = screenHousehold({ ...BASE, buildingType: "flat", outdoorSpace: "garden" });
+    const r = screenHousehold({
+      ...BASE,
+      buildingType: "flat",
+      outdoorSpace: "garden",
+    });
     expect(r.paths.find((p) => p.path === "insulation")?.eligible).toBe(false);
   });
 

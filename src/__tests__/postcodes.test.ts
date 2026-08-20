@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { isValidPolishPostcode, lookupPostcode, maskPostcodeInput } from "../data/postcodes.pl";
+import {
+  isValidPolishPostcode,
+  lookupPostcode,
+  maskPostcodeInput,
+} from "../data/postcodes.pl";
 
 describe("postcode masking", () => {
   it("inserts the dash after two digits as you type", () => {
@@ -23,7 +27,11 @@ describe("postcode lookup", () => {
   });
 
   it("flags a Katowice postcode as Silesian", () => {
-    expect(lookupPostcode("40-001")).toEqual({ valid: true, inSilesia: true, prefix: "40" });
+    expect(lookupPostcode("40-001")).toEqual({
+      valid: true,
+      inSilesia: true,
+      prefix: "40",
+    });
   });
 
   it("flags an out-of-region postcode without crashing", () => {
