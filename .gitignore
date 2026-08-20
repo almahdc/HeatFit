@@ -1,0 +1,10 @@
+node_modules/
+dist/
+
+# Editor and OS junk. If these are already tracked in your repo (the failed
+# build log shows .idea/ and .DS_Store files in the tarball, so they likely
+# are), this file only stops NEW ones — run the two `git rm --cached` lines
+# below once to untrack what's already committed.
+.idea/
+.DS_Store
+**/.DS_Store
