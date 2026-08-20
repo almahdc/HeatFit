@@ -18,5 +18,5 @@ const REPO_NAME = "HeatFit";
 // A mode either is "pages" or it is not.
 export default defineConfig(({ mode }) => ({
   plugins: [react()],
-  base: mode === "pages" ? `/${REPO_NAME}/` : "/",
+  base: `/${REPO_NAME}/`,
 }));
