@@ -23,8 +23,15 @@ import { ALL_CONSTANTS } from "../data/constants.pl";
 
 // A plausible Silesian house. NOT a claim about a real one — when Magda lands a
 // real interview, replace this block and the numbers below become evidence.
+const BURN = {
+  coalTonnesBought: 4,
+  coalType: "ekogroszek" as const,
+  boilerClass: "noClass" as const,
+  feedType: "handFed" as const,
+};
+
 const HOUSE = {
-  coalTonnesPerYear: 4,
+  ...BURN,
   heatedAreaM2: 140,
   heatPumpScop: range(2.6, 3.0, 3.4), // old radiators, high flow temperature
   tariff: "G11" as const,
@@ -69,31 +76,65 @@ describe("range arithmetic", () => {
 describe("heat demand from coal", () => {
   it("lands in the plausible range for four tonnes", () => {
     // 4 t x 1000 kg x 25 MJ/kg / 3.6 = ~27 800 kWh in, x 0.6 efficiency = ~16 700 kWh out
-    const d = heatDemandFromCoal(4);
+    const d = heatDemandFromCoal({ ...BURN, coalTonnesBought: 4 });
     expect(d.mid).toBeGreaterThan(14000);
     expect(d.mid).toBeLessThan(19000);
   });
 
   it("scales linearly with tonnage", () => {
-    expect(heatDemandFromCoal(8).mid).toBeCloseTo(
-      heatDemandFromCoal(4).mid * 2,
-      5,
-    );
+    expect(heatDemandFromCoal({ ...BURN, coalTonnesBought: 8 }).mid).toBeCloseTo(heatDemandFromCoal({ ...BURN, coalTonnesBought: 4 }).mid * 2, 5);
   });
 
   it("carries the boiler efficiency uncertainty forward, not silently", () => {
     // The band must be visibly wide. If someone narrows the efficiency constant
     // without evidence, this test should be what stops them.
-    expect(spread(heatDemandFromCoal(4))).toBeGreaterThan(0.1);
+    expect(spread(heatDemandFromCoal({ ...BURN, coalTonnesBought: 4 }))).toBeGreaterThan(0.1);
   });
 
   it("rejects nonsense input rather than returning a number", () => {
-    expect(() => heatDemandFromCoal(0)).toThrow();
-    expect(() => heatDemandFromCoal(-2)).toThrow();
+    expect(() => heatDemandFromCoal({ ...BURN, coalTonnesBought: 0 })).toThrow();
+    expect(() => heatDemandFromCoal({ ...BURN, coalTonnesBought: -2 })).toThrow();
+  });
+
+  it("subtracts leftover coal, because bought is not burned", () => {
+    const all = heatDemandFromCoal({ ...BURN, coalTonnesBought: 4 });
+    const someLeft = heatDemandFromCoal({ ...BURN, coalTonnesBought: 4, coalTonnesLeftOver: 1 });
+    expect(someLeft.mid).toBeCloseTo(all.mid * 0.75, 4);
+  });
+
+  it("refuses a cellar fuller than the delivery", () => {
+    expect(() =>
+      heatDemandFromCoal({ ...BURN, coalTonnesBought: 4, coalTonnesLeftOver: 4 })
+    ).toThrow();
+  });
+
+  it("gives mial less heat than orzech for the same tonnage", () => {
+    const mial = heatDemandFromCoal({ ...BURN, coalType: "mial" });
+    const orzech = heatDemandFromCoal({ ...BURN, coalType: "orzech" });
+    expect(mial.mid).toBeLessThan(orzech.mid);
+  });
+
+  it("punishes 'don't know' with a wider band than a real answer", () => {
+    const known = heatDemandFromCoal({ ...BURN, coalType: "ekogroszek", boilerClass: "class4" });
+    const unknown = heatDemandFromCoal({ ...BURN, coalType: "unknown", boilerClass: "unknown" });
+    expect(spread(unknown)).toBeGreaterThan(spread(known) * 1.5);
+  });
+
+  it("credits a feeder with better combustion than hand-feeding", () => {
+    const hand = heatDemandFromCoal({ ...BURN, feedType: "handFed" });
+    const auto = heatDemandFromCoal({ ...BURN, feedType: "automatic" });
+    expect(auto.mid).toBeGreaterThan(hand.mid);
+  });
+
+  it("raises and widens demand when wood was burnt too", () => {
+    const coalOnly = heatDemandFromCoal(BURN);
+    const withWood = heatDemandFromCoal({ ...BURN, burntWoodToo: true });
+    expect(withWood.mid).toBeGreaterThan(coalOnly.mid);
+    expect(spread(withWood)).toBeGreaterThan(spread(coalOnly));
   });
 
   it("puts an unrenovated house above the insulate-first threshold", () => {
-    const perM2 = heatDemandPerM2(heatDemandFromCoal(4), 140);
+    const perM2 = heatDemandPerM2(heatDemandFromCoal({ ...BURN, coalTonnesBought: 4 }), 140);
     expect(perM2.mid).toBeGreaterThan(100);
   });
 });
@@ -105,8 +146,15 @@ describe("running costs per scenario", () => {
     expect(c.monthly.mid).toBeCloseTo(c.annual.mid / 12, 5);
   });
 
+  it("prefers the price the household actually paid over the regional band", () => {
+    const remembered = coalRunningCost(4, 1300);
+    const fallback = coalRunningCost(4);
+    expect(remembered.annual.mid).toBeCloseTo(4 * 1300, 4);
+    expect(spread(remembered.annual)).toBeLessThan(spread(fallback.annual));
+  });
+
   it("gives pellet a wide band, because pellet prices are volatile", () => {
-    const p = pelletRunningCost(heatDemandFromCoal(4));
+    const p = pelletRunningCost(heatDemandFromCoal({ ...BURN, coalTonnesBought: 4 }));
     expect(p.annual.confidence).not.toBe("good");
     expect(p.confidence).toBe(p.annual.confidence);
     expect(spread(p.annual)).toBeGreaterThan(0.25);
@@ -116,7 +164,7 @@ describe("running costs per scenario", () => {
     // Guards the trap this test suite already fell into once: reading
     // .confidence off the wrapper instead of the Range and silently getting
     // undefined, which compares unequal to everything and passes.
-    const demand = heatDemandFromCoal(4);
+    const demand = heatDemandFromCoal({ ...BURN, coalTonnesBought: 4 });
     const all = [
       coalRunningCost(4),
       pelletRunningCost(demand),
@@ -130,7 +178,7 @@ describe("running costs per scenario", () => {
   });
 
   it("makes the heat pump cheaper to run than coal at a decent SCOP", () => {
-    const demand = heatDemandFromCoal(4);
+    const demand = heatDemandFromCoal({ ...BURN, coalTonnesBought: 4 });
     const hp = heatPumpRunningCost(demand, range(2.6, 3.0, 3.4), "G11");
     expect(hp.annual.mid).toBeLessThan(coalRunningCost(4).annual.mid);
   });
@@ -138,29 +186,27 @@ describe("running costs per scenario", () => {
   it("makes the heat pump lose on running cost at a bad SCOP", () => {
     // Small panel radiators, flow temperature near 60C. This is the honest
     // "do not switch yet" case and it must be reachable.
-    const demand = heatDemandFromCoal(4);
+    const demand = heatDemandFromCoal({ ...BURN, coalTonnesBought: 4 });
     const bad = heatPumpRunningCost(demand, range(1.8, 2.0, 2.2), "G11");
     expect(bad.annual.mid).toBeGreaterThan(coalRunningCost(4).annual.mid);
   });
 
   it("blends the G12w price below flat G11 for a heat pump", () => {
     expect(electricityPricePerKwh("G12w").mid).toBeLessThan(
-      electricityPricePerKwh("G11").mid,
+      electricityPricePerKwh("G11").mid
     );
   });
 
   it("charges the G12w standing premium rather than pretending it is free", () => {
-    const demand = heatDemandFromCoal(4);
+    const demand = heatDemandFromCoal({ ...BURN, coalTonnesBought: 4 });
     const scop = range(2.6, 3.0, 3.4);
     const kwh = heatPumpElectricityKwh(demand, scop);
     const naive = kwh.mid * electricityPricePerKwh("G12w").mid;
-    expect(
-      heatPumpRunningCost(demand, scop, "G12w").annual.mid,
-    ).toBeGreaterThan(naive);
+    expect(heatPumpRunningCost(demand, scop, "G12w").annual.mid).toBeGreaterThan(naive);
   });
 
   it("never lets PV drive a bill below zero", () => {
-    const demand = heatDemandFromCoal(4);
+    const demand = heatDemandFromCoal({ ...BURN, coalTonnesBought: 4 });
     const huge = range(90000, 100000, 110000);
     const hp = heatPumpRunningCost(demand, range(2.6, 3.0, 3.4), "G11", huge);
     expect(hp.annual.low).toBeGreaterThanOrEqual(0);
@@ -191,9 +237,7 @@ describe("constants integrity", () => {
   it("every constant carries a source, a read date and a certainty", () => {
     for (const [name, c] of Object.entries(ALL_CONSTANTS)) {
       expect(c.source, `${name} has no source`).toBeTruthy();
-      expect(c.readOn, `${name} has no read date`).toMatch(
-        /^\d{4}-\d{2}-\d{2}$/,
-      );
+      expect(c.readOn, `${name} has no read date`).toMatch(/^\d{4}-\d{2}-\d{2}$/);
       expect(["high", "medium", "low"]).toContain(c.certainty);
     }
   });

@@ -31,8 +31,25 @@ import * as C from "../data/constants.pl";
 export type Tariff = "G11" | "G12w";
 
 export interface HouseFacts {
-  /** Tonnes of coal burned in the last heating season. The load-bearing input. */
-  coalTonnesPerYear: number;
+  /** Tonnes of coal BOUGHT for the last heating season. */
+  coalTonnesBought: number;
+  /**
+   * Tonnes still unburnt at the end of the season. Bought is not burned — a
+   * tonne left in the cellar overstates demand by around 25% on a four-tonne
+   * house, which is larger than most of the corrections this model applies.
+   */
+  coalTonnesLeftOver?: number;
+  /** Which grade. Drives calorific value; "unknown" widens the band substantially. */
+  coalType: C.CoalType;
+  /** Emission class and feed type. Drive combustion efficiency. */
+  boilerClass: C.BoilerClass;
+  feedType: C.FeedType;
+  /**
+   * Did the household also burn wood or offcuts? A flag, not a volume —
+   * nobody knows their cubic metres, and a bad guess on a high-leverage input
+   * is worse than an honest widening.
+   */
+  burntWoodToo?: boolean;
   /** Heated floor area in m2. Used only for the insulate-first check, never for demand. */
   heatedAreaM2: number;
   /**
@@ -41,6 +58,8 @@ export interface HouseFacts {
    * Passed in rather than computed here so this module stays independent.
    */
   heatPumpScop: Range;
+  /** What they actually paid per tonne, if they remember. Beats any dataset. */
+  coalPricePaidPerTonne?: number;
   /** Which electricity tariff to price the heat pump on. */
   tariff: Tariff;
   /** Annual kWh the PV array is expected to offset, if any. From a PV model. */
@@ -69,11 +88,7 @@ function band(b: C.SourcedBand): Range {
   return range(b.low, b.mid, b.high);
 }
 
-function toRunningCost(
-  annual: Range,
-  fuelQuantity: Range,
-  fuelUnit: string,
-): RunningCost {
+function toRunningCost(annual: Range, fuelQuantity: Range, fuelUnit: string): RunningCost {
   return {
     annual,
     monthly: scale(annual, 1 / 12),
@@ -85,40 +100,77 @@ function toRunningCost(
 
 // --- step 1: what does this house actually need? ----------------------------
 
+/** Coal actually burned = bought minus whatever is still in the cellar. */
+export function coalActuallyBurned(bought: number, leftOver = 0): number {
+  const burned = bought - leftOver;
+  if (burned <= 0) {
+    throw new Error("coalActuallyBurned: leftover coal cannot equal or exceed what was bought");
+  }
+  return burned;
+}
+
+export interface HeatDemandInputs {
+  coalTonnesBought: number;
+  coalTonnesLeftOver?: number;
+  coalType: C.CoalType;
+  boilerClass: C.BoilerClass;
+  feedType: C.FeedType;
+  burntWoodToo?: boolean;
+}
+
 /**
  * Coal burned -> useful heat delivered into the house, in kWh per year.
  *
  *   tonnes x 1000 kg/t x MJ/kg x boiler efficiency / 3.6 MJ per kWh
  *
- * The boiler efficiency band is the widest source of error here and it is the
- * first thing real interview data should replace.
+ * Both the calorific value and the efficiency now come from lookup tables, so
+ * answering "what do you burn" and "what class is it" narrows the band instead
+ * of the model assuming an average house.
+ *
+ * The wood flag widens the result rather than adding a guessed quantity: a
+ * household that also burnt wood has more demand than their coal implies, and
+ * we say so honestly instead of inventing cubic metres.
  */
-export function heatDemandFromCoal(coalTonnesPerYear: number): Range {
-  if (coalTonnesPerYear <= 0) {
-    throw new Error("heatDemandFromCoal: coal tonnage must be positive");
-  }
+export function heatDemandFromCoal(input: HeatDemandInputs): Range {
+  const tonnes = coalActuallyBurned(input.coalTonnesBought, input.coalTonnesLeftOver ?? 0);
 
-  const kg = exact(coalTonnesPerYear * 1000);
-  const energyIn = scale(
-    multiply(kg, band(C.COAL_CALORIFIC_VALUE)),
-    1 / C.MJ_PER_KWH,
-  );
-  return multiply(energyIn, band(C.OLD_COAL_BOILER_EFFICIENCY));
+  const kg = exact(tonnes * 1000);
+  const calorific = band(C.COAL_CALORIFIC_VALUE[input.coalType]);
+  const efficiency = band(C.coalBoilerEfficiency(input.boilerClass, input.feedType));
+
+  const energyIn = scale(multiply(kg, calorific), 1 / C.MJ_PER_KWH);
+  const fromCoal = multiply(energyIn, efficiency);
+
+  if (!input.burntWoodToo) return fromCoal;
+
+  // Wood adds unmeasured demand. Centre the estimate modestly above coal-only
+  // and widen, so a heat pump sized from this is not undersized in January.
+  return multiply(fromCoal, range(1.05, 1.25, 1.45));
 }
 
 /** Useful heat per square metre. Feeds the insulate-first verdict. */
 export function heatDemandPerM2(demand: Range, heatedAreaM2: number): Range {
-  if (heatedAreaM2 <= 0)
-    throw new Error("heatDemandPerM2: area must be positive");
+  if (heatedAreaM2 <= 0) throw new Error("heatDemandPerM2: area must be positive");
   return scale(demand, 1 / heatedAreaM2);
 }
 
 // --- step 2: cost of each option --------------------------------------------
 
-/** Scenario A: change nothing. Keep buying coal. */
-export function coalRunningCost(coalTonnesPerYear: number): RunningCost {
-  const tonnes = fromSpread(coalTonnesPerYear, 0.05); // homeowner recall, not a meter
-  const annual = multiply(tonnes, band(C.COAL_PRICE_PER_TONNE));
+/**
+ * Scenario A: change nothing. Keep buying coal.
+ *
+ * If the household remembers what they paid, use it — they know this number
+ * precisely and no dataset does. Otherwise fall back to the regional band.
+ */
+export function coalRunningCost(
+  coalTonnesBurnedPerYear: number,
+  pricePaidPerTonne?: number
+): RunningCost {
+  const tonnes = fromSpread(coalTonnesBurnedPerYear, 0.05); // recall, not a meter
+  const price = pricePaidPerTonne
+    ? fromSpread(pricePaidPerTonne, 0.05)
+    : band(C.COAL_PRICE_PER_TONNE);
+  const annual = multiply(tonnes, price);
   return toRunningCost(annual, tonnes, "t");
 }
 
@@ -130,10 +182,7 @@ export function coalRunningCost(coalTonnesPerYear: number): RunningCost {
  * result given what happened to pellet prices last winter.
  */
 export function pelletRunningCost(demand: Range): RunningCost {
-  const energyNeededMj = scale(
-    divide(demand, band(C.PELLET_BOILER_EFFICIENCY)),
-    C.MJ_PER_KWH,
-  );
+  const energyNeededMj = scale(divide(demand, band(C.PELLET_BOILER_EFFICIENCY)), C.MJ_PER_KWH);
   const kg = divide(energyNeededMj, band(C.PELLET_CALORIFIC_VALUE));
   const tonnes = scale(kg, 1 / 1000);
   const annual = multiply(tonnes, band(C.PELLET_PRICE_PER_TONNE));
@@ -146,8 +195,7 @@ export function pelletRunningCost(demand: Range): RunningCost {
  * temperature, a low SCOP, and a heat pump that loses on cost.
  */
 export function heatPumpElectricityKwh(demand: Range, scop: Range): Range {
-  if (scop.low <= 0)
-    throw new Error("heatPumpElectricityKwh: SCOP must be positive");
+  if (scop.low <= 0) throw new Error("heatPumpElectricityKwh: SCOP must be positive");
   return divide(demand, scop);
 }
 
@@ -159,11 +207,11 @@ export function electricityPricePerKwh(tariff: Tariff): Range {
   const peakShare = range(
     1 - offpeakShare.high,
     1 - offpeakShare.mid,
-    1 - offpeakShare.low,
+    1 - offpeakShare.low
   );
   return add(
     multiply(offpeakShare, band(C.ELECTRICITY_G12W_OFFPEAK_PER_KWH)),
-    multiply(peakShare, band(C.ELECTRICITY_G12W_PEAK_PER_KWH)),
+    multiply(peakShare, band(C.ELECTRICITY_G12W_PEAK_PER_KWH))
   );
 }
 
@@ -180,7 +228,7 @@ export function heatPumpRunningCost(
   demand: Range,
   scop: Range,
   tariff: Tariff,
-  pvOffsetKwhPerYear?: Range,
+  pvOffsetKwhPerYear?: Range
 ): RunningCost {
   const gross = heatPumpElectricityKwh(demand, scop);
 
@@ -217,38 +265,20 @@ export interface RunningCosts {
  * Running cost only — no capital, no grant, no loan. financing.ts adds those.
  */
 export function runningCosts(facts: HouseFacts): RunningCosts {
-  const demand = heatDemandFromCoal(facts.coalTonnesPerYear);
+  const demand = heatDemandFromCoal(facts);
+  const burned = coalActuallyBurned(facts.coalTonnesBought, facts.coalTonnesLeftOver ?? 0);
 
   return {
     demand,
     demandPerM2: heatDemandPerM2(demand, facts.heatedAreaM2),
-    coal: coalRunningCost(facts.coalTonnesPerYear),
+    coal: coalRunningCost(burned, facts.coalPricePaidPerTonne),
     pellet: pelletRunningCost(demand),
     heatPump: heatPumpRunningCost(demand, facts.heatPumpScop, facts.tariff),
     heatPumpPlusPv: heatPumpRunningCost(
       demand,
       facts.heatPumpScop,
       facts.tariff,
-      facts.pvOffsetKwhPerYear ?? exact(0),
+      facts.pvOffsetKwhPerYear ?? exact(0)
     ),
   };
-}
-
-/**
- * Domestic hot water demand, in kWh/year, when it is NOT already inside the
- * coal tonnage (Q6 = separate heater). Uses a simple ΔT model: heating mains
- * water (assumed 10°C) to a usable 45°C.
- */
-export function dhwDemandKwh(people: number): Range {
-  if (people <= 0) throw new Error("dhwDemandKwh: people must be positive");
-
-  const litresPerYear = exact(people * 365).mid; // people is exact, not a Range
-  const litres = fromSpread(litresPerYear, 0); // placeholder shape, see note below
-  // litres/day x 365 x specific heat x deltaT, converted to kWh
-  const deltaT = 35; // 10C mains to 45C usable, Polish convention
-  const kwhPerLitre = (1 * 4.186 * deltaT) / 3600; // ~0.0407 kWh/litre
-  return scale(
-    band(C.DHW_LITRES_PER_PERSON_PER_DAY),
-    people * 365 * kwhPerLitre,
-  );
 }
