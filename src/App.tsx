@@ -457,7 +457,7 @@ export default function App() {
         <StepShell
           {...shared("coalBought")}
           title="How much coal did you buy for last winter?"
-          helper="Tonnes, or how many deliveries. A rough number is fine we show you the range."
+          helper="A rough number is fine."
         >
           <input
             type="number"
@@ -501,10 +501,10 @@ export default function App() {
             value={coalType}
             onChange={setCoalType}
             options={[
-              { value: "ekogroszek", label: "Ekogroszek" },
-              { value: "orzech", label: "Orzech" },
-              { value: "groszek", label: "Groszek" },
-              { value: "mial", label: "Miał" },
+              { value: "ekogroszek", label: "Eco-pea coal" },
+              { value: "orzech", label: "Nut coal" },
+              { value: "groszek", label: "Pea coal" },
+              { value: "mial", label: "Fine coal" },
               { value: "unknown", label: "A mix, or not sure" },
             ]}
           />
@@ -530,7 +530,7 @@ export default function App() {
               {
                 value: "noClass",
                 label: "No class",
-                sublabel: "An old kopciuch",
+                sublabel: "An old boiler",
               },
               { value: "class3", label: "Class 3" },
               { value: "class4", label: "Class 4" },
@@ -853,17 +853,20 @@ export default function App() {
                   : undefined,
             }))}
           />
+          {routeId !== "cash" && (
           <div className="sub-question">
             <p className="stat-label">Over how long?</p>
             <ChoiceGroup
-              value={String(termYears)}
-              onChange={(v) => setTermYears(+v)}
-              options={[5, 8, 10, 12].map((y) => ({
-                value: String(y),
-                label: `${y} years`,
-              }))}
+                value={String(termYears)}
+                onChange={(v) => setTermYears(+v)}
+                options={[5, 8, 10, 12].map((y) => ({
+                  value: String(y),
+                  label: `${y} years`,
+                }))}
             />
           </div>
+          )}
+
         </StepShell>
       )}
 
