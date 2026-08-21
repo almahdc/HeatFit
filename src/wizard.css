@@ -70,11 +70,10 @@
   color: var(--text-primary);
 }
 
-
 .step-helper {
   font-size: var(--type-lg);
   color: var(--text-secondary);
-  margin: 0 0 var(--space-2xl);
+  margin: 0 0 var(--space-lg);
   max-width: 50ch;
   line-height: 1.5;
 }
@@ -87,7 +86,7 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: var(--space-lg);
+  padding-top: var(--space-sm);
   gap: var(--space-lg);
 }
 
@@ -293,11 +292,10 @@
 
 .step-block {
   padding: var(--space-lg) 0;
-  scroll-margin-top: 5.5rem;
 }
 
 .step-block.active {
-  padding: var(--space-xl) 0 var(--space-2xl);
+  padding: var(--space-lg) 0 var(--space-xl);
 }
 
 /* Completed steps: fade and click-to-edit */
@@ -306,6 +304,10 @@
   opacity: 0.6;
   transition: opacity var(--transition-base);
   padding: var(--space-lg) 0;
+}
+
+.step-block.completed .step-nav-spacer {
+  height: 3.5rem;
 }
 
 .step-block.completed:hover {

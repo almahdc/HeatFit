@@ -270,7 +270,12 @@ export function financingPlan(input: FinancingInput): FinancingPlan {
         grant: input.upfrontGrant.mid,
       },
       {
-        bal: balanceAfter(borrowed.high, route.annualRate, termMonths, monthsIn),
+        bal: balanceAfter(
+          borrowed.high,
+          route.annualRate,
+          termMonths,
+          monthsIn,
+        ),
         grant: input.upfrontGrant.low,
       },
     ];
@@ -490,11 +495,11 @@ export function payoffSchedule(
  */
 
 export const AFFORDABILITY = {
-  /** Points added to the rate before a lender tests you. */          // VERIFY
+  /** Points added to the rate before a lender tests you. */ // VERIFY
   stressRateAddPct: 2.5,
-  /** Repayments as a share of net income. */                          // VERIFY
+  /** Repayments as a share of net income. */ // VERIFY
   maxDebtServiceRatio: 0.45,
-  /** Assumed household living costs, monthly. */                      // VERIFY
+  /** Assumed household living costs, monthly. */ // VERIFY
   assumedLivingCostsPln: 2500,
 };
 

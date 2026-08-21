@@ -162,7 +162,8 @@ export const DEFAULT_PROGRAMMES: Programme[] = [
     excludesForSameDevice: ["czystePowietrze"],
     requires: ["replacingKopciuch", "deviceOnZumList"],
     verified: false,
-    source: "Polish market reporting 2026 — UNVERIFIED. Amounts are set per gmina.",
+    source:
+      "Polish market reporting 2026 — UNVERIFIED. Amounts are set per gmina.",
     readOn: "2026-08-19",
   },
   {
@@ -181,7 +182,8 @@ export const DEFAULT_PROGRAMMES: Programme[] = [
     isTaxRelief: true,
     capIsPerTaxpayer: true,
     verified: false,
-    source: "Polish tax code, art. 26h PIT — cash value depends on the taxpayer's band",
+    source:
+      "Polish tax code, art. 26h PIT — cash value depends on the taxpayer's band",
     readOn: "2026-08-19",
   },
 ];
@@ -371,7 +373,9 @@ export function subsidiesFor(
       continue;
     }
 
-    const cap = p.capIsPerTaxpayer ? capPerTaxpayer * taxpayers : capPerTaxpayer;
+    const cap = p.capIsPerTaxpayer
+      ? capPerTaxpayer * taxpayers
+      : capPerTaxpayer;
     const base = Math.min(cap, ownSpend * share);
     const cash = base * rate;
 

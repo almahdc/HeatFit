@@ -183,7 +183,6 @@ footer {
 
 /* Wizard styles moved to wizard.css (Phase 2 redesign) */
 
-
 .breakdown .detail {
   border-top: none;
   padding-top: 0;
@@ -239,4 +238,3 @@ footer {
 }
 
 /* --- Sensitivity, Timeline, and Affordability Panels moved to results.css (Phase 3 redesign) */
-

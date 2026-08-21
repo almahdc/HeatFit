@@ -56,10 +56,10 @@
   display: block;
   font-size: var(--type-sm);
   font-weight: 700;
-  color: #30323D;
+  color: #30323d;
   margin-top: var(--space-md);
   padding-top: var(--space-md);
-  border-top: 2px solid #30323D;
+  border-top: 2px solid #30323d;
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -234,7 +234,7 @@
 }
 
 .verdict.v-pellets h2 {
-  color: #9B7E3F;
+  color: #9b7e3f;
 }
 
 /* --- Sensitivity Panel (Driver Rankings) ---------------------------------- */
@@ -405,7 +405,7 @@
   padding: 0.25rem 0.625rem;
   border: 2px solid var(--color-gold);
   border-radius: 3px;
-  color: #30323D;
+  color: #30323d;
   background: rgba(232, 197, 71, 0.1);
 }
 
@@ -506,7 +506,7 @@
 }
 
 .results > .btn-secondary.back-link:hover {
-  background: #E8E7E3;
+  background: #e8e7e3;
   border-color: var(--color-charcoal);
 }
 

@@ -102,9 +102,9 @@ describe("T1 · the project cap is applied once, not per device", () => {
 describe("T3 · the sensitivity list is generated, never hand-written", () => {
   // A stand-in model: monthly cost falls with a cheaper pellet price and rises
   // with a dearer one. Enough to prove the ranking machinery works.
-  const model = (o: Parameters<typeof sensitivity>[0] extends never
-    ? never
-    : any) => {
+  const model = (
+    o: Parameters<typeof sensitivity>[0] extends never ? never : any,
+  ) => {
     const pellet = o.pelletPricePerTonne ?? 1900;
     const elec = o.electricityG11PerKwh ?? 1.07;
     const rate = o.loanRatePct ?? 8.43;
@@ -143,8 +143,9 @@ describe("T3 · the sensitivity list is generated, never hand-written", () => {
     const narrowRate = sensitivity(model, { loanRatePct: 0.5 });
     // Same specs, different rate band, so the rate driver must move position
     // or magnitude rather than being frozen.
-    expect(wide.find((d) => d.label.includes("interest"))?.swingPlnPerMonth)
-      .toBeDefined();
+    expect(
+      wide.find((d) => d.label.includes("interest"))?.swingPlnPerMonth,
+    ).toBeDefined();
     expect(narrowRate.length).toBeGreaterThan(0);
   });
 });
