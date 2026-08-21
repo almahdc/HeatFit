@@ -447,7 +447,10 @@ export default function App() {
       {stepId !== "results" && (
         <div className="wizard-top">
           <p className="masthead-mini">
-            What's your coal boiler really costing you?
+            You're legally required to upgrade, but what actually makes financial sense?
+          </p>
+          <p className="masthead-submini">
+            You're legally required to upgrade, but what actually makes financial sense? Turn a few quick questions and photos into a clear, monthly payment plan.
           </p>
           <div className="overall-progress-track">
             <div
