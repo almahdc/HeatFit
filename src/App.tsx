@@ -182,6 +182,20 @@ useLayoutEffect(() => {
   });
 }, [stepIndex, stepId]);
 
+  // Term choices are capped by the route. Offering 12 years on a product that
+  // maxes at 120 months produced a monthly payment nobody could be given.
+  const TERM_CHOICES = [5, 8, 10, 12];
+  const routeMaxYears = Math.floor((ROUTES[routeId]?.maxTermMonths ?? 0) / 12);
+  const termOptions = TERM_CHOICES.filter((y) => y <= routeMaxYears);
+
+  const chooseRoute = (id: string) => {
+    setRouteId(id);
+    const max = Math.floor((ROUTES[id]?.maxTermMonths ?? 0) / 12);
+    if (max > 0 && termYears > max) {
+      setTermYears(Math.max(...TERM_CHOICES.filter((y) => y <= max)));
+    }
+  };
+
   const next = () => setStepIndex((i) => Math.min(i + 1, STEP_IDS.length - 1));
   const back = () => setStepIndex((i) => Math.max(i - 1, 0));
   const jumpTo = (id: StepId) => setStepIndex(idx(id));
@@ -854,7 +868,7 @@ useLayoutEffect(() => {
         >
           <ChoiceGroup
             value={routeId}
-            onChange={setRouteId}
+            onChange={chooseRoute}
             options={Object.values(ROUTES).map((r) => ({
               value: r.id,
               label: r.label,
@@ -870,11 +884,19 @@ useLayoutEffect(() => {
             <ChoiceGroup
                 value={String(termYears)}
                 onChange={(v) => setTermYears(+v)}
-                options={[5, 8, 10, 12].map((y) => ({
+                options={termOptions.map((y) => ({
                   value: String(y),
                   label: `${y} years`,
                 }))}
             />
+            {/* The programme sets a ceiling. The bank decides what it will
+                actually lend, to this person, at this age. We do not model
+                that yet, so we say so rather than implying the maximum is
+                on offer. */}
+            <p className="note-inline">
+              The longest term shown is this product's maximum. What you are
+              actually offered is decided by the bank, and can be shorter.
+            </p>
           </div>
           )}
 
@@ -942,70 +964,90 @@ function OptionBreakdown({
   const stepsDown =
     Math.round(plan.monthlyAfterGrant.mid) < Math.round(plan.monthlyBeforeGrant.mid);
 
-  const grants = sub.detail.filter((d) => !d.programme.isTaxRelief);
-  const reliefs = sub.detail.filter((d) => d.programme.isTaxRelief);
+  // Applied and refused are separated rather than interleaved: a refused
+  // programme is context, not an option, and should never sit above one the
+  // household actually gets. Refused lines carry the reason and no amount —
+  // showing money to someone who was never eligible invents a loss.
+  const applied = sub.detail.filter((d) => d.applied);
+  const refused = sub.detail.filter((d) => !d.applied);
+  const appliedGrants = applied.filter((d) => !d.programme.isTaxRelief);
+  const appliedReliefs = applied.filter((d) => d.programme.isTaxRelief);
 
   return (
     <details className="breakdown">
       <summary>See what you get and what you sign</summary>
 
-      {/* --- what am I getting --------------------------------------------- */}
-      <p className="stat-label">What you are getting</p>
-      <dl className="detail">
-        <div>
-          <dt>The work costs</dt>
-          <dd>{zl(row.capital.mid)} zł</dd>
-        </div>
-        <div>
-          <dt>Grants pay</dt>
-          <dd className="grant">- {zl(sub.upfrontGrant.mid)} zł</dd>
-        </div>
-        <div>
-          <dt>You pay</dt>
-          <dd>{zl(sub.ownSpend.mid)} zł</dd>
-        </div>
-      </dl>
+      {/* === PANEL 1: what you get ========================================= */}
+      <section className="money-panel">
+        <p className="stat-label">What you get</p>
+        <dl className="detail">
+          <div>
+            <dt>The work costs</dt>
+            <dd>{zl(row.capital.mid)} zł</dd>
+          </div>
+          <div>
+            <dt>Grants pay</dt>
+            <dd className="grant">- {zl(sub.upfrontGrant.mid)} zł</dd>
+          </div>
+          <div>
+            <dt>You pay</dt>
+            <dd>{zl(sub.ownSpend.mid)} zł</dd>
+          </div>
+        </dl>
 
-      <ul className="programme-list">
-        {grants.map((d) => (
-          <li
-            key={d.programme.id}
-            className={d.applied ? "applied" : "refused"}
-          >
-            <strong>{d.programme.label}</strong>
-            {d.applied ? (
-              <> pays {zl(d.amount.mid)} zł</>
-            ) : (
-              <>, {d.reason}</>
-            )}
-          </li>
+        {appliedGrants.length > 0 && (
+          <ul className="programme-list">
+            {appliedGrants.map((d) => (
+              <li key={d.programme.id} className="applied">
+                <strong>{d.programme.label}</strong> pays {zl(d.amount.mid)} zł
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {appliedReliefs.map((d) => (
+          <div key={d.programme.id} className="relief-block">
+            <p className="stat-label">Money back later, through your tax return</p>
+            <dl className="detail">
+              <div>
+                <dt>You subtract from taxable income</dt>
+                <dd>{zl(d.deductionBase?.mid ?? 0)} zł</dd>
+              </div>
+              <div>
+                <dt>Which returns, in cash</dt>
+                <dd className="grant">{zl(d.amount.mid)} zł</dd>
+              </div>
+            </dl>
+            <p className="note-inline">
+              This is a deduction, not a payment. You get back your tax rate on
+              it, spread over up to six tax years, not the whole amount, and not
+              up front.
+            </p>
+          </div>
         ))}
-      </ul>
 
-      {/* --- what do I get back later -------------------------------------- */}
-      <p className="stat-label">Money back later, through your tax return</p>
-      {reliefs.map((d) => (
-        <div key={d.programme.id}>
-          <dl className="detail">
-            <div>
-              <dt>You subtract from taxable income</dt>
-              <dd>{zl(d.deductionBase?.mid ?? 0)} zł</dd>
-            </div>
-            <div>
-              <dt>Which returns, in cash</dt>
-              <dd className="grant">{zl(d.amount.mid)} zł</dd>
-            </div>
-          </dl>
-          <p className="note-inline">
-            {d.applied
-              ? "This is a deduction, not a payment. You get back your tax rate on it, spread over up to six tax years, not the whole amount, and not up front."
-              : d.reason}
-          </p>
-        </div>
-      ))}
+        {refused.length > 0 && (
+          <ul className="programme-list refused-list">
+            {refused.map((d) => (
+              <li key={d.programme.id} className="refused">
+                <strong>{d.programme.label}</strong>
+                {d.reason ? <>: {d.reason}</> : null}
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
-      {/* --- what am I signing --------------------------------------------- */}
-      <p className="stat-label">What you would be signing</p>
+      {/* === BRIDGE: when the money actually moves ========================= */}
+      <p className="timing-bridge">
+        {plan.grantAppliedToCapital.mid > 0
+          ? `The grant of ${zl(plan.grantAppliedToCapital.mid)} zł goes straight to the bank and shrinks what you owe, which is why the repayment steps down. You never handle that money.`
+          : `The grant of ${zl(plan.grantReimbursed.mid)} zł is paid to you after the work is settled — so you have to cover the full cost first.`}
+      </p>
+
+      {/* === PANEL 2: how you cover it until it lands ====================== */}
+      <section className="money-panel">
+        <p className="stat-label">How you cover it until it lands</p>
       <dl className="detail">
         <div>
           <dt>Lender and product</dt>
@@ -1043,16 +1085,19 @@ function OptionBreakdown({
         </div>
       </dl>
 
-      <p className="note-inline">
-        {plan.grantAppliedToCapital.mid > 0
-          ? `The grant of ${zl(plan.grantAppliedToCapital.mid)} zł goes straight to the bank and shrinks what you owe, which is why the repayment steps down. You never handle that money.`
-          : `The grant of ${zl(plan.grantReimbursed.mid)} zł is paid to you after the work is settled. Your repayments do not change, unless you use it to pay the loan down early, which most people do.`}
-      </p>
+        {plan.grantAppliedToCapital.mid === 0 &&
+          plan.grantReimbursed.mid > 0 && (
+            <p className="note-inline">
+              Your repayments do not change when the grant arrives, unless you
+              use it to pay the loan down early, which most people do.
+            </p>
+          )}
 
-      <p className="note-inline">
-        Net cost across the whole term, after the grant and the tax relief:{" "}
-        <strong>{zl(plan.netCapitalCost.mid)} zł</strong>.
-      </p>
+        <p className="note-inline">
+          Net cost across the whole term, after the grant and the tax relief:{" "}
+          <strong>{zl(plan.netCapitalCost.mid)} zł</strong>.
+        </p>
+      </section>
 
       {plan.warnings.map((w) => (
         <p className="warn" key={w}>
@@ -1285,8 +1330,7 @@ function ResultsScreen({
             </p>
           )}
           <p className="warn">
-            This is a rough guide so you know what to expect, not credit advice,
-            and no lender has seen it. Your own bank decides.
+            This is a rough guide so you know what to expect, not credit advice. Your bank decides.
           </p>
         </section>
       )}

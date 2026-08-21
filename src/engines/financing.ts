@@ -192,7 +192,7 @@ export function financingPlan(input: FinancingInput): FinancingPlan {
 
   if (route.status === "suspended") {
     warnings.push(
-      `${route.label} is not available today — applications are suspended. Shown for comparison only.`,
+      `${route.label} is not available today, applications are suspended. Shown for comparison only.`,
     );
   }
   if (route.note?.includes("EXPIRES")) {

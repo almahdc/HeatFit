@@ -238,3 +238,41 @@ footer {
 }
 
 /* --- Sensitivity, Timeline, and Affordability Panels moved to results.css (Phase 3 redesign) */
+
+/* --- financing breakdown: two panels with a timing bridge ------------------
+   Grants and the loan are different objects: one is money you keep, the other
+   is how you cover the gap until it lands. Splitting them makes the timing
+   visible, which is the part homeowners get caught by. */
+
+.money-panel {
+  padding: var(--space-md) 0;
+}
+
+.money-panel + .money-panel {
+  border-top: 1px solid var(--ink-soft);
+}
+
+.relief-block {
+  margin-top: var(--space-md);
+}
+
+/* The bridge carries the one fact both panels depend on: when the money moves. */
+.timing-bridge {
+  margin: var(--space-md) 0;
+  padding: var(--space-md);
+  border-left: 4px solid var(--color-gold);
+  background: var(--color-off-white, #f7f7f5);
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+/* Refused programmes sit below the ones that apply, reason only, no amounts. */
+.refused-list {
+  margin-top: var(--space-md);
+}
+
+.refused-list li.refused {
+  font-size: var(--type-sm);
+  border-top: 1px solid var(--ink-soft);
+}

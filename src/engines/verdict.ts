@@ -94,10 +94,9 @@ export function verdict(input: VerdictInput): Verdict {
         Math.min(cheapest.duringLoan.low, runnerUp.duringLoan.low),
       )} and ${Math.round(
         Math.max(cheapest.duringLoan.high, runnerUp.duringLoan.high),
-      )} zł a month. The gap between them is smaller than what we do not know.`,
+      )} zł a month. `,
       wouldChangeIt: [
         "A firm quote from an installer, which replaces our cost estimate",
-        "A fixed-price pellet contract, which is the main reason the range is this wide",
         "Photographs of your radiators, which decide how efficiently a heat pump can run here",
       ],
     };

@@ -138,7 +138,7 @@ export const PELLET_PRICE_PER_TONNE: SourcedBand = {
   certainty: "low",
   note:
     "VOLATILE. Winter 2025/26 saw A1 pellet reach 2500-4000 zł/t at some distributors amid sawdust " +
-    "supply shortages. The wide band is the finding, not a modelling weakness — pellet is not the " +
+    "supply shortages. The wide band is the finding, not a modelling weakness, pellet is not the " +
     "price-stable option it is assumed to be. Do not narrow this without evidence.",
 };
 
