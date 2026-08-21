@@ -28,6 +28,7 @@ import {
   maskPostcodeInput,
 } from "./data/postcodes.pl";
 import * as C from "./data/constants.pl";
+import { StyleTile } from "./StyleTile";
 
 const zl = (n: number) => Math.round(n).toLocaleString("pl-PL");
 const band = (r: Range) => `${zl(r.low)} \u2013 ${zl(r.high)}`;
@@ -110,6 +111,12 @@ type StepId = (typeof STEP_IDS)[number];
 const idx = (id: StepId) => STEP_IDS.indexOf(id);
 
 export default function App() {
+  // Route check: show style tile if requested
+  const showStyleTile = new URLSearchParams(window.location.search).get("mode") === "style-tile";
+  if (showStyleTile) {
+    return <StyleTile />;
+  }
+
   // --- what they burn -------------------------------------------------------
   const [coalBought, setCoalBought] = useState(4);
   const [coalLeftOver, setCoalLeftOver] = useState(0);
