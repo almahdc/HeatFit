@@ -86,7 +86,6 @@ export const ROUTES: Record<string, FinancingRoute> = {
       "BOŚ Bank, Pożyczka Zielona. Representative example: 8.43% nominal, 8.76% APR on 60 000 zł. " +
       "Promotion 03.06.2026-30.09.2026, 0% arrangement fee, requires the signed WFOŚiGW agreement.",
     readOn: "2026-08-19",
-    note: "PROMOTION EXPIRES 30.09.2026. Recheck before the November pitch.",
   },
   cash: {
     id: "cash",

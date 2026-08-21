@@ -180,15 +180,49 @@ export default function App() {
   };
 
   const firstRender = useRef(true);
+
+  /**
+   * Where the step we are leaving sat, measured just before the state change.
+   *
+   * The wizard is continuous scroll: every previous step stays mounted. When a
+   * step deactivates it loses its helper text, its nav row, some padding and a
+   * type size, so several rem vanish from ABOVE the viewport and everything
+   * below rises to fill the gap. Nothing scrolled, but the content moved under
+   * a stationary viewport, which reads as the page jumping to the bottom.
+   *
+   * Recording the outgoing step's position before the change lets us put it
+   * back afterwards, so existing content appears to stay exactly where it was
+   * and the new step is simply revealed below it.
+   */
+  const anchorId = useRef<StepId | null>(null);
+  const anchorTop = useRef<number | null>(null);
+
+  const captureAnchor = () => {
+    const el = stepRefs.current[stepId];
+    anchorId.current = el ? stepId : null;
+    anchorTop.current = el ? el.getBoundingClientRect().top : null;
+  };
+
   useLayoutEffect(() => {
     if (firstRender.current) {
       firstRender.current = false;
       return;
     }
-    const el = stepRefs.current[stepId];
-    if (!el) return;
     requestAnimationFrame(() => {
-      el.scrollIntoView({ block: "start" }); // instant, not smooth
+      // 1. Undo the shift caused by the outgoing step collapsing.
+      const anchorEl = anchorId.current
+        ? stepRefs.current[anchorId.current]
+        : null;
+      if (anchorEl && anchorTop.current !== null) {
+        const drift = anchorEl.getBoundingClientRect().top - anchorTop.current;
+        if (Math.abs(drift) > 1) window.scrollBy(0, drift);
+      }
+      anchorId.current = null;
+      anchorTop.current = null;
+
+      // 2. Only now, and only if the new step is still out of view, move the
+      //    minimum distance needed to bring it in.
+      stepRefs.current[stepId]?.scrollIntoView({ block: "nearest" });
     });
   }, [stepIndex, stepId]);
 
@@ -206,9 +240,18 @@ export default function App() {
     }
   };
 
-  const next = () => setStepIndex((i) => Math.min(i + 1, STEP_IDS.length - 1));
-  const back = () => setStepIndex((i) => Math.max(i - 1, 0));
-  const jumpTo = (id: StepId) => setStepIndex(idx(id));
+  const next = () => {
+    captureAnchor();
+    setStepIndex((i) => Math.min(i + 1, STEP_IDS.length - 1));
+  };
+  const back = () => {
+    captureAnchor();
+    setStepIndex((i) => Math.max(i - 1, 0));
+  };
+  const jumpTo = (id: StepId) => {
+    captureAnchor();
+    setStepIndex(idx(id));
+  };
   const showStep = (id: StepId) => idx(id) <= stepIndex;
   const isActive = (id: StepId) => idx(id) === stepIndex;
 

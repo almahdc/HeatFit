@@ -158,6 +158,11 @@
   font-weight: 700;
 }
 
+.card.best .detail .grant {
+  color: #ffffff;
+  font-weight: 700;
+}
+
 /* Note: helper text for coal baseline ("here so you can see") */
 .note {
   margin-top: auto;

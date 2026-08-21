@@ -292,6 +292,17 @@
 
 .step-block {
   padding: var(--space-lg) 0;
+  /* Used only when a step arrives from below and has to be brought into view.
+     Leaves room under it instead of parking it flush against the bottom edge.
+     This is the knob for how much of the new step is revealed. */
+  scroll-margin-bottom: 10rem;
+}
+
+/* The active step is the last element on the page, so there is nothing below
+   it to scroll past. Without reserved room the browser hits maximum scroll
+   before the step is fully in view. */
+.step-block.active:last-child {
+  margin-bottom: 25vh;
 }
 
 .step-block.active {
