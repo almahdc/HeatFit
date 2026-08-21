@@ -627,3 +627,30 @@
 .figure.delta.second .delta-quiet {
   color: var(--text-secondary);
 }
+
+/* Timeline year rows: the comparison leads, the absolute total supports it.
+   Same prominence order as the scenario cards, so the screen speaks one
+   language throughout. */
+.years .year-delta {
+  display: block;
+  font-weight: var(--weight-bold);
+  color: var(--text-primary);
+}
+
+.years .year-total {
+  display: block;
+  font-size: var(--type-xs);
+  font-weight: var(--weight-regular);
+  color: var(--text-secondary);
+  margin-top: 0.15rem;
+}
+
+/* Span label on a collapsed run: states the duration as a fact rather than
+   leaving it to be inferred from how many rows there are. */
+.years .year-span {
+  display: block;
+  font-size: var(--type-xs);
+  font-weight: var(--weight-regular);
+  color: var(--text-secondary);
+  margin-top: 0.15rem;
+}

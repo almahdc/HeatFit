@@ -14,6 +14,7 @@ import {
   FinancingPlan,
   PayoffSchedule,
   ROUTES,
+  ScheduleYear,
   financingPlan,
   headlineMonthly,
   impliedIncome,
@@ -335,9 +336,17 @@ export default function App() {
     // The model is re-run against the winning scenario with one constant swung
     // at a time. Rebuilding running costs from scratch inside the closure is
     // what keeps the ranking honest: nothing is assumed to stay put.
-    const winner =
-      rows.find((r) => r.id === v.kind.replace("PlusPv", "PlusPv")) ??
-      rows.filter((r) => r.id !== "coal")[0]!;
+    // The verdict kind names a scenario only when it picked one. For
+    // "tooCloseToCall", "insulateFirst" and "wait" there is no named winner, and
+    // the panels below still need a subject. Falling through to rows[0] made
+    // that subject pellet every time, so the timeline described an option the
+    // verdict had not recommended. Fall back to the cheapest to run instead,
+    // which is the same rule the verdict itself uses to pick a winner.
+    const cheapestToRun = rows
+      .filter((r) => r.id !== "coal")
+      .sort((a, b) => a.summary.afterLoan.mid - b.summary.afterLoan.mid)[0]!;
+
+    const winner = rows.find((r) => r.id === v.kind) ?? cheapestToRun;
 
     const monthlyFor = (o: {
       pelletPricePerTonne?: number;
@@ -1197,6 +1206,51 @@ function ResultsScreen({
     return { amount: `${zl(Math.abs(d))} zł`, word: d > 0 ? "more" : "less" };
   };
 
+  /**
+   * Collapse runs of identical years.
+   *
+   * Nine rows saying the same thing are noise on a phone. But their length IS
+   * the commitment, so a collapsed run states its span in years explicitly —
+   * "9 years" is a fact, counting rows is a task. Years carrying a tag (grant
+   * lands, last payment) are never merged: those are the rows people look for.
+   */
+  const groupYears = (years: ScheduleYear[]) => {
+    const out: { rows: ScheduleYear[]; span: number }[] = [];
+    for (const y of years) {
+      const tagged = y.isStepDownYear || y.isFinalLoanYear;
+      const last = out[out.length - 1];
+      const prev = last?.rows[last.rows.length - 1];
+      const mergeable =
+        !tagged &&
+        prev !== undefined &&
+        !prev.isStepDownYear &&
+        !prev.isFinalLoanYear &&
+        Math.round(prev.repayment) === Math.round(y.repayment) &&
+        Math.round(prev.running) === Math.round(y.running) &&
+        prev.monthsInYear === y.monthsInYear;
+
+      if (mergeable && last) {
+        last.rows.push(y);
+        last.span += 1;
+      } else {
+        out.push({ rows: [y], span: 1 });
+      }
+    }
+    // A run of two saves no space and loses a year label, so split it back out.
+    return out.flatMap((g) =>
+      g.span >= 3 ? [g] : g.rows.map((r) => ({ rows: [r], span: 1 })),
+    );
+  };
+
+  /** Same delta, as a plain sentence, for places that cannot take markup —
+   *  a table cell or a headline string. Wording matches the cards exactly. */
+  const deltaSentence = (value: number): string => {
+    const p = deltaParts(value);
+    if (p === null) return `about ${zl(value)} zł a month`;
+    if (p === "same") return "about the same as you pay today";
+    return `${p.amount} a month ${p.word} than you pay today`;
+  };
+
   /** Renders a delta, or falls back to the plain absolute when there is no
    *  baseline to compare against. */
   const Delta = ({
@@ -1353,52 +1407,92 @@ function ResultsScreen({
 
       {schedule && (
         <section className="timeline">
-          <p className="eyebrow">When you are free of it</p>
+          <p className="eyebrow">When you are free of it — {winnerLabel}</p>
           <h2 className="panel-title">
             {schedule.loanFreeYear
-              ? `Loan-free in ${schedule.loanFreeYear}. From then, about ${zl(schedule.monthlyOnceFree)} zł a month.`
+              ? `Loan-free in ${schedule.loanFreeYear}. From then, ${deltaSentence(schedule.monthlyOnceFree)}.`
               : "This never clears within the horizon we model."}
           </h2>
+          {schedule.loanFreeYear && (
+            <p className="note-inline">
+              That is {zl(schedule.monthlyOnceFree)} zł a month in total,
+              running cost only, against the {zl(todayMonthly)} zł you pay for
+              coal today.
+            </p>
+          )}
           <table className="years">
             <thead>
               <tr>
-                <th scope="col">Year</th>
+                <th scope="col">Years</th>
                 <th scope="col">Repayment</th>
                 <th scope="col">Heating</th>
-                <th scope="col">Total that year</th>
+                <th scope="col">Compared with today</th>
               </tr>
             </thead>
             <tbody>
-              {schedule.years.map((y) => (
-                <tr
-                  key={y.year}
-                  className={
-                    y.repayment === 0
-                      ? "free"
-                      : y.isFinalLoanYear
-                        ? "final"
-                        : undefined
-                  }
-                >
-                  <th scope="row">
-                    {y.year}
-                    {y.isStepDownYear && (
-                      <span className="year-tag">grant lands</span>
-                    )}
-                    {y.isFinalLoanYear && (
-                      <span className="year-tag">last payment</span>
-                    )}
-                  </th>
-                  <td>{y.repayment > 0 ? `${zl(y.repayment)} zł` : "—"}</td>
-                  <td>{zl(y.running)} zł</td>
-                  <td>{zl(y.total)} zł</td>
-                </tr>
-              ))}
+              {groupYears(schedule.years).map((g) => {
+                const first = g.rows[0]!;
+                const last = g.rows[g.rows.length - 1]!;
+                // Every figure per month, matching the cards. The instalment
+                // does not change in a partial year — there are simply fewer of
+                // them — so a monthly figure describes the payment honestly
+                // where an annual one makes the first year look cheaper.
+                const m = first.monthsInYear || 1;
+                const perMonthRepay = first.repayment / m;
+                const perMonthHeat = first.running / m;
+                const runTotal = g.rows.reduce((s, r) => s + r.total, 0);
+
+                return (
+                  <tr
+                    key={first.year}
+                    className={
+                      first.repayment === 0
+                        ? "free"
+                        : first.isFinalLoanYear
+                          ? "final"
+                          : undefined
+                    }
+                  >
+                    <th scope="row">
+                      {g.span > 1 ? `${first.year}–${last.year}` : first.year}
+                      {g.span > 1 && (
+                        <span className="year-span">{g.span} years</span>
+                      )}
+                      {first.monthsInYear < 12 && g.span === 1 && (
+                        <span className="year-span">
+                          {first.monthsInYear} months
+                        </span>
+                      )}
+                      {first.isStepDownYear && (
+                        <span className="year-tag">grant lands</span>
+                      )}
+                      {first.isFinalLoanYear && (
+                        <span className="year-tag">last payment</span>
+                      )}
+                    </th>
+                    <td>
+                      {perMonthRepay > 0 ? `${zl(perMonthRepay)} zł` : "—"}
+                    </td>
+                    <td>{zl(perMonthHeat)} zł</td>
+                    <td>
+                      <span className="year-delta">
+                        {deltaSentence(perMonthRepay + perMonthHeat)}
+                      </span>
+                      <span className="year-total">
+                        {zl(runTotal)} zł over{" "}
+                        {g.span === 1 ? "the year" : "those years"}
+                      </span>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
           <p className="note-inline">
-            Heating cost is held at today's prices, so the later rows are the
-            shape of the commitment, not a prediction of the bills.
+            Every figure is per month. Coal is bought in bulk, so the coal
+            comparison is a year's coal divided by twelve. Heating cost is held
+            at today's prices, so the later rows are the shape of the
+            commitment, not a prediction of the bills.
           </p>
         </section>
       )}

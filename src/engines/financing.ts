@@ -192,7 +192,7 @@ export function financingPlan(input: FinancingInput): FinancingPlan {
 
   if (route.status === "suspended") {
     warnings.push(
-      `${route.label} is not available today, applications are suspended. Shown for comparison only.`,
+      `${route.label} is not available today — applications are suspended. Shown for comparison only.`,
     );
   }
   if (route.note?.includes("EXPIRES")) {
@@ -385,6 +385,13 @@ export interface ScheduleYear {
   /** Fuel and electricity for this year. */
   running: number;
   total: number;
+  /**
+   * Months of this calendar year that fall inside the horizon. The first and
+   * last years are usually partial. Exposed so a caller comparing against a
+   * baseline can scale it to the same number of months — comparing a five-month
+   * first year against a twelve-month baseline invents a saving.
+   */
+  monthsInYear: number;
   /** True for the last year in which any repayment falls. */
   isFinalLoanYear: boolean;
   /** True for the year the payment steps down on the bank route. */
@@ -459,6 +466,7 @@ export function payoffSchedule(
       repayment,
       running,
       total: repayment + running,
+      monthsInYear,
       isFinalLoanYear: y === finalLoanYear && term > 0,
       isStepDownYear: y === stepDownYear,
     });
