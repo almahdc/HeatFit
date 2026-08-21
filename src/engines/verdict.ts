@@ -47,6 +47,44 @@ export interface VerdictInput {
   monthsUntilDeadline?: number;
 }
 
+/** Nearest 10 zł. These bands are hundreds of złoty wide; printing a single
+ *  złoty of precision on top of that claims accuracy we do not have. */
+function zlRounded(n: number): string {
+  return String(Math.round(n / 10) * 10);
+}
+
+function width(r: Range): number {
+  return r.high - r.low;
+}
+
+/** Lowercase a label for mid-sentence use, without touching acronyms like PV. */
+function lower(label: string): string {
+  return label === label.toUpperCase() ? label : label.toLowerCase();
+}
+
+/**
+ * Names the source of the fog on the wider of the two bands. This is the part
+ * that makes "too close to call" useful rather than defeatist: the household
+ * learns which uncertainty is theirs to close and which is nobody's.
+ */
+function vagueness(wider: ScenarioSummary): string {
+  switch (wider.id) {
+    case "pellet":
+      return (
+        "The pellet range is the wide one, because nobody can quote you a pellet price " +
+        "for the years you would be burning it. That range does not narrow with better information."
+      );
+    case "heatPump":
+    case "heatPumpPlusPv":
+      return (
+        "The heat pump range is the wide one, because we are estimating how efficiently " +
+        "it would run on your radiators. That range narrows as soon as we see them."
+      );
+    default:
+      return "The wider range does not narrow with better information.";
+  }
+}
+
 function byId(s: ScenarioSummary[], id: ScenarioSummary["id"]) {
   const found = s.find((x) => x.id === id);
   if (!found) throw new Error(`verdict: missing scenario ${id}`);
@@ -87,14 +125,25 @@ export function verdict(input: VerdictInput): Verdict {
     .sort((a, b) => a.duringLoan.mid - b.duringLoan.mid)[0]!;
 
   if (tooCloseToCall(cheapest.duringLoan, runnerUp.duringLoan)) {
+    // Do NOT union the two bands into one range. min(low)..max(high) across two
+    // scenarios spans far more than either option actually does, and reads as
+    // "we know nothing". State each band, then name which one is the vague one
+    // and why — that is the sentence the household can act on.
+    const wider =
+      width(cheapest.duringLoan) >= width(runnerUp.duringLoan)
+        ? cheapest
+        : runnerUp;
+
     return {
       kind: "tooCloseToCall",
       headline: `${cheapest.label} and ${runnerUp.label} are too close for us to call apart.`,
-      because: `Both land somewhere between ${Math.round(
-        Math.min(cheapest.duringLoan.low, runnerUp.duringLoan.low),
-      )} and ${Math.round(
-        Math.max(cheapest.duringLoan.high, runnerUp.duringLoan.high),
-      )} zł a month. `,
+      because:
+        `${cheapest.label} lands between ${zlRounded(cheapest.duringLoan.low)} and ` +
+        `${zlRounded(cheapest.duringLoan.high)} zł a month, ${lower(runnerUp.label)} between ` +
+        `${zlRounded(runnerUp.duringLoan.low)} and ${zlRounded(runnerUp.duringLoan.high)} zł. ` +
+        `They overlap too much to rank. ${vagueness(wider)} ` +
+        `Both figures are the loan repayment plus the heating bill, after grants; ` +
+        `tax relief is not in them, because it comes back through your tax return years later.`,
       wouldChangeIt: [
         "A firm quote from an installer, which replaces our cost estimate",
         "Photographs of your radiators, which decide how efficiently a heat pump can run here",
