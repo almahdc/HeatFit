@@ -484,8 +484,7 @@ export default function App() {
       {stepId !== "results" && (
         <div className="wizard-top">
           <p className="masthead-mini">
-            You're legally required to upgrade, but what actually makes
-            financial sense?
+            What's your coal boiler actually costing you?
           </p>
           <p className="masthead-submini">
             You're legally required to upgrade, but what actually makes
