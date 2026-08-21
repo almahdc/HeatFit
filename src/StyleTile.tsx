@@ -167,7 +167,7 @@ export function StyleTile() {
                 color: "var(--text-secondary)",
               }}
             >
-              Monthly cost — signature figure, impossible to miss
+              Monthly cost, signature figure, impossible to miss
             </p>
           </div>
         </div>

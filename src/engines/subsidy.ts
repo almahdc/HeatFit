@@ -120,7 +120,7 @@ export const DEFAULT_PROGRAMMES: Programme[] = [
   {
     id: "czystePowietrze",
     nameP1: "Czyste Powietrze",
-    label: "Clean Air — the main national grant",
+    label: "Clean Air, the main national grant",
     appliesTo: ["heatPump", "pelletBoiler", "insulation"],
     maxByLevel: { basic: 68040, raised: 119070, highest: 119070 },
     // A previous version had this at 1.0 for every level, which made a 42 000 zł
@@ -136,26 +136,26 @@ export const DEFAULT_PROGRAMMES: Programme[] = [
       "replacingKopciuch",
     ],
     verified: false,
-    source: "BOŚ Bank, Kredyt Czyste Powietrze page — shares UNVERIFIED",
+    source: "BOŚ Bank, Kredyt Czyste Powietrze page, shares UNVERIFIED",
     readOn: "2026-08-19",
   },
   {
     id: "mojeCiepło",
     nameP1: "Moje Ciepło",
-    label: "My Heat — new-build homes only",
+    label: "My Heat, new-build homes only",
     appliesTo: ["heatPump"],
     maxByLevel: { basic: 21000, raised: 21000, highest: 21000 },
     shareByLevel: { basic: 0.3, raised: 0.3, highest: 0.3 },
     excludesForSameDevice: ["czystePowietrze"],
     requires: ["newBuild", "deviceOnZumList"],
     verified: false,
-    source: "Polish market reporting 2026 — UNVERIFIED",
+    source: "Polish market reporting 2026, UNVERIFIED",
     readOn: "2026-08-19",
   },
   {
     id: "ciepłeMieszkanie",
     nameP1: "Ciepłe Mieszkanie",
-    label: "Warm Flat — flats in multi-family buildings",
+    label: "Warm Flat, flats in multi-family buildings",
     appliesTo: ["heatPump", "pelletBoiler"],
     maxByLevel: { basic: 21000, raised: 27000, highest: 37000 },
     shareByLevel: { basic: 0.3, raised: 0.6, highest: 0.9 },
@@ -163,7 +163,7 @@ export const DEFAULT_PROGRAMMES: Programme[] = [
     requires: ["replacingKopciuch", "deviceOnZumList"],
     verified: false,
     source:
-      "Polish market reporting 2026 — UNVERIFIED. Amounts are set per gmina.",
+      "Polish market reporting 2026, UNVERIFIED. Amounts are set per gmina.",
     readOn: "2026-08-19",
   },
   {
@@ -183,7 +183,7 @@ export const DEFAULT_PROGRAMMES: Programme[] = [
     capIsPerTaxpayer: true,
     verified: false,
     source:
-      "Polish tax code, art. 26h PIT — cash value depends on the taxpayer's band",
+      "Polish tax code, art. 26h PIT, cash value depends on the taxpayer's band",
     readOn: "2026-08-19",
   },
 ];
@@ -321,7 +321,7 @@ export function subsidiesFor(
         applied: false,
         missingGates: [],
         reason: other
-          ? `You cannot claim ${p.label} and ${other.label} for the same device — we kept the larger one`
+          ? `You cannot claim ${p.label} and ${other.label} for the same device, we kept the larger one`
           : `Excluded by another programme`,
       });
       continue;

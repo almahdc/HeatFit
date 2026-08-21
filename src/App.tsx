@@ -976,7 +976,7 @@ function OptionBreakdown({
             {d.applied ? (
               <> pays {zl(d.amount.mid)} zł</>
             ) : (
-              <> — {d.reason}</>
+              <>, {d.reason}</>
             )}
           </li>
         ))}
@@ -998,7 +998,7 @@ function OptionBreakdown({
           </dl>
           <p className="note-inline">
             {d.applied
-              ? "This is a deduction, not a payment. You get back your tax rate on it, spread over up to six tax years — not the whole amount, and not up front."
+              ? "This is a deduction, not a payment. You get back your tax rate on it, spread over up to six tax years, not the whole amount, and not up front."
               : d.reason}
           </p>
         </div>
@@ -1046,7 +1046,7 @@ function OptionBreakdown({
       <p className="note-inline">
         {plan.grantAppliedToCapital.mid > 0
           ? `The grant of ${zl(plan.grantAppliedToCapital.mid)} zł goes straight to the bank and shrinks what you owe, which is why the repayment steps down. You never handle that money.`
-          : `The grant of ${zl(plan.grantReimbursed.mid)} zł is paid to you after the work is settled. Your repayments do not change — unless you use it to pay the loan down early, which most people do.`}
+          : `The grant of ${zl(plan.grantReimbursed.mid)} zł is paid to you after the work is settled. Your repayments do not change, unless you use it to pay the loan down early, which most people do.`}
       </p>
 
       <p className="note-inline">
@@ -1178,7 +1178,7 @@ function ResultsScreen({
                   <p className="note-inline">
                     {r.id === "coal"
                       ? "Fuel only. There is nothing to repay, because you are not buying anything."
-                      : "Paid from savings, so there is no repayment — only running cost."}
+                      : "Paid from savings, so there is no repayment, only running cost."}
                   </p>
                 </>
               )}
@@ -1269,7 +1269,7 @@ function ResultsScreen({
           </h2>
           <p className="because">
             We never asked what you earn and we are not going to. But a bank
-            does not test you at the advertised rate — it adds a margin first,
+            does not test you at the advertised rate, it adds a margin first,
             so this loan is assessed as if the repayment were{" "}
             {zl(affordability.stressedInstalment)} zł, not{" "}
             {zl(rows.find((r) => r.plan)?.plan?.monthlyBeforeGrant.mid ?? 0)} zł.

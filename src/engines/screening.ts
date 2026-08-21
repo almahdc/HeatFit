@@ -48,7 +48,7 @@ export function screenHousehold(h: HouseholdScreen): ScreeningResult {
       canProceed: false,
       stopReason:
         "This tool is for the person who decides on the heating system. " +
-        "As a tenant, that decision sits with your landlord — worth sharing this with them.",
+        "As a tenant, that decision sits with your landlord, worth sharing this with them.",
       paths: [],
     };
   }
@@ -72,14 +72,14 @@ export function screenHousehold(h: HouseholdScreen): ScreeningResult {
     paths.push(
       blocked(
         "heatPump",
-        "There is no outdoor space for the unit — not a garden, not even a balcony.",
+        "There is no outdoor space for the unit, not a garden, not even a balcony.",
       ),
     );
   } else if (h.buildingType === "flat" && h.outdoorSpace === "balconyOnly") {
     paths.push(
       blocked(
         "heatPump",
-        "A balcony may work for a small unit, but a flat needs sign-off from the building — worth checking before going further.",
+        "A balcony may work for a small unit, but a flat needs sign-off from the building, worth checking before going further.",
       ),
     );
   } else {
@@ -92,7 +92,7 @@ export function screenHousehold(h: HouseholdScreen): ScreeningResult {
     paths.push(
       blocked(
         "solar",
-        "The roof is shared — this needs agreement from the other owners first.",
+        "The roof is shared, this needs agreement from the other owners first.",
       ),
     );
   } else {
