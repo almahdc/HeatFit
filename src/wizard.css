@@ -226,7 +226,7 @@
 
 .big-input {
   font: inherit;
-  font-size: var(--type-figure);
+  font-size: var(--type-lg);
   font-weight: var(--weight-extrabold);
   font-variant-numeric: tabular-nums;
   padding: var(--space-sm) var(--space-md);

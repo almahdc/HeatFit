@@ -19,11 +19,7 @@ import {
   impliedIncome,
   payoffSchedule,
 } from "./engines/financing";
-import {
-  Driver,
-  sensitivity,
-  sensitivityHeadline,
-} from "./engines/sensitivity";
+import { Driver, sensitivity, sensitivityHeadline } from "./engines/sensitivity";
 import { ScenarioSummary, verdict } from "./engines/verdict";
 import { BuildingType, Ownership, screenHousehold } from "./engines/screening";
 import {
@@ -45,11 +41,7 @@ const band = (r: Range) => `${zl(r.low)} \u2013 ${zl(r.high)}`;
  * sensitivity ranking and avoids threading overrides through every engine.
  * If a driver ever needs to be exact rather than ranked, compute it properly.
  */
-const scalePrice = (
-  r: Range,
-  override: number | undefined,
-  baseline: number,
-) =>
+const scalePrice = (r: Range, override: number | undefined, baseline: number) =>
   override === undefined || baseline === 0 ? r : scale(r, override / baseline);
 
 // T2 — the applicant is built from what the household answered, never assumed.
@@ -120,8 +112,7 @@ const idx = (id: StepId) => STEP_IDS.indexOf(id);
 
 export default function App() {
   // Route check: show style tile if requested
-  const showStyleTile =
-    new URLSearchParams(window.location.search).get("mode") === "style-tile";
+  const showStyleTile = new URLSearchParams(window.location.search).get("mode") === "style-tile";
   if (showStyleTile) {
     return <StyleTile />;
   }
@@ -179,6 +170,17 @@ export default function App() {
   };
 
   const firstRender = useRef(true);
+useLayoutEffect(() => {
+  if (firstRender.current) {
+    firstRender.current = false;
+    return;
+  }
+  const el = stepRefs.current[stepId];
+  if (!el) return;
+  requestAnimationFrame(() => {
+    el.scrollIntoView({ block: "start" });   // instant, not smooth
+  });
+}, [stepIndex, stepId]);
 
   const next = () => setStepIndex((i) => Math.min(i + 1, STEP_IDS.length - 1));
   const back = () => setStepIndex((i) => Math.max(i - 1, 0));
@@ -344,11 +346,7 @@ export default function App() {
 
       const isPellet = winner.id === "pellet";
       const runningAlt = isPellet
-        ? scalePrice(
-            rcAlt.pellet.monthly,
-            o.pelletPricePerTonne,
-            C.PELLET_PRICE_PER_TONNE.mid,
-          )
+        ? scalePrice(rcAlt.pellet.monthly, o.pelletPricePerTonne, C.PELLET_PRICE_PER_TONNE.mid)
         : scalePrice(
             winner.id === "heatPumpPlusPv"
               ? rcAlt.heatPumpPlusPv.monthly
@@ -450,13 +448,10 @@ export default function App() {
       {stepId !== "results" && (
         <div className="wizard-top">
           <p className="masthead-mini">
-            You're legally required to upgrade, but what actually makes
-            financial sense?
+            You're legally required to upgrade, but what actually makes financial sense?
           </p>
           <p className="masthead-submini">
-            You're legally required to upgrade, but what actually makes
-            financial sense? Turn a few quick questions and photos into a clear,
-            monthly payment plan.
+            You're legally required to upgrade, but what actually makes financial sense? Turn a few quick questions and photos into a clear, monthly payment plan.
           </p>
           <div className="overall-progress-track">
             <div
@@ -635,7 +630,7 @@ export default function App() {
         <StepShell
           {...shared("radiators")}
           title="What are your radiators like?"
-          helper="Coal boilers run hot, so coal-era radiators are small. A heat pump runs cooler, where the same radiator gives about half as much heat. This is the answer that decides the verdict."
+          helper="Coal boilers run hot, so coal-era radiators are small. A heat pump runs cooler, where the same radiator gives about half as much heat."
         >
           <ChoiceGroup
             value={String(scop)}
@@ -782,9 +777,7 @@ export default function App() {
           title="Two things the grant office will check"
           helper="Both are yes or no. Get either wrong and a grant can be clawed back later, with interest, so it is worth being honest with yourself here."
         >
-          <p className="stat-label">
-            Have you owned the house three years or more?
-          </p>
+          <p className="stat-label">Have you owned the house three years or more?</p>
           <ChoiceGroup
             value={ownedThreeYears ? "yes" : "no"}
             onChange={(v) => setOwnedThreeYears(v === "yes")}
@@ -834,21 +827,9 @@ export default function App() {
             onChange={setTaxBand}
             options={[
               { value: "pit12", label: "Yes, the lower rate", sublabel: "12%" },
-              {
-                value: "pit32",
-                label: "Yes, the higher rate",
-                sublabel: "32%",
-              },
-              {
-                value: "flat19",
-                label: "Flat rate, self-employed",
-                sublabel: "19%",
-              },
-              {
-                value: "none",
-                label: "No income tax",
-                sublabel: "The relief is worth nothing",
-              },
+              { value: "pit32", label: "Yes, the higher rate", sublabel: "32%" },
+              { value: "flat19", label: "Flat rate, self-employed", sublabel: "19%" },
+              { value: "none", label: "No income tax", sublabel: "The relief is worth nothing" },
             ]}
           />
           <div className="sub-question">
@@ -858,11 +839,7 @@ export default function App() {
               onChange={(v) => setTaxpayerCount(v === "two" ? 2 : 1)}
               options={[
                 { value: "one", label: "One", sublabel: "One allowance" },
-                {
-                  value: "two",
-                  label: "Two",
-                  sublabel: "Two allowances, twice the room",
-                },
+                { value: "two", label: "Two", sublabel: "Two allowances, twice the room" },
               ]}
             />
           </div>
@@ -888,18 +865,19 @@ export default function App() {
             }))}
           />
           {routeId !== "cash" && (
-            <div className="sub-question">
-              <p className="stat-label">Over how long?</p>
-              <ChoiceGroup
+          <div className="sub-question">
+            <p className="stat-label">Over how long?</p>
+            <ChoiceGroup
                 value={String(termYears)}
                 onChange={(v) => setTermYears(+v)}
                 options={[5, 8, 10, 12].map((y) => ({
                   value: String(y),
                   label: `${y} years`,
                 }))}
-              />
-            </div>
+            />
+          </div>
           )}
+
         </StepShell>
       )}
 
@@ -962,8 +940,7 @@ function OptionBreakdown({
 }) {
   const pct = (n: number) => `${(n * 100).toFixed(2).replace(".", ",")}%`;
   const stepsDown =
-    Math.round(plan.monthlyAfterGrant.mid) <
-    Math.round(plan.monthlyBeforeGrant.mid);
+    Math.round(plan.monthlyAfterGrant.mid) < Math.round(plan.monthlyBeforeGrant.mid);
 
   const grants = sub.detail.filter((d) => !d.programme.isTaxRelief);
   const reliefs = sub.detail.filter((d) => d.programme.isTaxRelief);
@@ -996,7 +973,11 @@ function OptionBreakdown({
             className={d.applied ? "applied" : "refused"}
           >
             <strong>{d.programme.label}</strong>
-            {d.applied ? <> pays {zl(d.amount.mid)} zł</> : <> — {d.reason}</>}
+            {d.applied ? (
+              <> pays {zl(d.amount.mid)} zł</>
+            ) : (
+              <> — {d.reason}</>
+            )}
           </li>
         ))}
       </ul>
@@ -1190,7 +1171,8 @@ function ResultsScreen({
                       : "What you would pay"}
                   </p>
                   <p className="figure">
-                    {zl(r.running.mid)} <span className="unit">zł a month</span>
+                    {zl(r.running.mid)}{" "}
+                    <span className="unit">zł a month</span>
                   </p>
                   <p className="range">could be {band(r.running)} zł</p>
                   <p className="note-inline">
@@ -1225,58 +1207,6 @@ function ResultsScreen({
           ))}
         </ul>
       </section>
-
-      {drivers.length > 0 && (
-        <section className="drivers">
-          <p className="eyebrow">What actually decides this</p>
-          <h2 className="panel-title">{sensitivityHeadline(drivers)}</h2>
-          <p className="because">
-            Each bar is how far the monthly figure for {winnerLabel} moves
-            between the cheap end and the dear end of what that number could be.
-            Nothing here is a forecast. It is the width of what nobody knows.
-          </p>
-          <ol className="driver-list">
-            {drivers.map((d) => {
-              const widest = drivers[0]!.swingPlnPerMonth || 1;
-              const pctWidth = Math.max(
-                4,
-                Math.round((d.swingPlnPerMonth / widest) * 100),
-              );
-              return (
-                <li key={d.label}>
-                  <div className="driver-head">
-                    <span className="driver-label">{d.label}</span>
-                    <span className="driver-amount">
-                      {zl(d.swingPlnPerMonth)} zł a month
-                    </span>
-                  </div>
-                  <div className="driver-track">
-                    <div
-                      className={
-                        d.withinTheirControl
-                          ? "driver-bar yours"
-                          : "driver-bar market"
-                      }
-                      style={{ width: `${pctWidth}%` }}
-                    />
-                  </div>
-                  <p className="driver-foot">
-                    {d.lowValue} to {d.highValue} ·{" "}
-                    {d.withinTheirControl
-                      ? "you have some say in this"
-                      : "not in your hands"}
-                  </p>
-                </li>
-              );
-            })}
-          </ol>
-          <p className="note-inline">
-            Bars in one shade are yours to move. The others are the market's. If
-            the top bar is not yours, treat any single confident number from
-            anyone as a sales figure.
-          </p>
-        </section>
-      )}
 
       {schedule && (
         <section className="timeline">
@@ -1334,17 +1264,17 @@ function ResultsScreen({
         <section className="affordability">
           <p className="eyebrow">Before you go to a bank</p>
           <h2 className="panel-title">
-            A lender will want to see about {zl(affordability.impliedNetIncome)}{" "}
-            zł a month coming in.
+            A lender will want to see about{" "}
+            {zl(affordability.impliedNetIncome)} zł a month coming in.
           </h2>
           <p className="because">
             We never asked what you earn and we are not going to. But a bank
             does not test you at the advertised rate — it adds a margin first,
             so this loan is assessed as if the repayment were{" "}
             {zl(affordability.stressedInstalment)} zł, not{" "}
-            {zl(rows.find((r) => r.plan)?.plan?.monthlyBeforeGrant.mid ?? 0)}{" "}
-            zł. Then it caps total repayments at roughly a bit under half of
-            what comes in, and assumes you still have to live.
+            {zl(rows.find((r) => r.plan)?.plan?.monthlyBeforeGrant.mid ?? 0)} zł.
+            Then it caps total repayments at roughly a bit under half of what
+            comes in, and assumes you still have to live.
           </p>
           {affordability.loanServiceableBySaving > 0 && (
             <p className="because">
