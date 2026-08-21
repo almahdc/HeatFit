@@ -147,8 +147,8 @@ function pvAddOnVerdict(
     headline:
       "The heat pump is the answer. Panels are a separate decision, and not an urgent one.",
     because:
-      `With or without panels you pay about the same each month while the loan runs — ` +
-      `${Math.round(hp.duringLoan.mid)} zł against ${Math.round(hpPv.duringLoan.mid)} zł — ` +
+      `With or without panels you pay about the same each month while the loan runs, ` +
+      `${Math.round(hp.duringLoan.mid)} zł against ${Math.round(hpPv.duringLoan.mid)} zł, ` +
       `because the panels are inside the same loan. ` +
       (afterGap >= 20
         ? `Once it is repaid the panels could save around ${afterGap} zł a month. ` +
@@ -159,7 +159,7 @@ function pvAddOnVerdict(
         : `Once it is repaid the difference is too small for us to call. ` +
           `We would not add panels on these numbers alone.`),
     wouldChangeIt: [
-      "Deciding the heat pump first — the panels can be added later, on their own budget",
+      "Deciding the heat pump first, the panels can be added later, on their own budget",
       "A battery, which is what actually turns panels into winter heating",
       "Your real electricity bill, which tells us how much of the year you are at home",
     ],

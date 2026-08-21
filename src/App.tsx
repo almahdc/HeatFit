@@ -1129,7 +1129,7 @@ function OptionBreakdown({
       <p className="timing-bridge">
         {plan.grantAppliedToCapital.mid > 0
           ? `The grant of ${zl(plan.grantAppliedToCapital.mid)} zł goes straight to the bank and shrinks what you owe, which is why the repayment steps down. You never handle that money.`
-          : `The grant of ${zl(plan.grantReimbursed.mid)} zł is paid to you after the work is settled — so you have to cover the full cost first.`}
+          : `The grant of ${zl(plan.grantReimbursed.mid)} zł is paid to you after the work is settled, so you have to cover the full cost first.`}
       </p>
 
       {/* === PANEL 2: how you cover it until it lands ====================== */}
@@ -1449,7 +1449,7 @@ function ResultsScreen({
 
       {schedule && (
         <section className="timeline">
-          <p className="eyebrow">When you are free of it — {winnerLabel}</p>
+          <p className="eyebrow">When you are free of it, {winnerLabel}</p>
           <h2 className="panel-title">
             {schedule.loanFreeYear
               ? `Loan-free in ${schedule.loanFreeYear}. From then, ${deltaSentence(schedule.monthlyOnceFree)}.`
