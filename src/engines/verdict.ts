@@ -85,6 +85,99 @@ function vagueness(wider: ScenarioSummary): string {
   }
 }
 
+/**
+ * Difference against what they pay today, in the words they would use.
+ *
+ * Computed from the ROUNDED values, not the raw mids, so a household that
+ * subtracts the two printed numbers by hand gets our answer exactly. A delta
+ * they cannot reproduce is worse than no delta.
+ *
+ * Deliberately a single number with no band. The uncertainty lives in the two
+ * absolute ranges this is derived from; restating it here would compound two
+ * bands that share most of their inputs, and overstate what we do not know.
+ */
+function vsToday(option: number, today: number): string {
+  const d = Math.round(option) - Math.round(today);
+  if (Math.abs(d) < 20) return "about what you pay today";
+  return d > 0
+    ? `${Math.abs(d)} zł a month more than today`
+    : `${Math.abs(d)} zł a month less than today`;
+}
+
+/**
+ * Hints for the tie case. Driven by the SAME `wider` scenario that vagueness()
+ * describes, so the paragraph and the list can never contradict each other.
+ * Ordered most-actionable first: the thing that closes the gap, then the thing
+ * that does not.
+ */
+/**
+ * Heat pump with and without panels are tied on monthly cost.
+ *
+ * This is not a tie between two heating systems. It is one heating system and
+ * an optional roof. So the verdict settles heating and reframes solar as a
+ * second, separate decision — which is what a neighbour would actually say.
+ *
+ * The honesty constraint here is severe, because the PV saving is the least
+ * trustworthy number this model produces:
+ *
+ *   NET BILLING. Poland replaced net metering in 2022. Exported kWh are
+ *     deposited at market price and drawn back at retail, so an exported unit
+ *     is worth far less than one you never bought. runningCost.ts models PV as
+ *     a flat kWh offset at retail and says in its own comment that this is
+ *     optimistic. Until pv.ts exists, the saving quoted here is a ceiling.
+ *
+ *   SEASONAL MISMATCH. Polish PV yields a few percent of its annual output in
+ *     December and January — exactly when a heat pump draws hardest. Without a
+ *     battery, panels do not cover winter heating. Any claim of independence
+ *     from the grid would be false.
+ *
+ * So: state the after-loan gap, then immediately state that it is a ceiling and
+ * why. A number offered without its ceiling is a sales number.
+ */
+function pvAddOnVerdict(
+  hp: ScenarioSummary,
+  hpPv: ScenarioSummary,
+  coal: ScenarioSummary,
+): Verdict {
+  const afterGap =
+    Math.round(hp.afterLoan.mid) - Math.round(hpPv.afterLoan.mid);
+
+  return {
+    kind: "tooCloseToCall",
+    headline:
+      "The heat pump is the answer. Panels are a separate decision.",
+    because:
+      `With or without panels you pay about the same each month while the loan runs, ` +
+      `${Math.round(hp.duringLoan.mid)} zł against ${Math.round(hpPv.duringLoan.mid)} zł, ` +
+      `because the panels are inside the same loan. ` +
+      (afterGap >= 20
+        ? `Once it is repaid the panels could save around ${afterGap} zł a month. ` +
+          `Treat that as the best case, not the expected one: since 2022 Poland pays you ` +
+          `market price for what you export and charges you retail for what you take back, ` +
+          `and we do not model that yet. Panels also produce almost nothing in December and ` +
+          `January, which is when the heat pump works hardest.`
+        : `Once it is repaid the difference is too small for us to call. ` +
+          `We would not add panels on these numbers alone.`),
+    wouldChangeIt: [
+      "Deciding the heat pump first, the panels can be added later, on their own budget",
+      "A battery, which is what actually turns panels into winter heating",
+      "Your real electricity bill, which tells us how much of the year you are at home",
+    ],
+  };
+}
+
+function hintsForTie(wider: ScenarioSummary): string[] {
+  const quote = "A firm quote from an installer, which replaces our cost estimate";
+  const radiators =
+    "Photographs of your radiators, which decide how efficiently a heat pump can run here";
+  const pelletPrice =
+    "A fixed-price pellet contract, the only thing that narrows the pellet range";
+
+  return wider.id === "pellet"
+    ? [pelletPrice, quote, radiators]
+    : [radiators, quote, pelletPrice];
+}
+
 function byId(s: ScenarioSummary[], id: ScenarioSummary["id"]) {
   const found = s.find((x) => x.id === id);
   if (!found) throw new Error(`verdict: missing scenario ${id}`);
@@ -125,6 +218,16 @@ export function verdict(input: VerdictInput): Verdict {
     .sort((a, b) => a.duringLoan.mid - b.duringLoan.mid)[0]!;
 
   if (tooCloseToCall(cheapest.duringLoan, runnerUp.duringLoan)) {
+    // Special case: the two tied options are the same machine. A tie between
+    // "heat pump" and "heat pump plus PV" is not a choice between two heating
+    // systems — same unit, same install, same radiators, only panels differ.
+    // Refusing to rank them leaves the household believing the heating decision
+    // is unresolved when it is not. Settle heating, hand them solar separately.
+    const ids = [cheapest.id, runnerUp.id];
+    if (ids.includes("heatPump") && ids.includes("heatPumpPlusPv")) {
+      return pvAddOnVerdict(hp, hpPv, coal);
+    }
+
     // Do NOT union the two bands into one range. min(low)..max(high) across two
     // scenarios spans far more than either option actually does, and reads as
     // "we know nothing". State each band, then name which one is the vague one
@@ -144,10 +247,7 @@ export function verdict(input: VerdictInput): Verdict {
         `They overlap too much to rank. ${vagueness(wider)} ` +
         `Both figures are the loan repayment plus the heating bill, after grants; ` +
         `tax relief is not in them, because it comes back through your tax return years later.`,
-      wouldChangeIt: [
-        "A firm quote from an installer, which replaces our cost estimate",
-        "Photographs of your radiators, which decide how efficiently a heat pump can run here",
-      ],
+      wouldChangeIt: hintsForTie(wider),
     };
   }
 
@@ -185,12 +285,18 @@ export function verdict(input: VerdictInput): Verdict {
     kind,
     headline: `${winner.label} is the cheapest option over its lifetime.`,
     because:
-      `About ${Math.round(winner.duringLoan.mid)} zł a month while the loan runs, then ` +
-      `${Math.round(winner.afterLoan.mid)} zł a month once it is paid off. ` +
-      `You pay ${Math.round(coal.afterLoan.mid)} zł a month for coal today.`,
+      `${capitalise(vsToday(winner.duringLoan.mid, coal.afterLoan.mid))} while the loan runs, ` +
+      `then ${vsToday(winner.afterLoan.mid, coal.afterLoan.mid)} once it is paid off. ` +
+      `That is ${Math.round(winner.duringLoan.mid)} zł, then ` +
+      `${Math.round(winner.afterLoan.mid)} zł a month, against the ` +
+      `${Math.round(coal.afterLoan.mid)} zł you pay for coal today.`,
     wouldChangeIt: [
       "A different loan term moves the monthly figure without changing the total much",
       "Adding solar panels, if the roof suits it",
     ],
   };
+}
+
+function capitalise(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }

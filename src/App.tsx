@@ -1179,6 +1179,59 @@ function ResultsScreen({
   } = model;
   const best = Math.min(...rows.map((r) => r.summary.afterLoan.mid));
 
+  // The baseline every other card is measured against. Rounded here, once, so
+  // every delta on the page reconciles with the number printed on the coal card.
+  const todayMonthly = Math.round(
+    rows.find((r) => r.id === "coal")?.running.mid ?? 0,
+  );
+
+  /** Delta against today, split into parts so the number and the direction can
+   *  carry the emphasis while the connective words stay quiet. Words rather
+   *  than signs: "−280 zł" reads literally as paying negative money. */
+  const deltaParts = (
+    value: number,
+  ): { amount: string; word: string } | "same" | null => {
+    if (todayMonthly === 0) return null;
+    const d = Math.round(value) - todayMonthly;
+    if (Math.abs(d) < 20) return "same";
+    return { amount: `${zl(Math.abs(d))} zł`, word: d > 0 ? "more" : "less" };
+  };
+
+  /** Renders a delta, or falls back to the plain absolute when there is no
+   *  baseline to compare against. */
+  const Delta = ({
+    value,
+    className,
+  }: {
+    value: number;
+    className: string;
+  }) => {
+    const p = deltaParts(value);
+    if (p === null) {
+      return (
+        <p className={className}>
+          {zl(value)} <span className="unit">zł a month</span>
+        </p>
+      );
+    }
+    if (p === "same") {
+      return (
+        <p className={`${className} delta`}>
+          <span className="delta-key">about the same</span>{" "}
+          <span className="delta-quiet">as today</span>
+        </p>
+      );
+    }
+    return (
+      <p className={`${className} delta`}>
+        <span className="delta-key">{p.amount}</span>{" "}
+        <span className="delta-quiet">a month</span>{" "}
+        <span className="delta-key">{p.word}</span>{" "}
+        <span className="delta-quiet">than today</span>
+      </p>
+    );
+  };
+
   const confidenceLine =
     rc.demand.confidence === "good"
       ? "We're reasonably confident in this."
@@ -1227,21 +1280,20 @@ function ResultsScreen({
               {hasLoan ? (
                 <>
                   <p className="stat-label">While you repay the loan</p>
-                  <p className="figure">
-                    {zl(r.summary.duringLoan.mid)}{" "}
-                    <span className="unit">zł a month</span>
-                  </p>
+                  <Delta value={r.summary.duringLoan.mid} className="figure" />
                   <p className="range">
-                    could be {band(r.summary.duringLoan)} zł
+                    {zl(r.summary.duringLoan.mid)} zł a month in total, could be{" "}
+                    {band(r.summary.duringLoan)} zł
                   </p>
 
                   <p className="stat-label">Once the loan is paid off</p>
-                  <p className="figure second">
-                    {zl(r.summary.afterLoan.mid)}{" "}
-                    <span className="unit">zł a month</span>
-                  </p>
+                  <Delta
+                    value={r.summary.afterLoan.mid}
+                    className="figure second"
+                  />
                   <p className="range">
-                    could be {band(r.summary.afterLoan)} zł
+                    {zl(r.summary.afterLoan.mid)} zł a month in total, could be{" "}
+                    {band(r.summary.afterLoan)} zł
                   </p>
                 </>
               ) : (
@@ -1251,13 +1303,24 @@ function ResultsScreen({
                       ? "What you pay today"
                       : "What you would pay"}
                   </p>
-                  <p className="figure">
-                    {zl(r.running.mid)} <span className="unit">zł a month</span>
+                  {/* The coal card is the baseline, so it keeps the absolute at
+                      full display size. Every other card is measured against it. */}
+                  {r.id === "coal" ? (
+                    <p className="figure">
+                      {zl(r.running.mid)}{" "}
+                      <span className="unit">zł a month</span>
+                    </p>
+                  ) : (
+                    <Delta value={r.running.mid} className="figure" />
+                  )}
+                  <p className="range">
+                    {r.id === "coal"
+                      ? `could be ${band(r.running)} zł`
+                      : `${zl(r.running.mid)} zł a month in total, could be ${band(r.running)} zł`}
                   </p>
-                  <p className="range">could be {band(r.running)} zł</p>
                   <p className="note-inline">
                     {r.id === "coal"
-                      ? "Fuel only. There is nothing to repay, because you are not buying anything."
+                      ? "Fuel only. There is nothing to repay, because you are not buying anything. This is the number every other card is compared to."
                       : "Paid from savings, so there is no repayment, only running cost."}
                   </p>
                 </>
@@ -1282,8 +1345,8 @@ function ResultsScreen({
         <p className="because">{v.because}</p>
         <p className="stat-label">What would change this</p>
         <ul>
-          {v.wouldChangeIt.map((w) => (
-            <li key={w}>{w}</li>
+          {v.wouldChangeIt.map((w, i) => (
+            <li key={`${v.kind}-${i}`}>{w}</li>
           ))}
         </ul>
       </section>
@@ -1365,8 +1428,8 @@ function ResultsScreen({
             </p>
           )}
           <p className="warn">
-            This is a rough guide so you know what to expect, not credit advice.
-            Your bank decides.
+            This is a rough guide so you know what to expect, not credit advice,
+            and no lender has seen it. Your own bank decides.
           </p>
         </section>
       )}

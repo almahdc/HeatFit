@@ -596,3 +596,34 @@
     padding: 0.5rem 0.25rem;
   }
 }
+
+/* --- delta figures ---------------------------------------------------------
+   .figure is 64px/800 with tight tracking, built for a 3-digit number plus a
+   small unit. A delta is a short sentence, so it gets its own scale: the
+   amount and the direction word carry the weight, the connective words step
+   back. Same information, a third of the ink. */
+
+.figure.delta {
+  font-size: var(--type-lg);
+  line-height: 1.25;
+  font-weight: var(--weight-medium);
+  letter-spacing: 0;
+  text-wrap: balance;
+}
+
+/* The two things the eye should land on: how much, and which direction. */
+.figure.delta .delta-key {
+  font-weight: var(--weight-extrabold);
+  color: inherit;
+}
+
+.figure.delta .delta-quiet {
+  font-weight: var(--weight-regular);
+  color: var(--text-secondary);
+}
+
+/* .figure.second colours the after-loan number blue; keep that on the amount
+   but let the quiet words stay neutral so the contrast ratio holds. */
+.figure.delta.second .delta-quiet {
+  color: var(--text-secondary);
+}

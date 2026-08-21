@@ -337,3 +337,9 @@ footer {
     transition: none;
   }
 }
+
+/* Delta figures carry a sign, so they should not read as a plain amount.
+   No red or green: a plus sign is not bad news when the loan clears later. */
+.card .figure {
+  font-variant-numeric: tabular-nums;
+}
