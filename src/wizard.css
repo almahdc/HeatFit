@@ -382,7 +382,7 @@
   font-size: var(--type-lg);
   font-weight: var(--weight-bold);
   cursor: pointer;
-  padding: var(--space-sm) 0;
+  padding: var(--space-sm);
   min-height: 44px;
   display: flex;
   align-items: center;

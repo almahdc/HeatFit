@@ -276,3 +276,64 @@ footer {
   font-size: var(--type-sm);
   border-top: 1px solid var(--ink-soft);
 }
+
+/* --- breakdown disclosure --------------------------------------------------
+   <summary> renders as a ~20px text row by default: below the 48px tap target,
+   and with no affordance that it does anything. Styled as a secondary button,
+   keeping native <details> semantics (keyboard, ARIA, open state) rather than
+   rebuilding them on a <button>. */
+
+.breakdown > summary {
+  list-style: none; /* Firefox */
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  min-height: 48px;
+  padding: var(--space-md);
+  margin-top: var(--space-md);
+  border: 2px solid var(--color-blue-dark);
+  border-radius: var(--border-radius);
+  background: var(--bg-card);
+  color: var(--color-blue-dark);
+  font-size: var(--type-sm);
+  font-weight: var(--weight-semibold);
+  text-align: left;
+}
+
+.breakdown > summary::-webkit-details-marker {
+  display: none; /* Safari and older Chrome */
+}
+
+/* Chevron, drawn in CSS so it needs no icon font and no extra markup. */
+.breakdown > summary::after {
+  content: "";
+  flex: 0 0 auto;
+  width: 0.6em;
+  height: 0.6em;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+  transform-origin: center;
+  transition: transform var(--transition-base, 0.15s ease);
+}
+
+.breakdown[open] > summary::after {
+  transform: rotate(-135deg);
+}
+
+.breakdown > summary:hover {
+  background: var(--color-off-white, #f7f7f5);
+}
+
+.breakdown > summary:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .breakdown > summary::after {
+    transition: none;
+  }
+}
