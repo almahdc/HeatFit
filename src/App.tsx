@@ -1487,6 +1487,31 @@ function ResultsScreen({
         })()}
       </section>
 
+      <section className="cta" aria-label="Next steps">
+        <p className="eyebrow">What next</p>
+        <h2 className="panel-title">Want a number you can act on?</h2>
+        <div className="cta-actions">
+          <button
+            type="button"
+            className="btn-cta btn-cta-primary"
+            onClick={() => {
+              /* open form / route to lead capture */
+            }}
+          >
+            Get an estimate from us
+          </button>
+          <button
+            type="button"
+            className="btn-cta btn-cta-secondary"
+            onClick={() => {
+              /* open form / route to lead capture */
+            }}
+          >
+            Connect with installers
+          </button>
+        </div>
+      </section>
+
       {schedule && (
         <section className="timeline">
           <p className="eyebrow">When you are free of it, {winnerLabel}</p>

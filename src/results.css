@@ -659,3 +659,63 @@
   color: var(--text-secondary);
   margin-top: 0.15rem;
 }
+
+/* --- Closing call to action -------------------------------------------------
+   Two actions, deliberately unequal: the estimate is ours to answer, the
+   installer hand-off sends the household elsewhere. Stacked on narrow screens,
+   side by side once there is room. */
+
+.cta {
+  margin-top: var(--space-2xl);
+  margin-bottom: var(--space-2xl);
+  padding: var(--space-xl);
+  background: var(--bg-section);
+  border-radius: var(--border-radius);
+}
+
+.cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-md);
+  margin: var(--space-lg) 0 var(--space-md);
+}
+
+.btn-cta {
+  flex: 1 1 16rem;
+  min-height: 48px;
+  padding: var(--space-md) var(--space-lg);
+  border: 0px;
+  border-radius: var(--border-radius);
+  font-family: inherit;
+  font-size: var(--type-sm);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+  transition: background var(--transition-base);
+}
+
+.btn-cta-primary {
+  background: var(--button-bg-primary);
+  color: var(--button-text-primary);
+}
+.btn-cta-primary:hover {
+  background: var(--color-blue);
+}
+
+.btn-cta-secondary {
+  background: var(--bg-card);
+  color: var(--color-blue-dark);
+}
+.btn-cta-secondary:hover {
+  background: var(--color-off-white);
+}
+
+.btn-cta:focus-visible {
+  outline: 3px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-cta {
+    transition: none;
+  }
+}
