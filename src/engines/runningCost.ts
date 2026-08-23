@@ -82,10 +82,7 @@ export interface HouseFacts {
 }
 
 export type HotWaterSource =
-  | "coalAllYear"
-  | "coalThenElectric"
-  | "electricAllYear"
-  | "other";
+  "coalAllYear" | "coalThenElectric" | "electricAllYear" | "other";
 
 export interface RunningCost {
   /** Annual cost in zloty. */
@@ -425,7 +422,11 @@ export function runningCosts(facts: HouseFacts): RunningCosts {
   // behaves exactly as it did before this existed.
   const dhw = dhwDemand(facts.occupants);
   const split = splitDemand(demand, dhw, facts.hotWaterNow);
-  const immersion = immersionKwh(dhw, split.dhwInsideTonnage, facts.hotWaterNow);
+  const immersion = immersionKwh(
+    dhw,
+    split.dhwInsideTonnage,
+    facts.hotWaterNow,
+  );
 
   // Pellet replaces the coal boiler and does exactly the same job, hot water
   // included, so it keeps the full measured demand.

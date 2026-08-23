@@ -56,8 +56,7 @@ main {
 /* --- masthead ----------------------------------------------------------- */
 
 .masthead {
-  border-bottom: 4px solid var(--line);
-  padding-bottom: 1.75rem;
+  padding-bottom: 4px;
   margin-bottom: 2.5rem;
 }
 

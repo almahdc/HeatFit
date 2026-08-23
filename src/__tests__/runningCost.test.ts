@@ -25,8 +25,8 @@ import { ALL_CONSTANTS } from "../data/constants.pl";
 // real interview, replace this block and the numbers below become evidence.
 const BURN = {
   coalTonnesBought: 4,
-  coalType: "ekogroszek" as const,
-  boilerClass: "noClass" as const,
+  coalType: "orzech" as const,
+  boilerClass: "class4" as const,
   feedType: "handFed" as const,
 };
 
@@ -136,13 +136,13 @@ describe("heat demand from coal", () => {
   it("punishes 'don't know' with a wider band than a real answer", () => {
     const known = heatDemandFromCoal({
       ...BURN,
-      coalType: "ekogroszek",
+      coalType: "orzech",
       boilerClass: "class4",
     });
     const unknown = heatDemandFromCoal({
       ...BURN,
       coalType: "unknown",
-      boilerClass: "unknown",
+      boilerClass: "noClass",
     });
     expect(spread(unknown)).toBeGreaterThan(spread(known) * 1.5);
   });

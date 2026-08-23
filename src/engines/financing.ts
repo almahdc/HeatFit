@@ -39,6 +39,7 @@ import { Range, add, exact, range, scale, subtract } from "./range";
 export interface FinancingRoute {
   id: string;
   label: string;
+  subtitle?: string;
   /** Whether a homeowner can actually use this today. */
   status: "open" | "suspended";
   /** Nominal annual interest rate, e.g. 0.0843 for 8.43%. */
@@ -60,8 +61,9 @@ export interface FinancingRoute {
 export const ROUTES: Record<string, FinancingRoute> = {
   bankRoute: {
     id: "bankRoute",
-    label: "Clean Air bank loan (grant pays down the loan)",
-    status: "suspended",
+    label: "Clean Air bank loan",
+    subtitle: "grant is paid directly to the bank",
+    status: "open",
     annualRate: 0.0676, // WIBOR 6M 3.77% + 2.99pp margin, as at 06.02.2026
     arrangementFee: 0.02,
     maxTermMonths: 144,
@@ -75,7 +77,8 @@ export const ROUTES: Record<string, FinancingRoute> = {
   },
   pozyczkaZielona: {
     id: "pozyczkaZielona",
-    label: "Green Loan (available now)",
+    label: "Green Loan",
+    subtitle: "for businesses",
     status: "open",
     annualRate: 0.0843,
     arrangementFee: 0, // 0% under the promotion running to 30.09.2026

@@ -133,8 +133,8 @@ export default function App() {
   // --- what they burn -------------------------------------------------------
   const [coalBought, setCoalBought] = useState(4);
   const [coalLeftOver, setCoalLeftOver] = useState(0);
-  const [coalType, setCoalType] = useState<C.CoalType>("ekogroszek");
-  const [boilerClass, setBoilerClass] = useState<C.BoilerClass>("unknown");
+  const [coalType, setCoalType] = useState<C.CoalType>("orzech");
+  const [boilerClass, setBoilerClass] = useState<C.BoilerClass>("class4");
   const [feedType, setFeedType] = useState<C.FeedType>("handFed");
   const [burntWoodToo, setBurntWoodToo] = useState(false);
   const [pricePaid, setPricePaid] = useState<string>(""); // empty = don't remember
@@ -578,8 +578,8 @@ export default function App() {
       {showStep("coalLeftOver") && (
         <StepShell
           {...shared("coalLeftOver")}
-          title="Anything still in the cellar?"
-          helper="Bought is not burned. A tonne left over would otherwise overstate what your house needs by a quarter."
+          title="Anything still left?"
+          helper="We're interested to know how much you burned as closely as possible."
           nextDisabled={coalLeftOver >= coalBought}
         >
           <input
@@ -605,7 +605,6 @@ export default function App() {
             value={coalType}
             onChange={setCoalType}
             options={[
-              { value: "ekogroszek", label: "Eco-pea coal" },
               { value: "orzech", label: "Nut coal" },
               { value: "groszek", label: "Pea coal" },
               { value: "mial", label: "Fine coal" },
@@ -625,7 +624,7 @@ export default function App() {
         <StepShell
           {...shared("boiler")}
           title="What class is your boiler?"
-          helper="Look for a nameplate on the front or side. This one question does more for the accuracy of your answer than any other."
+          helper="Look for a nameplate on the front or side."
         >
           <ChoiceGroup
             value={boilerClass}
@@ -640,7 +639,6 @@ export default function App() {
               { value: "class4", label: "Class 4" },
               { value: "class5", label: "Class 5" },
               { value: "ecodesign", label: "Ecodesign" },
-              { value: "unknown", label: "I don't know" },
             ]}
           />
           <div className="sub-question">
@@ -654,13 +652,6 @@ export default function App() {
               ]}
             />
           </div>
-          {isActive("boiler") && boilerClass === "unknown" && (
-            <p className="inline-warn">
-              Without the class we have to allow for anything from a very poor
-              boiler to a good one, which roughly triples the uncertainty in
-              your result. A photo of the nameplate would fix it.
-            </p>
-          )}
         </StepShell>
       )}
 
@@ -668,7 +659,6 @@ export default function App() {
         <StepShell
           {...shared("burntWood")}
           title="Did you burn wood or offcuts as well?"
-          helper="We don't need an amount just whether it happened."
         >
           <ChoiceGroup
             value={burntWoodToo ? "yes" : "no"}
@@ -685,7 +675,7 @@ export default function App() {
         <StepShell
           {...shared("pricePaid")}
           title="What did you pay per tonne?"
-          helper="If you remember. You know this better than any price list we could look up but skipping it is fine, we'll use the regional range."
+          helper="If you don't remember, we'll use the regional range."
           nextLabel={pricePaid ? "Next" : "Skip"}
         >
           <input
@@ -705,7 +695,6 @@ export default function App() {
         <StepShell
           {...shared("area")}
           title="How many square metres do you heat?"
-          helper="If you close off part of the house in winter, give the part you heat. We use this only to check whether insulation should come first."
         >
           <input
             type="number"
@@ -723,7 +712,7 @@ export default function App() {
         <StepShell
           {...shared("occupants")}
           title="How many people live here?"
-          helper="Hot water is a question of people, not square metres. This is the only thing we use it for."
+          helper="It's imporant for hot water usage."
         >
           <input
             type="number"
@@ -741,7 +730,6 @@ export default function App() {
         <StepShell
           {...shared("hotWater")}
           title="How is your hot water heated now?"
-          helper="This changes the answer more than it looks. If the boiler is off in summer, something else is heating your water, and it is almost certainly costing you more than the coal does."
         >
           <ChoiceGroup
             value={hotWaterNow}
@@ -782,7 +770,6 @@ export default function App() {
         <StepShell
           {...shared("electricityBill")}
           title="Roughly what do you pay for electricity each month?"
-          helper="A rough figure is fine, and you can skip this. We use it to check our own arithmetic against a bill you actually recognise."
         >
           <input
             type="number"
@@ -800,7 +787,6 @@ export default function App() {
         <StepShell
           {...shared("radiators")}
           title="What are your radiators like?"
-          helper="Coal boilers run hot, so coal-era radiators are small. A heat pump runs cooler, where the same radiator gives about half as much heat."
         >
           <ChoiceGroup
             value={String(scop)}
@@ -908,7 +894,7 @@ export default function App() {
         <StepShell
           {...shared("incomeBand")}
           title="Roughly, how much does your household bring in?"
-          helper="No figures, no proof, and we never store it. We ask because the Clean Air grant pays a bigger share to households that earn less, and that one fact changes the answer more than anything else on this page."
+          helper="We ask because the Clean Air grant pays a bigger share to households that earn less."
         >
           <ChoiceGroup
             value={incomeLevel}
@@ -945,7 +931,6 @@ export default function App() {
         <StepShell
           {...shared("ownedYears")}
           title="Two things the grant office will check"
-          helper="Both are yes or no. Get either wrong and a grant can be clawed back later, with interest, so it is worth being honest with yourself here."
         >
           <p className="stat-label">
             Have you owned the house three years or more?
@@ -992,7 +977,7 @@ export default function App() {
         <StepShell
           {...shared("taxBand")}
           title="Do you pay income tax?"
-          helper="The thermal-modernisation relief is a deduction, not a payment. You subtract what you spent from your taxable income, and you get back your tax rate on it, over up to six years. So it is worth nothing if you pay no tax, and nearly three times more at the higher rate."
+          helper="The thermal-modernisation relief is a deduction, not a payment."
         >
           <ChoiceGroup
             value={taxBand}
@@ -1046,10 +1031,7 @@ export default function App() {
             options={Object.values(ROUTES).map((r) => ({
               value: r.id,
               label: r.label,
-              sublabel:
-                r.status === "suspended"
-                  ? "Not available right now"
-                  : undefined,
+              sublabel: r.subtitle ? r.subtitle : undefined,
             }))}
           />
           {routeId !== "cash" && (
@@ -1063,14 +1045,6 @@ export default function App() {
                   label: `${y} years`,
                 }))}
               />
-              {/* The programme sets a ceiling. The bank decides what it will
-                actually lend, to this person, at this age. We do not model
-                that yet, so we say so rather than implying the maximum is
-                on offer. */}
-              <p className="note-inline">
-                The longest term shown is this product's maximum. What you are
-                actually offered is decided by the bank, and can be shorter.
-              </p>
             </div>
           )}
         </StepShell>
@@ -1437,10 +1411,6 @@ function ResultsScreen({
       <header className="masthead">
         <p className="eyebrow">Silesia · coal boiler replacement</p>
         <h1>What will it actually cost you?</h1>
-        <p className="lede">
-          Real monthly numbers for coal, pellet, or heat pump loan and grant
-          included, priced from what you actually burned last winter.
-        </p>
       </header>
 
       <p className="demand">
@@ -1450,16 +1420,20 @@ function ResultsScreen({
         metre. {confidenceLine}
       </p>
 
-      <section className="grid" aria-label="Your four options">
-        {rows.map((r) => {
-          const isBest = r.summary.afterLoan.mid === best;
+      <section className="grid single" aria-label="Your best option">
+        {(() => {
+          const r = rows.find((row) => row.summary.afterLoan.mid === best)!;
           // Staying on coal borrows nothing, and neither does paying cash.
           // Printing "while you repay the loan" over a fuel bill invented a
           // debt the household does not have.
           const hasLoan = r.plan !== null && r.plan.amountBorrowed.mid > 0;
 
           return (
-            <article key={r.id} className={isBest ? "card best" : "card"}>
+            <article className="card best">
+              <p className="verdict-lede">
+                Of every option we checked against your coal baseline, this is
+                the one that costs you the least.
+              </p>
               <h2>{r.label}</h2>
 
               {hasLoan ? (
@@ -1488,8 +1462,6 @@ function ResultsScreen({
                       ? "What you pay today"
                       : "What you would pay"}
                   </p>
-                  {/* The coal card is the baseline, so it keeps the absolute at
-                      full display size. Every other card is measured against it. */}
                   {r.id === "coal" ? (
                     <p className="figure">
                       {zl(r.running.mid)}{" "}
@@ -1510,30 +1482,9 @@ function ResultsScreen({
                   </p>
                 </>
               )}
-
-              {r.sub && r.plan ? (
-                <OptionBreakdown row={r} sub={r.sub} plan={r.plan} />
-              ) : (
-                <p className="note">
-                  Your boiler's age and class decide when this has to go. This
-                  column is here so you can see what you pay today.
-                </p>
-              )}
             </article>
           );
-        })}
-      </section>
-
-      <section className={`verdict v-${v.kind}`}>
-        <p className="eyebrow">What we would tell a neighbour</p>
-        <h2>{v.headline}</h2>
-        <p className="because">{v.because}</p>
-        <p className="stat-label">What would change this</p>
-        <ul>
-          {v.wouldChangeIt.map((w, i) => (
-            <li key={`${v.kind}-${i}`}>{w}</li>
-          ))}
-        </ul>
+        })()}
       </section>
 
       {schedule && (

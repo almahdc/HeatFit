@@ -63,18 +63,9 @@ export const COAL_PRICE_GUS_NATIONAL: Sourced<number> = {
  * to about 30 for orzech. Using one figure for all of them is a ±25% error on
  * heat demand before anything else happens, which is why the tool asks.
  */
-export type CoalType = "ekogroszek" | "orzech" | "groszek" | "mial" | "unknown";
+export type CoalType = "orzech" | "groszek" | "mial" | "unknown";
 
 export const COAL_CALORIFIC_VALUE: Record<CoalType, SourcedBand> = {
-  ekogroszek: {
-    low: 24,
-    mid: 25.5,
-    high: 27,
-    unit: "MJ/kg",
-    source: "Ekogroszek specification, typical Polish retail grade",
-    readOn: "2026-08-20",
-    certainty: "medium",
-  },
   orzech: {
     low: 26,
     mid: 28,
@@ -163,7 +154,7 @@ export const PELLET_CALORIFIC_VALUE: SourcedBand = {
  * why the tool pushes the nameplate photo instead of accepting it.
  */
 export type BoilerClass =
-  "noClass" | "class3" | "class4" | "class5" | "ecodesign" | "unknown";
+  "noClass" | "class3" | "class4" | "class5" | "ecodesign";
 export type FeedType = "handFed" | "automatic";
 
 export const COAL_BOILER_EFFICIENCY: Record<
@@ -271,27 +262,6 @@ export const COAL_BOILER_EFFICIENCY: Record<
       certainty: "medium",
     },
   },
-  unknown: {
-    handFed: {
-      low: 0.45,
-      mid: 0.6,
-      high: 0.75,
-      unit: "fraction",
-      source: "Derived envelope across all classes",
-      readOn: "2026-08-20",
-      certainty: "low",
-      note: "The single biggest avoidable band-widener in the model. Route to the nameplate photo.",
-    },
-    automatic: {
-      low: 0.45,
-      mid: 0.6,
-      high: 0.75,
-      unit: "fraction",
-      source: "Derived envelope across all classes",
-      readOn: "2026-08-20",
-      certainty: "low",
-    },
-  },
 };
 
 /** Convenience lookup so callers don't index a nested record by hand. */
@@ -397,7 +367,7 @@ export const PELLET_BOILER_INSTALLED_COST: SourcedBand = {
   high: 32000,
   unit: "zł, turnkey incl. VAT",
   source:
-    "Polish installer pricing 2026; ekogroszek boilers quoted 15 000-25 000 zł installed",
+    "Polish installer pricing 2026; orzech boilers quoted 15 000-25 000 zł installed",
   readOn: "2026-08-19",
   certainty: "low",
   note:
@@ -502,7 +472,8 @@ export const SUMMER_DHW_SHARE: SourcedBand = {
 
 export const IMMERSION_EFFICIENCY: Sourced<number> = {
   value: 1.0,
-  source: "Resistance heating converts electricity to heat at unity by definition",
+  source:
+    "Resistance heating converts electricity to heat at unity by definition",
   readOn: "2026-08-21",
   certainty: "high",
 };
