@@ -451,6 +451,77 @@ export const PELLET_BOILER_LIFE_YEARS: Sourced<number> = {
 
 // --- building ---------------------------------------------------------------
 
+// --- domestic hot water -----------------------------------------------------
+// The model ignored hot water entirely until now, which quietly flattered the
+// heat pump: tonnage-derived demand includes whatever the coal boiler heated,
+// and all of it was handed to the pump at radiator SCOP. Hot water needs a
+// higher temperature, so it runs at a worse COP. Splitting it out corrects
+// that, and also lets us count immersion heating the household already pays
+// for but never sees itemised.
+
+export const DHW_KWH_PER_PERSON_YEAR: SourcedBand = {
+  low: 700,
+  mid: 1000,
+  high: 1400,
+  unit: "kWh/person/yr",
+  source:
+    "50 L per person per day at a 45 K rise is 955 kWh of useful energy " +
+    "(50 x 45 x 4.186 / 3600 x 365), plus 15-25% tank and circulation losses",
+  readOn: "2026-08-21",
+  certainty: "medium",
+  // VERIFY: arithmetic is sound, the 50 L/person/day figure is a European
+  // convention rather than a Polish measurement. Worth one question in Magda's
+  // interviews: how many people, how many showers.
+};
+
+export const DHW_HEAT_PUMP_COP: SourcedBand = {
+  low: 2.0,
+  mid: 2.6,
+  high: 3.2,
+  unit: "COP",
+  source:
+    "Hot water is stored at 50-55 C, well above a radiator flow temperature, " +
+    "so a heat pump makes it at a materially lower COP than its heating SCOP",
+  readOn: "2026-08-21",
+  certainty: "low",
+  note: "Unsourced band. Needs a manufacturer figure or an installer's view.",
+};
+
+export const SUMMER_DHW_SHARE: SourcedBand = {
+  low: 0.33,
+  mid: 0.42,
+  high: 0.5,
+  unit: "fraction",
+  source:
+    "Share of annual hot water made in the months a coal boiler is shut down, " +
+    "roughly May to September",
+  readOn: "2026-08-21",
+  certainty: "low",
+  note: "Modelling assumption. Flag on any slide using it.",
+};
+
+export const IMMERSION_EFFICIENCY: Sourced<number> = {
+  value: 1.0,
+  source: "Resistance heating converts electricity to heat at unity by definition",
+  readOn: "2026-08-21",
+  certainty: "high",
+};
+
+export const BASELINE_HOUSEHOLD_KWH_YEAR: SourcedBand = {
+  low: 1800,
+  mid: 2400,
+  high: 3200,
+  unit: "kWh/yr",
+  source:
+    "Household electricity excluding space heating and hot water: lighting, " +
+    "appliances, electronics",
+  readOn: "2026-08-21",
+  certainty: "low",
+  note:
+    "Used only to reconcile a stated bill against expected use. A large excess " +
+    "usually means electric heaters or an immersion tank nobody mentioned.",
+};
+
 export const INSULATE_FIRST_THRESHOLD: Sourced<number> = {
   value: 150,
   source:
@@ -504,6 +575,11 @@ export const ALL_CONSTANTS: Record<string, Sourced<unknown> | SourcedBand> = {
   COAL_BOILER_REPLACEMENT_COST,
   HEAT_PUMP_LIFE_YEARS,
   PELLET_BOILER_LIFE_YEARS,
+  DHW_KWH_PER_PERSON_YEAR,
+  DHW_HEAT_PUMP_COP,
+  SUMMER_DHW_SHARE,
+  IMMERSION_EFFICIENCY,
+  BASELINE_HOUSEHOLD_KWH_YEAR,
   INSULATE_FIRST_THRESHOLD,
   ...TABLE_CONSTANTS,
 };

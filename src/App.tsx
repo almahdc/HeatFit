@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { StepShell, ChoiceGroup } from "./wizard/StepShell";
 import { Range, exact, range, scale } from "./engines/range";
-import { runningCosts, Tariff } from "./engines/runningCost";
+import { HotWaterSource, runningCosts, Tariff } from "./engines/runningCost";
 import {
   Applicant,
   IncomeLevel,
@@ -105,6 +105,9 @@ const STEP_IDS = [
   "burntWood",
   "pricePaid",
   "area",
+  "occupants",
+  "hotWater",
+  "electricityBill",
   "radiators",
   "postcode",
   "buildingType",
@@ -138,6 +141,9 @@ export default function App() {
 
   // --- the house ------------------------------------------------------------
   const [area, setArea] = useState(140);
+  const [occupants, setOccupants] = useState(3);
+  const [hotWaterNow, setHotWaterNow] = useState<HotWaterSource>("coalAllYear");
+  const [electricityBill, setElectricityBill] = useState<string>(""); // empty = don't know
   const [scop, setScop] = useState(3.0);
   const [postcode, setPostcode] = useState("");
   const [buildingType, setBuildingType] = useState<BuildingType>("detached");
@@ -281,6 +287,8 @@ export default function App() {
       heatPumpScop: range(scop - 0.4, scop, scop + 0.4),
       tariff,
       pvOffsetKwhPerYear: range(2600, 3200, 3800),
+      occupants,
+      hotWaterNow,
     });
 
     const route = ROUTES[routeId]!;
@@ -417,6 +425,8 @@ export default function App() {
         })(),
         tariff,
         pvOffsetKwhPerYear: range(2600, 3200, 3800),
+        occupants,
+        hotWaterNow,
       });
 
       const isPellet = winner.id === "pellet";
@@ -506,6 +516,8 @@ export default function App() {
     burntWoodToo,
     pricePaid,
     area,
+    occupants,
+    hotWaterNow,
     scop,
     tariff,
     routeId,
@@ -704,6 +716,83 @@ export default function App() {
             onChange={(e) => setArea(Math.max(30, +e.target.value))}
           />
           <span className="input-unit">m²</span>
+        </StepShell>
+      )}
+
+      {showStep("occupants") && (
+        <StepShell
+          {...shared("occupants")}
+          title="How many people live here?"
+          helper="Hot water is a question of people, not square metres. This is the only thing we use it for."
+        >
+          <input
+            type="number"
+            step={1}
+            min={1}
+            className="big-input"
+            value={occupants}
+            onChange={(e) => setOccupants(Math.max(1, +e.target.value))}
+          />
+          <span className="input-unit">people</span>
+        </StepShell>
+      )}
+
+      {showStep("hotWater") && (
+        <StepShell
+          {...shared("hotWater")}
+          title="How is your hot water heated now?"
+          helper="This changes the answer more than it looks. If the boiler is off in summer, something else is heating your water, and it is almost certainly costing you more than the coal does."
+        >
+          <ChoiceGroup
+            value={hotWaterNow}
+            onChange={(v) => setHotWaterNow(v as HotWaterSource)}
+            options={[
+              {
+                value: "coalAllYear",
+                label: "The coal boiler, all year",
+                sublabel: "It runs in summer too, just for water",
+              },
+              {
+                value: "coalThenElectric",
+                label: "The boiler in winter, electricity in summer",
+                sublabel: "A tank or immersion heater takes over",
+              },
+              {
+                value: "electricAllYear",
+                label: "Electricity, all year",
+                sublabel: "The boiler only ever heats radiators",
+              },
+              {
+                value: "other",
+                label: "Something else",
+                sublabel: "Gas, district heating, or not sure",
+              },
+            ]}
+          />
+          {isActive("hotWater") && hotWaterNow === "other" && (
+            <p className="inline-warn">
+              We will leave hot water out of the comparison rather than guess at
+              it. Every figure you see will be heating only.
+            </p>
+          )}
+        </StepShell>
+      )}
+
+      {showStep("electricityBill") && (
+        <StepShell
+          {...shared("electricityBill")}
+          title="Roughly what do you pay for electricity each month?"
+          helper="A rough figure is fine, and you can skip this. We use it to check our own arithmetic against a bill you actually recognise."
+        >
+          <input
+            type="number"
+            step={50}
+            min={0}
+            className="big-input"
+            value={electricityBill}
+            onChange={(e) => setElectricityBill(e.target.value)}
+          />
+          <span className="input-unit">zł a month</span>
         </StepShell>
       )}
 

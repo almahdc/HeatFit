@@ -64,7 +64,28 @@ export interface HouseFacts {
   tariff: Tariff;
   /** Annual kWh the PV array is expected to offset, if any. From a PV model. */
   pvOffsetKwhPerYear?: Range;
+  /** People living here. Drives hot water volume, nothing else. */
+  occupants?: number;
+  /**
+   * How hot water is made TODAY. This decides the sign of the whole hot water
+   * correction, so it is asked rather than assumed:
+   *
+   *   coalAllYear   the tonnage already paid for hot water, so the coal
+   *                 baseline is complete and space heat is the remainder
+   *   coalThenElectric  the boiler is shut in summer and an immersion tank
+   *                 takes over, so the household is already paying for
+   *                 resistance heating that never appears in the coal figure
+   *   electricAllYear   none of the hot water is in the tonnage
+   *   other         gas, district, or unknown. Not modelled, left alone.
+   */
+  hotWaterNow?: HotWaterSource;
 }
+
+export type HotWaterSource =
+  | "coalAllYear"
+  | "coalThenElectric"
+  | "electricAllYear"
+  | "other";
 
 export interface RunningCost {
   /** Annual cost in zloty. */
@@ -166,6 +187,89 @@ export function heatDemandPerM2(demand: Range, heatedAreaM2: number): Range {
   return scale(demand, 1 / heatedAreaM2);
 }
 
+// --- hot water ---------------------------------------------------------------
+
+/**
+ * Useful hot water energy per year, from occupants alone.
+ *
+ * Deliberately not derived from floor area: hot water is a function of people
+ * and habits, not square metres. Returns zero when we were not told, so every
+ * caller degrades to the old behaviour rather than inventing a household.
+ */
+export function dhwDemand(occupants?: number): Range {
+  if (!occupants || occupants <= 0) return exact(0);
+  return scale(band(C.DHW_KWH_PER_PERSON_YEAR), occupants);
+}
+
+/**
+ * How the total tonnage-derived demand splits.
+ *
+ * `heatDemandFromCoal` measures everything the coal boiler delivered. If that
+ * boiler also heated water, hot water is already inside the total and must come
+ * out before the remainder is called space heating. If it did not, the total is
+ * space heating and hot water sits on top, paid for some other way.
+ */
+export function splitDemand(
+  total: Range,
+  dhw: Range,
+  source: HotWaterSource | undefined,
+): { spaceHeat: Range; dhw: Range; dhwInsideTonnage: Range } {
+  if (!source || dhw.mid === 0) {
+    return { spaceHeat: total, dhw: exact(0), dhwInsideTonnage: exact(0) };
+  }
+
+  const summerShare = band(C.SUMMER_DHW_SHARE);
+
+  // Fraction of annual hot water the coal boiler actually made.
+  let insideFraction: Range;
+  if (source === "coalAllYear") insideFraction = exact(1);
+  else if (source === "coalThenElectric") {
+    insideFraction = range(
+      1 - summerShare.high,
+      1 - summerShare.mid,
+      1 - summerShare.low,
+    );
+  } else insideFraction = exact(0);
+
+  const inside = multiply(dhw, insideFraction);
+
+  // Never let hot water exceed the measured total: a household that burns very
+  // little coal and has many occupants would otherwise get negative space heat.
+  const cappedInside = range(
+    Math.min(inside.low, total.low),
+    Math.min(inside.mid, total.mid),
+    Math.min(inside.high, total.high),
+  );
+
+  const spaceHeat = range(
+    Math.max(0, total.low - cappedInside.high),
+    Math.max(0, total.mid - cappedInside.mid),
+    Math.max(0, total.high - cappedInside.low),
+  );
+
+  return { spaceHeat, dhw, dhwInsideTonnage: cappedInside };
+}
+
+/**
+ * Hot water the household currently buys as electricity, and never sees as a
+ * heating cost. Immersion heating is COP 1.0, so this is the most expensive
+ * possible way to make hot water and the easiest saving a heat pump makes.
+ */
+export function immersionKwh(
+  dhw: Range,
+  dhwInsideTonnage: Range,
+  source: HotWaterSource | undefined,
+): Range {
+  if (!source || source === "coalAllYear" || source === "other")
+    return exact(0);
+  const outside = range(
+    Math.max(0, dhw.low - dhwInsideTonnage.high),
+    Math.max(0, dhw.mid - dhwInsideTonnage.mid),
+    Math.max(0, dhw.high - dhwInsideTonnage.low),
+  );
+  return scale(outside, 1 / C.IMMERSION_EFFICIENCY.value);
+}
+
 // --- step 2: cost of each option --------------------------------------------
 
 /**
@@ -177,12 +281,25 @@ export function heatDemandPerM2(demand: Range, heatedAreaM2: number): Range {
 export function coalRunningCost(
   coalTonnesBurnedPerYear: number,
   pricePaidPerTonne?: number,
+  immersionKwhPerYear?: Range,
+  tariff: Tariff = "G11",
 ): RunningCost {
   const tonnes = fromSpread(coalTonnesBurnedPerYear, 0.05); // recall, not a meter
   const price = pricePaidPerTonne
     ? fromSpread(pricePaidPerTonne, 0.05)
     : band(C.COAL_PRICE_PER_TONNE);
-  const annual = multiply(tonnes, price);
+  let annual = multiply(tonnes, price);
+
+  // A household that shuts the boiler in summer heats water with an immersion
+  // tank for months. They pay for it on the electricity bill and never count it
+  // as heating, so leaving it out understates what staying on coal costs.
+  if (immersionKwhPerYear && immersionKwhPerYear.mid > 0) {
+    annual = add(
+      annual,
+      multiply(immersionKwhPerYear, electricityPricePerKwh(tariff)),
+    );
+  }
+
   return toRunningCost(annual, tonnes, "t");
 }
 
@@ -245,8 +362,18 @@ export function heatPumpRunningCost(
   scop: Range,
   tariff: Tariff,
   pvOffsetKwhPerYear?: Range,
+  dhwKwhPerYear?: Range,
 ): RunningCost {
-  const gross = heatPumpElectricityKwh(demand, scop);
+  // Space heat at the radiator SCOP, hot water at its own, worse COP. A tank is
+  // held at 50-55 C, well above radiator flow, so charging hot water at the
+  // heating SCOP overstates how cheaply a heat pump can make it.
+  const gross =
+    dhwKwhPerYear && dhwKwhPerYear.mid > 0
+      ? add(
+          heatPumpElectricityKwh(demand, scop),
+          divide(dhwKwhPerYear, band(C.DHW_HEAT_PUMP_COP)),
+        )
+      : heatPumpElectricityKwh(demand, scop);
 
   let net = gross;
   if (pvOffsetKwhPerYear) {
@@ -274,6 +401,12 @@ export interface RunningCosts {
   pellet: RunningCost;
   heatPump: RunningCost;
   heatPumpPlusPv: RunningCost;
+  /** Space heating only, once hot water is taken out of the tonnage. */
+  spaceHeatDemand: Range;
+  /** Annual useful hot water energy, from occupants. Zero when not asked. */
+  dhwDemand: Range;
+  /** Hot water the household currently buys as electricity at COP 1.0. */
+  immersionKwh: Range;
 }
 
 /**
@@ -287,17 +420,41 @@ export function runningCosts(facts: HouseFacts): RunningCosts {
     facts.coalTonnesLeftOver ?? 0,
   );
 
+  // Hot water is split out of the measured total before any scenario prices it.
+  // With no occupants or no hot water answer, dhw is zero and every scenario
+  // behaves exactly as it did before this existed.
+  const dhw = dhwDemand(facts.occupants);
+  const split = splitDemand(demand, dhw, facts.hotWaterNow);
+  const immersion = immersionKwh(dhw, split.dhwInsideTonnage, facts.hotWaterNow);
+
+  // Pellet replaces the coal boiler and does exactly the same job, hot water
+  // included, so it keeps the full measured demand.
   return {
     demand,
     demandPerM2: heatDemandPerM2(demand, facts.heatedAreaM2),
-    coal: coalRunningCost(burned, facts.coalPricePaidPerTonne),
+    spaceHeatDemand: split.spaceHeat,
+    dhwDemand: dhw,
+    immersionKwh: immersion,
+    coal: coalRunningCost(
+      burned,
+      facts.coalPricePaidPerTonne,
+      immersion,
+      facts.tariff,
+    ),
     pellet: pelletRunningCost(demand),
-    heatPump: heatPumpRunningCost(demand, facts.heatPumpScop, facts.tariff),
+    heatPump: heatPumpRunningCost(
+      split.spaceHeat,
+      facts.heatPumpScop,
+      facts.tariff,
+      undefined,
+      dhw,
+    ),
     heatPumpPlusPv: heatPumpRunningCost(
-      demand,
+      split.spaceHeat,
       facts.heatPumpScop,
       facts.tariff,
       facts.pvOffsetKwhPerYear ?? exact(0),
+      dhw,
     ),
   };
 }
