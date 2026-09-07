@@ -35,6 +35,9 @@ import {
 import * as C from "./data/constants.pl";
 import { StyleTile } from "./StyleTile";
 
+import HouseTypeSelector from "./HouseTypeSelector";
+import { HouseArchetypeId } from "./Archetype";
+
 const zl = (n: number) => Math.round(n).toLocaleString("pl-PL");
 const band = (r: Range) => `${zl(r.low)} \u2013 ${zl(r.high)}`;
 
@@ -98,6 +101,7 @@ function toBand(b: C.SourcedBand): Range {
 // calculator that asks for floor area, and asking it first means the valuable
 // answer is given before any admin questions have a chance to lose people.
 const STEP_IDS = [
+  "houseType",
   "coalBought",
   "coalLeftOver",
   "coalType",
@@ -122,6 +126,24 @@ const STEP_IDS = [
 type StepId = (typeof STEP_IDS)[number];
 const idx = (id: StepId) => STEP_IDS.indexOf(id);
 
+export const CalculatorStep1Page: React.FC = () => {
+  const [selectedHouse, setSelectedHouse] =
+    useState<HouseArchetypeId>("kostka");
+
+  const handleHouseChange = (id: HouseArchetypeId) => {
+    setSelectedHouse(id);
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto py-8 px-4">
+      <HouseTypeSelector
+        selectedHouseId={selectedHouse}
+        onSelectHouse={handleHouseChange}
+      />
+    </div>
+  );
+};
+
 export default function App() {
   // Route check: show style tile if requested
   const showStyleTile =
@@ -131,6 +153,8 @@ export default function App() {
   }
 
   // --- what they burn -------------------------------------------------------
+  const [selectedHouse, setSelectedHouse] =
+    useState<HouseArchetypeId>("kostka");
   const [coalBought, setCoalBought] = useState(4);
   const [coalLeftOver, setCoalLeftOver] = useState(0);
   const [coalType, setCoalType] = useState<C.CoalType>("orzech");
@@ -554,6 +578,27 @@ export default function App() {
               }}
             />
           </div>
+        </div>
+      )}
+
+      {showStep("houseType") && (
+        <div
+          ref={setStepRef("houseType")}
+          className={`step-block ${isActive("houseType") ? "active" : ""}`}
+        >
+          <HouseTypeSelector
+            selectedHouseId={selectedHouse}
+            onSelectHouse={setSelectedHouse}
+            className="mb-6"
+          />
+          {isActive("houseType") && (
+            <div className="step-nav">
+              <span /> {/* Empty spacer for alignment */}
+              <button type="button" className="btn-primary" onClick={next}>
+                Next
+              </button>
+            </div>
+          )}
         </div>
       )}
 
