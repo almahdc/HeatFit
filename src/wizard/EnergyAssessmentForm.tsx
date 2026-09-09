@@ -1,87 +1,27 @@
 import { useState } from "react";
-import {
-  ArrowLeft,
-  ArrowRight,
-  BatteryCharging,
-  Droplets,
-  Euro,
-  Flame,
-  Fuel,
-  Info,
-  MapPin,
-  Mountain,
-  Sun,
-  Tag,
-  TreePine,
-  Wind,
-  Zap,
-} from "lucide-react";
+import { ArrowLeft, ArrowRight, Flame, Info, MapPin } from "lucide-react";
 import {
   Block,
   FieldLabel,
-  IconCardGroup,
   InfoBox,
   StepProgress,
   TextInputWithIcon,
-  ToggleCard,
-  type IconCardOption,
 } from "./FormPrimitives";
+import { AssessmentState, initialAssessmentState } from "./assessmentTypes";
 import {
-  AssessmentState,
-  CoolingType,
-  ElectricityTariff,
-  HeatingSystemInputs,
-  SpaceHeaterFuel,
-  WaterHeaterType,
-  initialAssessmentState,
-} from "./assessmentTypes";
-import { HouseholdCaseStudy } from "./HouseholdCaseStudy";
+  CurrentHeatingSection,
+  ElectricityWaterSection,
+  HomeComfortSection,
+  PersonaPicker,
+} from "./HouseholdCaseStudy";
 import { HouseholdCaseInputs, initialHouseholdCase } from "./householdCases";
 
-const STEP_LABELS = ["Location", "Your home", "Current heating"];
-
-const FUEL_OPTIONS: IconCardOption<SpaceHeaterFuel>[] = [
-  { value: "gas", label: "Gas", icon: Flame },
-  { value: "oil", label: "Oil", icon: Fuel },
-  { value: "coal", label: "Coal", icon: Mountain },
-  { value: "wood", label: "Wood", icon: TreePine },
+const STEP_LABELS = [
+  "Welcome & Location",
+  "Home Profile & Comfort",
+  "Current Heating & Fuel",
+  "Electricity & Water",
 ];
-
-const WATER_HEATER_OPTIONS: IconCardOption<WaterHeaterType>[] = [
-  { value: "electricTank", label: "Electric tank", icon: Droplets },
-  { value: "instantGas", label: "Instant gas heater", icon: Droplets },
-  {
-    value: "combinedWithHeater",
-    label: "Combined with space heater",
-    icon: Droplets,
-  },
-  { value: "solar", label: "Solar water heater", icon: Droplets },
-];
-
-const COOLING_OPTIONS: IconCardOption<CoolingType>[] = [
-  { value: "none", label: "None", icon: Wind },
-  { value: "splitAc", label: "Split AC units", icon: Wind },
-  { value: "centralAc", label: "Central air conditioning", icon: Wind },
-  { value: "fansOnly", label: "Fans only", icon: Wind },
-];
-
-const ELECTRICITY_TARIFF_OPTIONS: IconCardOption<ElectricityTariff>[] = [
-  { value: "singleRate", label: "Single-rate", icon: Zap },
-  {
-    value: "timeOfUse",
-    label: "Time-of-use",
-    sublabel: "Day / night",
-    icon: Zap,
-  },
-];
-
-function updateHeating<K extends keyof HeatingSystemInputs>(
-  state: AssessmentState,
-  key: K,
-  value: HeatingSystemInputs[K],
-): AssessmentState {
-  return { ...state, heating: { ...state.heating, [key]: value } };
-}
 
 export function EnergyAssessmentForm({
   onComplete,
@@ -98,10 +38,31 @@ export function EnergyAssessmentForm({
   const [state, setState] = useState<AssessmentState>(initialState);
   const [household, setHousehold] =
     useState<HouseholdCaseInputs>(initialHousehold);
+  const [attemptedNext, setAttemptedNext] = useState(false);
 
   const isLastStep = step === STEP_LABELS.length - 1;
 
+  // Every field elsewhere has a sensible default from a persona or the
+  // initial state, so it can never be "empty" — postal code, boiler year and
+  // coal provider are the only fields a user must actually type themselves,
+  // which makes them the only ones worth gating on.
+  const postalCodeValid = state.location.postalCode.trim() !== "";
+  const boilerYearValid = household.boilerYear !== "";
+  const coalProviderValid = household.coalProvider.trim() !== "";
+
+  const stepValid =
+    step === 0
+      ? postalCodeValid
+      : step === 2
+        ? boilerYearValid && coalProviderValid
+        : true;
+
   const goNext = () => {
+    if (!stepValid) {
+      setAttemptedNext(true);
+      return;
+    }
+    setAttemptedNext(false);
     if (isLastStep) {
       onComplete(state, household);
     } else {
@@ -109,7 +70,10 @@ export function EnergyAssessmentForm({
     }
   };
 
-  const goBack = () => setStep((s) => Math.max(0, s - 1));
+  const goBack = () => {
+    setAttemptedNext(false);
+    setStep((s) => Math.max(0, s - 1));
+  };
 
   return (
     <div className="mx-auto w-full lg:w-1/2 lg:min-w-[600px] xl:max-w-[820px] px-4 py-8">
@@ -117,159 +81,80 @@ export function EnergyAssessmentForm({
 
       <div className="flex flex-col gap-6">
         {step === 0 && (
-          <Block
-            title="Location"
-            subtitle="Your location determines climate zones and local anti-smog ordinances."
-          >
-            <div>
-              <FieldLabel icon={MapPin}>Postal Code</FieldLabel>
-              <TextInputWithIcon
-                icon={MapPin}
-                inputMode="text"
-                placeholder="e.g., 10115"
-                value={state.location.postalCode}
-                onChange={(v) =>
-                  setState((s) => ({ ...s, location: { postalCode: v } }))
-                }
-              />
-            </div>
-            <InfoBox icon={Info}>
-              We use your postal code to match your climate zone and check
-              whether local anti-smog rules restrict which heating systems are
-              allowed in your area.
-            </InfoBox>
-          </Block>
+          <>
+            <Block
+              title="Welcome"
+              subtitle="A few minutes of questions, in exchange for a clear answer on what replacing your boiler would actually cost and save."
+            >
+              <p className="text-base text-ink-soft">
+                This tool is built{" "}
+                <strong className="text-ink">
+                  exclusively for households currently heating with a coal
+                  boiler
+                </strong>
+                . Over the next few steps we'll ask about your home, your
+                current coal use, and your electricity and water setup, then use
+                that to estimate the running costs, subsidies, and financing for
+                switching to gas, pellet, or a heat pump. If your home doesn't
+                burn coal for heat, this calculator isn't the right fit yet.
+              </p>
+            </Block>
+
+            <Block
+              title="Location"
+              subtitle="Your location determines climate zones and local anti-smog ordinances."
+            >
+              <div>
+                <FieldLabel icon={MapPin}>
+                  Postal Code <span className="text-accent">*</span>
+                </FieldLabel>
+                <TextInputWithIcon
+                  icon={MapPin}
+                  inputMode="text"
+                  placeholder="e.g., 10115"
+                  value={state.location.postalCode}
+                  onChange={(v) =>
+                    setState((s) => ({ ...s, location: { postalCode: v } }))
+                  }
+                />
+                {attemptedNext && !postalCodeValid && (
+                  <p className="mt-2 text-sm font-medium text-red-600">
+                    Enter a postal code to continue.
+                  </p>
+                )}
+              </div>
+              <InfoBox icon={Info}>
+                We use your postal code to check which regional subsidies apply
+                to your area, what your municipality's deadline for replacing
+                coal boilers is, and whether a local clean-air programme covers
+                part of the cost.
+              </InfoBox>
+            </Block>
+          </>
         )}
 
         {step === 1 && (
-          <HouseholdCaseStudy value={household} onChange={setHousehold} />
+          <>
+            <PersonaPicker value={household} onChange={setHousehold} />
+            <HomeComfortSection value={household} onChange={setHousehold} />
+          </>
         )}
 
         {step === 2 && (
-          <Block
-            title="Current heating"
-            subtitle="Tell us about your current energy setup."
-          >
-            <div>
-              <FieldLabel icon={Flame}>Space heater fuel</FieldLabel>
-              <IconCardGroup
-                columns={4}
-                value={state.heating.spaceHeaterFuel}
-                onChange={(v) =>
-                  setState((s) => updateHeating(s, "spaceHeaterFuel", v))
-                }
-                options={FUEL_OPTIONS}
-              />
-            </div>
+          <>
+            <CurrentHeatingSection value={household} onChange={setHousehold} />
+            {attemptedNext && !stepValid && (
+              <p className="flex items-center gap-2 text-sm font-medium text-red-600">
+                <Flame className="h-4 w-4" aria-hidden />
+                Boiler installation year and coal provider are required to
+                continue.
+              </p>
+            )}
+          </>
+        )}
 
-            <div>
-              <FieldLabel icon={Tag}>Average fuel price per season</FieldLabel>
-              <TextInputWithIcon
-                icon={Tag}
-                inputMode="decimal"
-                placeholder="e.g., 1200"
-                suffix="/ season"
-                value={String(state.heating.fuelPricePerSeason)}
-                onChange={(v) =>
-                  setState((s) =>
-                    updateHeating(
-                      s,
-                      "fuelPricePerSeason",
-                      v === "" ? "" : Number(v.replace(/[^0-9.]/g, "")),
-                    ),
-                  )
-                }
-              />
-            </div>
-
-            <div>
-              <FieldLabel icon={Droplets}>Water heater</FieldLabel>
-              <IconCardGroup
-                columns={4}
-                value={state.heating.waterHeaterType}
-                onChange={(v) =>
-                  setState((s) => updateHeating(s, "waterHeaterType", v))
-                }
-                options={WATER_HEATER_OPTIONS}
-              />
-            </div>
-
-            <div>
-              <FieldLabel icon={Wind}>Cooling</FieldLabel>
-              <IconCardGroup
-                columns={4}
-                value={state.heating.cooling}
-                onChange={(v) =>
-                  setState((s) => updateHeating(s, "cooling", v))
-                }
-                options={COOLING_OPTIONS}
-              />
-            </div>
-
-            <div>
-              <FieldLabel icon={Zap}>Electricity tariff</FieldLabel>
-              <IconCardGroup
-                value={state.heating.electricityTariff}
-                onChange={(v) =>
-                  setState((s) => updateHeating(s, "electricityTariff", v))
-                }
-                options={ELECTRICITY_TARIFF_OPTIONS}
-              />
-            </div>
-
-            <div>
-              <FieldLabel icon={Euro}>Electricity price</FieldLabel>
-              <TextInputWithIcon
-                icon={Euro}
-                inputMode="decimal"
-                placeholder="e.g., 0.75"
-                suffix="/ kWh"
-                value={String(state.heating.electricityPricePerKwh)}
-                onChange={(v) =>
-                  setState((s) =>
-                    updateHeating(
-                      s,
-                      "electricityPricePerKwh",
-                      v === "" ? "" : Number(v.replace(/[^0-9.]/g, "")),
-                    ),
-                  )
-                }
-              />
-            </div>
-
-            <div>
-              <FieldLabel>PV & storage setup</FieldLabel>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <ToggleCard
-                  icon={Sun}
-                  label="PV panels"
-                  sublabel="Solar electricity"
-                  checked={state.heating.hasPvPanels}
-                  onChange={(v) =>
-                    setState((s) => updateHeating(s, "hasPvPanels", v))
-                  }
-                />
-                <ToggleCard
-                  icon={BatteryCharging}
-                  label="Battery"
-                  sublabel="Stores solar power"
-                  checked={state.heating.hasBattery}
-                  onChange={(v) =>
-                    setState((s) => updateHeating(s, "hasBattery", v))
-                  }
-                />
-                <ToggleCard
-                  icon={Zap}
-                  label="Heat storage"
-                  sublabel="Buffer / thermal tank"
-                  checked={state.heating.hasHeatStorage}
-                  onChange={(v) =>
-                    setState((s) => updateHeating(s, "hasHeatStorage", v))
-                  }
-                />
-              </div>
-            </div>
-          </Block>
+        {step === 3 && (
+          <ElectricityWaterSection value={household} onChange={setHousehold} />
         )}
       </div>
 
@@ -286,7 +171,11 @@ export function EnergyAssessmentForm({
         <button
           type="button"
           onClick={goNext}
-          className="flex items-center gap-2 rounded-xl bg-accent px-6 py-3 text-[14.5px] font-semibold text-white shadow-cta transition-colors hover:bg-accent-600 active:scale-[0.98]"
+          className={`flex items-center gap-2 rounded-xl px-6 py-3 text-[14.5px] font-semibold text-white shadow-cta transition-colors active:scale-[0.98] ${
+            stepValid
+              ? "bg-accent hover:bg-accent-600"
+              : "bg-accent/50 hover:bg-accent/50"
+          }`}
         >
           {isLastStep ? "Continue to Financials" : "Continue"}
           <ArrowRight className="h-4 w-4" aria-hidden />
