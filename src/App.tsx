@@ -2,6 +2,7 @@ import { useState } from "react";
 import { ArrowLeft, Sparkles } from "lucide-react";
 import { EnergyAssessmentForm } from "./wizard/EnergyAssessmentForm";
 import { AssessmentState } from "./wizard/assessmentTypes";
+import { HouseholdCaseInputs } from "./wizard/householdCases";
 import { StyleTile } from "./StyleTile";
 
 type Phase = "form" | "financials";
@@ -16,6 +17,7 @@ export default function App() {
 
   const [phase, setPhase] = useState<Phase>("form");
   const [assessment, setAssessment] = useState<AssessmentState | null>(null);
+  const [household, setHousehold] = useState<HouseholdCaseInputs | null>(null);
 
   return (
     <main className="min-h-screen bg-paper">
@@ -32,17 +34,20 @@ export default function App() {
       {phase === "form" && (
         <EnergyAssessmentForm
           initialState={assessment ?? undefined}
-          initialStep={assessment ? 2 : 0}
-          onComplete={(state) => {
+          initialHousehold={household ?? undefined}
+          initialStep={assessment ? 3 : 0}
+          onComplete={(state, householdData) => {
             setAssessment(state);
+            setHousehold(householdData);
             setPhase("financials");
           }}
         />
       )}
 
-      {phase === "financials" && assessment && (
+      {phase === "financials" && assessment && household && (
         <FinancialsPlaceholder
           assessment={assessment}
+          household={household}
           onBack={() => setPhase("form")}
         />
       )}
@@ -57,9 +62,11 @@ export default function App() {
  */
 function FinancialsPlaceholder({
   assessment,
+  household,
   onBack,
 }: {
   assessment: AssessmentState;
+  household: HouseholdCaseInputs;
   onBack: () => void;
 }) {
   return (
@@ -127,6 +134,62 @@ function FinancialsPlaceholder({
             }
           />
         </dl>
+
+        <h3 className="mt-8 text-xs font-semibold uppercase tracking-wider text-ink-soft/70">
+          Household case study
+        </h3>
+        <dl className="mt-3 grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+          <Fact label="Coal type" value={household.coalType} />
+          <Fact
+            label="Coal bought"
+            value={`${household.coalTonnesPerSeason} t/season @ ${household.coalPricePerTonnePln} zł/t`}
+          />
+          <Fact
+            label="Boiler"
+            value={`${household.boilerClass}, ${household.boilerYear || "—"}`}
+          />
+          <Fact label="Feed type" value={household.feedType} />
+          <Fact
+            label="Free/discounted coal"
+            value={
+              household.freeCoalReceived
+                ? `Yes (${household.freeCoalTonnes} t)`
+                : "No"
+            }
+          />
+          <Fact
+            label="City deadline notice"
+            value={household.cityDeadlineNotice}
+          />
+          <Fact
+            label="Electricity"
+            value={`${household.electricityTariff}, ${household.electricityBillPlnPerMonth} zł/mo`}
+          />
+          <Fact label="Water heating" value={household.waterHeating} />
+          <Fact
+            label="Showers/baths per week"
+            value={String(household.showersBathsPerWeek)}
+          />
+          <Fact
+            label="AC available"
+            value={household.acAvailable ? "Yes" : "No"}
+          />
+          <Fact
+            label="Gas connection"
+            value={household.gasConnectionAvailable ? "Yes" : "No"}
+          />
+          <Fact
+            label="Replacement preference"
+            value={household.replacementPreference}
+          />
+          <Fact label="Coal provider" value={household.coalProvider || "—"} />
+          <Fact label="Unheated rooms" value={household.unheatedRooms || "—"} />
+        </dl>
+        {household.additionalNotes && (
+          <p className="mt-4 text-sm italic text-ink-soft">
+            “{household.additionalNotes}”
+          </p>
+        )}
       </section>
     </div>
   );

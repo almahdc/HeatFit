@@ -311,6 +311,33 @@ export function TextInputWithIcon({
   );
 }
 
+export function TextAreaWithIcon({
+  icon: Icon,
+  value,
+  onChange,
+  placeholder,
+  rows = 2,
+}: {
+  icon: LucideIcon;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  rows?: number;
+}) {
+  return (
+    <div className="flex items-start gap-2 rounded-[14px] border border-line bg-white px-4 py-3 shadow-card focus-within:border-accent/60 focus-within:ring-1 focus-within:ring-accent/40">
+      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-ink-soft/70" aria-hidden />
+      <textarea
+        rows={rows}
+        className="w-full resize-none text-base text-ink outline-none placeholder:text-ink-soft/50"
+        value={value}
+        placeholder={placeholder}
+        onChange={(e) => onChange(e.target.value)}
+      />
+    </div>
+  );
+}
+
 export function InfoBox({
   icon: Icon,
   children,

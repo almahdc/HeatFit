@@ -3,26 +3,16 @@ import {
   ArrowLeft,
   ArrowRight,
   BatteryCharging,
-  Building,
-  Building2,
-  Columns3,
   Droplets,
   Euro,
   Flame,
   Fuel,
-  Grid2x2,
-  Home,
   Info,
   MapPin,
-  Maximize,
   Mountain,
-  Shield,
-  Store,
   Sun,
   Tag,
   TreePine,
-  Users,
-  Warehouse,
   Wind,
   Zap,
 } from "lucide-react";
@@ -30,8 +20,6 @@ import {
   Block,
   FieldLabel,
   IconCardGroup,
-  IconSlider,
-  IconStepper,
   InfoBox,
   StepProgress,
   TextInputWithIcon,
@@ -43,83 +31,14 @@ import {
   CoolingType,
   ElectricityTariff,
   HeatingSystemInputs,
-  HomeInputs,
-  HomeType,
-  HouseKind,
-  InsulationLevel,
-  RadiatorType,
   SpaceHeaterFuel,
   WaterHeaterType,
-  WindowFrame,
   initialAssessmentState,
 } from "./assessmentTypes";
+import { HouseholdCaseStudy } from "./HouseholdCaseStudy";
+import { HouseholdCaseInputs, initialHouseholdCase } from "./householdCases";
 
 const STEP_LABELS = ["Location", "Your home", "Current heating"];
-
-const HOME_TYPE_OPTIONS: IconCardOption<HomeType>[] = [
-  {
-    value: "house",
-    label: "House",
-    badge: "The greatest potential for savings",
-    icon: Home,
-  },
-  {
-    value: "apartmentBuilding",
-    label: "Apartment building",
-    badge: "Good for shared systems",
-    icon: Building2,
-  },
-  {
-    value: "warehouse",
-    label: "Warehouse",
-    badge: "Best for large volumes",
-    icon: Warehouse,
-  },
-  {
-    value: "commercial",
-    label: "Store / commercial",
-    badge: "Ideal for business hours",
-    icon: Store,
-  },
-];
-
-const HOUSE_KIND_OPTIONS: IconCardOption<HouseKind>[] = [
-  { value: "detached", label: "Detached", icon: Home },
-  { value: "semiDetached", label: "Semi-detached / terraced", icon: Building },
-];
-
-const INSULATION_OPTIONS: IconCardOption<InsulationLevel>[] = [
-  { value: "none", label: "No insulation", icon: Shield },
-  {
-    value: "standard",
-    label: "10 cm Styrofoam",
-    sublabel: "Standard",
-    icon: Shield,
-  },
-  {
-    value: "veryGood",
-    label: "15–20 cm Styrofoam",
-    sublabel: "Very good",
-    icon: Shield,
-  },
-];
-
-const WINDOW_OPTIONS: IconCardOption<WindowFrame>[] = [
-  { value: "woodenOld", label: "Wooden", sublabel: "Old", icon: Columns3 },
-  { value: "doublePanePvc", label: "Double-pane PVC", icon: Columns3 },
-  {
-    value: "triplePanePvc",
-    label: "3-pane PVC",
-    sublabel: "New",
-    icon: Columns3,
-  },
-];
-
-const RADIATOR_OPTIONS: IconCardOption<RadiatorType>[] = [
-  { value: "standard", label: "Standard radiators", icon: Flame },
-  { value: "floorHeating", label: "Floor heating", icon: Grid2x2 },
-  { value: "mixed", label: "Mixed", icon: Grid2x2 },
-];
 
 const FUEL_OPTIONS: IconCardOption<SpaceHeaterFuel>[] = [
   { value: "gas", label: "Gas", icon: Flame },
@@ -156,14 +75,6 @@ const ELECTRICITY_TARIFF_OPTIONS: IconCardOption<ElectricityTariff>[] = [
   },
 ];
 
-function updateHome<K extends keyof HomeInputs>(
-  state: AssessmentState,
-  key: K,
-  value: HomeInputs[K],
-): AssessmentState {
-  return { ...state, home: { ...state.home, [key]: value } };
-}
-
 function updateHeating<K extends keyof HeatingSystemInputs>(
   state: AssessmentState,
   key: K,
@@ -175,20 +86,24 @@ function updateHeating<K extends keyof HeatingSystemInputs>(
 export function EnergyAssessmentForm({
   onComplete,
   initialState = initialAssessmentState,
+  initialHousehold = initialHouseholdCase,
   initialStep = 0,
 }: {
-  onComplete: (state: AssessmentState) => void;
+  onComplete: (state: AssessmentState, household: HouseholdCaseInputs) => void;
   initialState?: AssessmentState;
+  initialHousehold?: HouseholdCaseInputs;
   initialStep?: number;
 }) {
   const [step, setStep] = useState(initialStep);
   const [state, setState] = useState<AssessmentState>(initialState);
+  const [household, setHousehold] =
+    useState<HouseholdCaseInputs>(initialHousehold);
 
   const isLastStep = step === STEP_LABELS.length - 1;
 
   const goNext = () => {
     if (isLastStep) {
-      onComplete(state);
+      onComplete(state, household);
     } else {
       setStep((s) => s + 1);
     }
@@ -227,94 +142,7 @@ export function EnergyAssessmentForm({
         )}
 
         {step === 1 && (
-          <Block
-            title="Your home"
-            subtitle="Select the option that is the closest and adjust if needed."
-          >
-            <div>
-              <FieldLabel>Home type</FieldLabel>
-              <IconCardGroup
-                columns={4}
-                value={state.home.homeType}
-                onChange={(v) => setState((s) => updateHome(s, "homeType", v))}
-                options={HOME_TYPE_OPTIONS}
-              />
-            </div>
-
-            <div>
-              <FieldLabel icon={Home}>What kind of house</FieldLabel>
-              <IconCardGroup
-                value={state.home.houseKind}
-                onChange={(v) => setState((s) => updateHome(s, "houseKind", v))}
-                options={HOUSE_KIND_OPTIONS}
-              />
-            </div>
-
-            <div>
-              <FieldLabel icon={Maximize}>Heated area</FieldLabel>
-              <IconSlider
-                icon={Maximize}
-                min={50}
-                max={300}
-                step={5}
-                unit="m²"
-                value={state.home.heatedAreaM2}
-                onChange={(v) =>
-                  setState((s) => updateHome(s, "heatedAreaM2", v))
-                }
-              />
-            </div>
-
-            <div>
-              <FieldLabel icon={Shield}>Level of insulation</FieldLabel>
-              <IconCardGroup
-                columns={3}
-                value={state.home.insulation}
-                onChange={(v) =>
-                  setState((s) => updateHome(s, "insulation", v))
-                }
-                options={INSULATION_OPTIONS}
-              />
-            </div>
-
-            <div>
-              <FieldLabel icon={Columns3}>
-                Condition of window frames
-              </FieldLabel>
-              <IconCardGroup
-                columns={3}
-                value={state.home.windowFrame}
-                onChange={(v) =>
-                  setState((s) => updateHome(s, "windowFrame", v))
-                }
-                options={WINDOW_OPTIONS}
-              />
-            </div>
-
-            <div>
-              <FieldLabel icon={Users}>Number of people</FieldLabel>
-              <IconStepper
-                icon={Users}
-                min={1}
-                max={10}
-                unit="people in the household"
-                value={state.home.occupants}
-                onChange={(v) => setState((s) => updateHome(s, "occupants", v))}
-              />
-            </div>
-
-            <div>
-              <FieldLabel icon={Flame}>Type of radiators</FieldLabel>
-              <IconCardGroup
-                columns={3}
-                value={state.home.radiatorType}
-                onChange={(v) =>
-                  setState((s) => updateHome(s, "radiatorType", v))
-                }
-                options={RADIATOR_OPTIONS}
-              />
-            </div>
-          </Block>
+          <HouseholdCaseStudy value={household} onChange={setHousehold} />
         )}
 
         {step === 2 && (
