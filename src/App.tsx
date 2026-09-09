@@ -3,6 +3,8 @@ import { ArrowLeft, Sparkles } from "lucide-react";
 import { EnergyAssessmentForm } from "./wizard/EnergyAssessmentForm";
 import { AssessmentState } from "./wizard/assessmentTypes";
 import { HouseholdCaseInputs } from "./wizard/householdCases";
+import { BaselineSummary } from "./wizard/BaselineSummary";
+import { calculateUserBaseline } from "./engines/baseline";
 import { StyleTile } from "./StyleTile";
 
 type Phase = "form" | "financials";
@@ -80,17 +82,26 @@ function FinancialsPlaceholder({
         Back to your answers
       </button>
 
-      <section className="rounded-[20px] border border-line bg-white p-6 shadow-block">
-        <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-[10px] bg-accent text-white">
+      {/*
+        The baseline leads. Every number that follows it is a change measured
+        against this one, so it has to be on screen first.
+
+        The household state is already the merged result of a persona plus any
+        edits, so it is passed wholesale as the override set with no persona id.
+      */}
+      <BaselineSummary baseline={calculateUserBaseline("", household)} />
+
+      <section className="mt-6 rounded-[20px] border border-line bg-white p-6 shadow-block">
+        <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-[10px] bg-chip text-ink-soft">
           <Sparkles className="h-5 w-5" aria-hidden />
         </div>
         <h2 className="text-[23px] font-bold tracking-tight text-ink">
-          Financials are coming next
+          The rest is coming soon
         </h2>
         <p className="mt-2 text-base text-ink-soft">
-          Capex, running costs, and financing options will appear here once the
-          underlying energy model is wired up. For now, here is what was
-          collected:
+          What a replacement costs, which subsidies you qualify for, and what
+          the monthly figure looks like on a loan will appear here next. For
+          now, here is what was collected:
         </p>
 
         <dl className="mt-6 grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
