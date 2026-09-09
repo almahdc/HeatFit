@@ -107,6 +107,7 @@ export interface HouseholdCasePreset {
   id: string;
   name: string;
   tagline: string;
+  description: string;
   data: HouseholdCaseInputs;
 }
 
@@ -115,6 +116,8 @@ export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
     id: "grandmaKrysia",
     name: "Grandma Krysia",
     tagline: "Why touch it? Why change it?",
+    description:
+      "Uses an old off-class manual coal boiler and relies on local media updates.",
     data: {
       houseKind: "detached",
       insulation: "none",
@@ -158,6 +161,8 @@ export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
     id: "grandpaJanek",
     name: "Grandpa Janek",
     tagline: "Everything at the last minute",
+    description:
+      "Has a gas connection at the fence and an aging Class 4 boiler from 2017.",
     data: {
       houseKind: "detached",
       insulation: "none",
@@ -200,6 +205,8 @@ export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
     id: "mrsTeresa",
     name: "Mrs. Teresa",
     tagline: "In the big house",
+    description:
+      "Living alone in a large legacy home with massive radiators and unheated upper rooms.",
     data: {
       houseKind: "detached",
       insulation: "none",
@@ -243,6 +250,8 @@ export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
     id: "mrMarek",
     name: "Mr. Marek",
     tagline: "On the night tariff",
+    description:
+      "A pragmatic optimizer using the G12 night tariff, Orzech coal, and night-active water heating.",
     data: {
       houseKind: "detached",
       insulation: "standard",

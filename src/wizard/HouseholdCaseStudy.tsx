@@ -3,6 +3,7 @@ import {
   BatteryCharging,
   Building,
   Calendar,
+  Check,
   Clock,
   Columns3,
   FileText,
@@ -28,7 +29,6 @@ import {
   User,
   Users,
   Zap,
-  type LucideIcon,
 } from "lucide-react";
 import {
   Block,
@@ -69,15 +69,6 @@ function update<K extends keyof HouseholdCaseInputs>(
 ): HouseholdCaseInputs {
   return { ...state, [key]: value };
 }
-
-const PRESET_OPTIONS: IconCardOption<string>[] = HOUSEHOLD_CASE_PRESETS.map(
-  (p) => ({
-    value: p.id,
-    label: p.name,
-    sublabel: p.tagline,
-    icon: User as LucideIcon,
-  }),
-);
 
 const HOUSE_KIND_OPTIONS: IconCardOption<HouseKind>[] = [
   { value: "detached", label: "Detached", icon: Home },
@@ -205,12 +196,54 @@ export function PersonaPicker({ value, onChange }: Props) {
     >
       <div>
         <FieldLabel icon={Users}>Household case study</FieldLabel>
-        <IconCardGroup
-          columns={4}
-          value={selectedPresetId}
-          onChange={loadPreset}
-          options={PRESET_OPTIONS}
-        />
+        <div
+          className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4"
+          role="radiogroup"
+        >
+          {HOUSEHOLD_CASE_PRESETS.map((preset) => {
+            const selected = selectedPresetId === preset.id;
+            return (
+              <button
+                key={preset.id}
+                type="button"
+                role="radio"
+                aria-checked={selected}
+                onClick={() => loadPreset(preset.id)}
+                className={`relative flex flex-col items-start gap-1.5 rounded-[14px] border bg-white p-3.5 text-left transition-all duration-150 active:scale-[0.97] ${
+                  selected
+                    ? "border-accent/60 bg-accent-tint shadow-card-selected"
+                    : "border-line shadow-card hover:border-ink-soft/30"
+                }`}
+              >
+                {selected && (
+                  <span className="absolute right-2.5 top-2.5 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-accent">
+                    <Check
+                      className="h-[11px] w-[11px] text-white"
+                      strokeWidth={3}
+                      aria-hidden
+                    />
+                  </span>
+                )}
+                <div
+                  className={`flex h-9 w-9 items-center justify-center rounded-[10px] ${
+                    selected ? "bg-accent text-white" : "bg-chip text-ink-soft"
+                  }`}
+                >
+                  <User className="h-[18px] w-[18px]" aria-hidden />
+                </div>
+                <p className="text-[15px] font-semibold text-ink">
+                  {preset.name}
+                </p>
+                <p className="text-[13px] italic text-ink-soft">
+                  “{preset.tagline}”
+                </p>
+                <p className="text-[13px] text-ink-soft/80">
+                  {preset.description}
+                </p>
+              </button>
+            );
+          })}
+        </div>
       </div>
     </Block>
   );
