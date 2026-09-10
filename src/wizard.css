@@ -82,14 +82,6 @@
   margin-bottom: var(--space-2xl);
 }
 
-.step-nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: var(--space-sm);
-  gap: var(--space-lg);
-}
-
 /* --- buttons: primary and secondary ---------------------------------------- */
 
 .btn-primary,
@@ -265,103 +257,30 @@
   line-height: 1.5;
 }
 
-/* --- continuous scroll: completed vs active step state ---------------------- */
+/* --- all steps shown at once, scrolled through by the user ------------------ */
 
 .wizard-top {
-  position: sticky;
-  top: 0;
-  background: var(--bg-page);
   padding-top: var(--space-lg);
   padding-bottom: var(--space-md);
-  z-index: 10;
   margin-bottom: var(--space-lg);
-}
-
-.overall-progress-track {
-  height: 6px;
-  background: var(--bg-card);
-  border-radius: var(--border-radius);
-  overflow: hidden;
-}
-
-.overall-progress-fill {
-  height: 100%;
-  background: var(--color-blue-dark);
-  transition: width 0.25s ease;
+  border-bottom: var(--border-normal) solid var(--border-primary);
 }
 
 .step-block {
-  padding: var(--space-lg) 0;
-  /* Used only when a step arrives from below and has to be brought into view.
-     Leaves room under it instead of parking it flush against the bottom edge.
-     This is the knob for how much of the new step is revealed. */
-  scroll-margin-bottom: 10rem;
-}
-
-/* The active step is the last element on the page, so there is nothing below
-   it to scroll past. Without reserved room the browser hits maximum scroll
-   before the step is fully in view. */
-.step-block.active:last-child {
-  margin-bottom: 25vh;
-}
-
-.step-block.active {
   padding: var(--space-lg) 0 var(--space-xl);
+  border-bottom: var(--border-normal) solid var(--border-primary);
 }
 
-/* Completed steps: fade and click-to-edit */
-.step-block.completed {
-  cursor: pointer;
-  opacity: 0.6;
-  transition: opacity var(--transition-base);
-  padding: var(--space-lg) 0;
+.calculate-row {
+  padding: var(--space-xl) 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-md);
 }
 
-.step-block.completed .step-nav-spacer {
-  height: 3.5rem;
-}
-
-.step-block.completed:hover {
-  opacity: 0.9;
-  background: var(--color-off-white);
-}
-
-.step-block.completed .step-title {
-  font-size: var(--type-lg);
-  font-weight: var(--weight-semibold);
-  margin-bottom: var(--space-md);
-  max-width: none;
-}
-
-.step-block.completed .choice-group {
-  flex-direction: row;
-  flex-wrap: wrap;
-  gap: var(--space-sm);
-}
-
-.step-block.completed .choice {
-  padding: var(--space-sm) var(--space-md);
-  min-height: 40px;
-  pointer-events: none;
-  font-size: var(--type-sm);
-}
-
-.step-block.completed .choice-label {
-  font-size: var(--type-sm);
-}
-
-.step-block.completed .choice-sublabel {
-  display: none;
-}
-
-.step-block.completed .big-input {
-  font-size: var(--type-xl);
-  pointer-events: none;
-}
-
-.step-block.completed .input-unit {
-  display: inline;
-  margin: 0 0 0 var(--space-sm);
+.btn-calculate {
+  min-width: 12rem;
 }
 
 /* --- sub-question: nested questions within a step (boiler + feed, etc) ----- */
@@ -374,11 +293,6 @@
 
 .sub-question .stat-label {
   margin-bottom: var(--space-md);
-}
-
-.step-block.completed .sub-question {
-  margin-top: var(--space-md);
-  padding-top: var(--space-md);
 }
 
 /* --- breakdown details: collapsed reference information -------------------- */
@@ -433,10 +347,8 @@
     font-size: var(--type-base);
   }
 
-  .step-nav {
-    flex-direction: column;
+  .calculate-row {
     align-items: stretch;
-    gap: var(--space-md);
   }
 
   .btn-primary,
