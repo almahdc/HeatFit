@@ -34,6 +34,7 @@ import {
 } from "./data/postcodes.pl";
 import * as C from "./data/constants.pl";
 import { StyleTile } from "./StyleTile";
+import { useScrollToTopOnChange } from "./hooks/useScrollToTopOnChange";
 
 import HouseTypeSelector from "./HouseTypeSelector";
 import { HouseArchetypeId } from "./Archetype";
@@ -557,6 +558,8 @@ export default function App() {
     onBack: idx(id) === 0 ? undefined : back,
     onNext: next,
   });
+
+  useScrollToTopOnChange(phase);
 
   return (
     <main className="wizard-shell">
