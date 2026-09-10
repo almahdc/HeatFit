@@ -37,6 +37,7 @@ import {
   TextAreaWithIcon,
   TextInputWithIcon,
   ToggleCard,
+  WhyNote,
   type IconCardOption,
 } from "./FormPrimitives";
 import {
@@ -342,6 +343,9 @@ export function HomeComfortSection({ value, onChange }: Props) {
           onChange={(v) => onChange(update(value, "insulation", v))}
           options={insulationOptions(t)}
         />
+        <WhyNote summary={t.home.insulationWhySummary}>
+          {t.home.insulationWhyBody}
+        </WhyNote>
       </div>
 
       <div>

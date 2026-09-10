@@ -2,12 +2,18 @@ import { ReactNode } from "react";
 import { Check, type LucideIcon } from "lucide-react";
 import { useT } from "../i18n";
 
-/** Every major section: a distinct rounded block with its own header. */
+/** Every major section: a distinct rounded block with its own header.
+ *
+ *  `eyebrow` carries the roadmap step ("Step 2 of 5 · Your options"). Naming
+ *  the step turns a wall of separate money blocks into one route the
+ *  household is being walked along, and tells them how much is still ahead. */
 export function Block({
+  eyebrow,
   title,
   subtitle,
   children,
 }: {
+  eyebrow?: string;
   title: string;
   subtitle?: string;
   children: ReactNode;
@@ -15,6 +21,7 @@ export function Block({
   return (
     <section className="rounded-[20px] border border-line bg-white p-6 shadow-block">
       <header className="mb-5">
+        {eyebrow && <StepEyebrow>{eyebrow}</StepEyebrow>}
         <h2 className="text-[23px] font-bold tracking-tight text-ink">
           {title}
         </h2>
@@ -24,6 +31,64 @@ export function Block({
       </header>
       <div className="flex flex-col gap-5">{children}</div>
     </section>
+  );
+}
+
+/** The roadmap step label above a block heading. */
+export function StepEyebrow({ children }: { children: ReactNode }) {
+  return (
+    <p className="mb-1.5 text-[11.5px] font-semibold uppercase tracking-[0.08em] text-accent">
+      {children}
+    </p>
+  );
+}
+
+/** A verified-status pill: what a programme actually recognises, said plainly
+ *  enough that it can be checked rather than taken on faith. */
+export function TrustBadge({
+  icon: Icon,
+  label,
+  detail,
+}: {
+  icon: LucideIcon;
+  label: string;
+  detail: string;
+}) {
+  return (
+    <div className="flex items-start gap-2.5 rounded-[12px] border border-accent-tint2 bg-accent-tint px-3 py-2.5">
+      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-accent-600" aria-hidden />
+      <div>
+        <p className="text-[13px] font-semibold text-accent-600">{label}</p>
+        <p className="text-[12px] leading-snug text-accent-600/80">{detail}</p>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * "Why does this matter?" disclosure.
+ *
+ * A tooltip would hide this behind a hover the household cannot perform on a
+ * phone, so it is a real disclosure instead: closed by default, one tap to
+ * open, and the answer stays on screen while they read it. Every number this
+ * tool shows should be traceable to an answer they gave.
+ */
+export function WhyNote({
+  summary,
+  children,
+}: {
+  summary: string;
+  children: ReactNode;
+}) {
+  return (
+    <details className="mt-2 rounded-[12px] border border-line bg-[#fbfaf8] px-3.5 py-2.5">
+      <summary className="cursor-pointer text-[12.5px] font-semibold text-ink-soft hover:text-ink">
+        {summary}
+      </summary>
+      <div className="mt-2 text-[12.5px] leading-relaxed text-ink-soft">
+        {children}
+      </div>
+    </details>
   );
 }
 

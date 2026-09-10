@@ -7,6 +7,7 @@ import { HouseholdCaseInputs } from "./wizard/householdCases";
 import { BaselineSummary } from "./wizard/BaselineSummary";
 import { AlternativeHeatingOptions } from "./wizard/AlternativeHeatingOptions";
 import { EarlyAccessBlock } from "./wizard/EarlyAccessBlock";
+import { StepEyebrow } from "./wizard/FormPrimitives";
 import { calculateUserBaseline } from "./engines/baseline";
 import { StyleTile } from "./StyleTile";
 import { useScrollToTopOnChange } from "./hooks/useScrollToTopOnChange";
@@ -117,6 +118,7 @@ function FinancialsPlaceholder({
               <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-[10px] bg-chip text-ink-soft">
                 <ClipboardList className="h-5 w-5" aria-hidden />
               </div>
+              <StepEyebrow>{t.roadmap.yourAnswers}</StepEyebrow>
               <h2 className="text-[23px] font-bold tracking-tight text-ink">
                 {s.title}
               </h2>

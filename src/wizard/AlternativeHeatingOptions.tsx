@@ -11,6 +11,7 @@ import {
   Package,
   Plug,
   Receipt,
+  BadgeCheck,
   ShieldCheck,
   Sun,
   TrendingDown,
@@ -22,7 +23,13 @@ import {
   Wrench,
   type LucideIcon,
 } from "lucide-react";
-import { Block, FieldLabel, IconCardGroup, ToggleCard } from "./FormPrimitives";
+import {
+  Block,
+  FieldLabel,
+  IconCardGroup,
+  ToggleCard,
+  TrustBadge,
+} from "./FormPrimitives";
 import {
   ALTERNATIVE_HEATING_IDS,
   calculateAlternativeHeatingCost,
@@ -208,7 +215,7 @@ export function AlternativeHeatingOptions({
 
   return (
     <>
-      <Block title={c.title} subtitle={c.subtitle}>
+      <Block eyebrow={t.roadmap.compare} title={c.title} subtitle={c.subtitle}>
         <div>
           <FieldLabel>{c.fieldLabel}</FieldLabel>
           <IconCardGroup
@@ -217,6 +224,18 @@ export function AlternativeHeatingOptions({
             onChange={setSelected}
             options={cardOptions}
           />
+          <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <TrustBadge
+              icon={BadgeCheck}
+              label={t.alternatives.trust.czystePowietrze.label}
+              detail={t.alternatives.trust.czystePowietrze.detail}
+            />
+            <TrustBadge
+              icon={ShieldCheck}
+              label={t.alternatives.trust.zum.label}
+              detail={t.alternatives.trust.zum.detail}
+            />
+          </div>
         </div>
 
         <p className="text-[14.5px] text-ink-soft">{option.description}</p>
@@ -292,6 +311,7 @@ export function AlternativeHeatingOptions({
 
       {/* Block 3: the plain delta against the baseline. */}
       <Block
+        eyebrow={t.roadmap.savings}
         title={t.alternatives.savings.title}
         subtitle={t.alternatives.savings.subtitle(option.name, addSolar)}
       >
@@ -351,6 +371,7 @@ export function AlternativeHeatingOptions({
 
       {/* Block 4: equipment cost : the sticker price, before any grant or loan. */}
       <Block
+        eyebrow={t.roadmap.capex}
         title={t.alternatives.capex.title}
         subtitle={t.alternatives.capex.subtitle(
           option.name.toLowerCase(),
@@ -435,6 +456,7 @@ export function AlternativeHeatingOptions({
 
       {/* Block 5: the grant, and what is genuinely left to find after it. */}
       <Block
+        eyebrow={t.roadmap.grants}
         title={t.alternatives.grants.title}
         subtitle={t.alternatives.grants.subtitle}
       >
@@ -525,6 +547,7 @@ export function AlternativeHeatingOptions({
 
       {/* Block 6: running cost + repayment. The one figure a household feels. */}
       <Block
+        eyebrow={t.roadmap.trueCost}
         title={t.alternatives.trueCost.title}
         subtitle={t.alternatives.trueCost.subtitle}
       >

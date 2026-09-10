@@ -74,6 +74,17 @@ export const en = {
       "This tool is designed for Polish addresses. Enter a Polish postal code (format: XX-XXX, e.g., 10-115).",
   },
 
+  roadmap: {
+    baseline: "Step 1 of 6 · Where you stand today",
+    compare: "Step 2 of 6 · Your options",
+    savings: "Step 3 of 6 · What changes",
+    capex: "Step 4 of 6 · What it costs",
+    grants: "Step 5 of 6 · What you get back",
+    trueCost: "Step 6 of 6 · Your monthly plan",
+    nextStep: "Your next step",
+    yourAnswers: "For your records",
+  },
+
   personas: {
     title: "Load a household case study",
     subtitle:
@@ -162,6 +173,9 @@ export const en = {
     acSublabel: "Working AC unit available",
     unheatedRooms: "Unheated rooms",
     unheatedRoomsPlaceholder: "e.g., none: whole house heated",
+    insulationWhySummary: "Why we ask about insulation",
+    insulationWhyBody:
+      "Insulation decides how much heat your house actually needs each year, measured in kWh per square metre. That single number drives two things: what any new system costs to run, and which Czyste Powietrze funding level is open to you. We show it back to you in full rather than hiding it inside a score.",
   },
 
   heating: {
@@ -285,7 +299,7 @@ export const en = {
   baseline: {
     title: "What you're paying now",
     subtitle:
-      "Your current year on coal, reconstructed from your answers. This is the figure every option below will be compared against.",
+      "Your current year on coal, rebuilt from your own answers. Everything that follows is measured against this one figure, so take a moment to check it looks like your life.",
     totalOutflow: "Total outflow",
     perMonth: "per month",
     perYear: "per year",
@@ -312,6 +326,12 @@ export const en = {
       "That usually means the typical household we compare everyday electricity use against (lighting, fridge, and similar) uses more than your household does.",
     gapClosing: " We priced the bill you gave us, not our estimate.",
     assumptionsSummary: (count: number) => `What we assumed (${count})`,
+    whyTotalSummary: "Where this figure comes from",
+    whyTotalBody:
+      "We take the coal you told us you burn, the energy in that grade, and how much of it your boiler class actually turns into heat. Hot water and everything else on the meter are priced from the bill you gave us, not from a national average. Anything we had to assume is listed above, in plain words.",
+    whyConditionSummary: "Why this number decides so much",
+    whyConditionBody:
+      "kWh/m²/year is your building's condition in one figure: the heat it needs per square metre. Czyste Powietrze uses the same measure. Above 140, the programme will not fund a heat source on its own without insulation work, and only above 140 does the highest funding level open up. Nothing is scored behind the scenes: this is the number, and step 5 shows exactly what it means for your grant.",
   },
 
   alternatives: {
@@ -341,10 +361,23 @@ export const en = {
       },
     },
 
+    trust: {
+      czystePowietrze: {
+        label: "Czyste Powietrze eligible",
+        detail:
+          "All three are measures the national programme funds. What your household specifically qualifies for is worked out in step 5, from your own numbers.",
+      },
+      zum: {
+        label: "ZUM-listed devices only",
+        detail:
+          "The grant covers only equipment on the government's official ZUM list. We link it below, so you can check a model before you commit to it.",
+      },
+    },
+
     compare: {
       title: "Compare a replacement",
       subtitle:
-        "Pick one option to see its running cost on today's numbers. Solar, grants and financing come further down: this is energy cost alone.",
+        "One option at a time, so the comparison stays honest. This step is energy cost only: solar, grants and financing each get a step of their own below.",
       fieldLabel: "Replacement option",
       addSolarLabel: "Add solar to this project",
       addSolarSublabel: (price: string, kwh: string) =>
@@ -378,13 +411,13 @@ export const en = {
       ) =>
         `${verb} ${amount} a year${worse ? " more" : ""}, compared against ${baseline}/year on coal today.`,
       caveat:
-        "Energy cost alone is only part of the picture. Coal has no installation cost left to pay off; a replacement's upfront price, any grant toward it, and financing can still change which option makes sense once those are added.",
+        "Energy cost alone is only part of the picture, and this is the point in the roadmap where it looks worst. Coal has no installation cost left to pay off, while a replacement has not yet had its grant or financing applied. Keep going: the next three steps add both.",
     },
 
     capex: {
       title: "What it costs to install",
       subtitle: (name: string, withSolar: boolean) =>
-        `Hardware and installation for ${name}${withSolar ? ", plus solar" : ""}. This is the price before any grant or loan: both come next.`,
+        `Hardware and installation for ${name}${withSolar ? ", plus solar" : ""}. This is the full price before any help arrives: the grant comes in step 5, financing in step 6.`,
       hardware: "Hardware",
       installation: "Installation",
       typically: (range: string) => `Typically ${range}`,
@@ -406,7 +439,7 @@ export const en = {
     grants: {
       title: "Grants (Czyste Powietrze)",
       subtitle:
-        "What the programme pays towards this, and what is left for you to find.",
+        "What the programme pays towards this, and what genuinely remains for you. Pick the income level that matches your household: until you do, we assume the least generous one, so the real figure can only be better.",
       incomeLevel: "Your income level",
       tiers: {
         basic: "Basic",
@@ -505,24 +538,26 @@ export const en = {
   },
 
   earlyAccess: {
-    title: "Ready for the next step?",
+    title: "A real person takes it from here",
     subtitle:
-      "These numbers are the start. Leave your details and we'll help turn them into an actual quote.",
+      "You have the numbers. The next part is where most households get stuck, and it is the part we do with you rather than hand you a list and wish you luck.",
+    reviewNote:
+      "Whichever you pick, it starts the same way. Before anyone contacts you, someone at HeatFit reads through the audit you just completed: your building, your figures, your constraints.",
     valueProps: {
       installers: {
-        title: "Connect to vetted installers",
+        title: "We match you with vetted local installers",
         description:
-          "Screened installers who work in your area, ready to quote the job.",
+          "We check who genuinely works in your area and introduce you personally. Not a directory, not a list of numbers to ring.",
       },
       grant: {
-        title: "Get help securing the Czyste Powietrze grant",
+        title: "We handle the Czyste Powietrze paperwork with you",
         description:
-          "We walk you through the paperwork so you don't leave funding on the table.",
+          "A person walks your application through, so funding does not slip away on a technicality or a missed deadline.",
       },
       financing: {
-        title: "Connect to partner banks for green financing",
+        title: "We line up green financing with partner banks",
         description:
-          "Loans and instalment plans built for exactly this kind of upgrade.",
+          "If you would rather spread the cost, we bring you loan options already matched to this specific job.",
       },
     },
     modal: {

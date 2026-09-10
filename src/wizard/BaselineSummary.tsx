@@ -1,5 +1,6 @@
 import { AlertTriangle, Droplets, Flame, Plug, Wallet } from "lucide-react";
 import type { Baseline, BaselineAssumption } from "../engines/baseline";
+import { StepEyebrow, WhyNote } from "./FormPrimitives";
 import { useT } from "../i18n";
 import type { Dictionary } from "../i18n";
 
@@ -71,6 +72,7 @@ export function BaselineSummary({ baseline }: { baseline: Baseline }) {
       <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-[10px] bg-accent text-white">
         <Wallet className="h-5 w-5" aria-hidden />
       </div>
+      <StepEyebrow>{t.roadmap.baseline}</StepEyebrow>
       <h2 className="text-[23px] font-bold tracking-tight text-ink">
         {t.baseline.title}
       </h2>
@@ -122,6 +124,10 @@ export function BaselineSummary({ baseline }: { baseline: Baseline }) {
         ))}
       </dl>
 
+      <WhyNote summary={t.baseline.whyTotalSummary}>
+        {t.baseline.whyTotalBody}
+      </WhyNote>
+
       {/* Facts that decide eligibility later, so worth surfacing now. */}
       <div className="mt-5 grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
         <Fact
@@ -133,6 +139,10 @@ export function BaselineSummary({ baseline }: { baseline: Baseline }) {
           value={t.baseline.kwhPerM2PerYear(energy.spaceHeatPerM2.toFixed(0))}
         />
       </div>
+
+      <WhyNote summary={t.baseline.whyConditionSummary}>
+        {t.baseline.whyConditionBody}
+      </WhyNote>
 
       {/*
         The bill and the model rarely agree, and the difference is information,

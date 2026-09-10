@@ -68,6 +68,17 @@ export const pl: Dictionary = {
       "To narzędzie działa dla adresów w Polsce. Podaj polski kod pocztowy (format: XX-XXX, np. 10-115).",
   },
 
+  roadmap: {
+    baseline: "Krok 1 z 6 · Gdzie jesteś dzisiaj",
+    compare: "Krok 2 z 6 · Twoje opcje",
+    savings: "Krok 3 z 6 · Co się zmienia",
+    capex: "Krok 4 z 6 · Ile to kosztuje",
+    grants: "Krok 5 z 6 · Co odzyskujesz",
+    trueCost: "Krok 6 z 6 · Twój miesięczny plan",
+    nextStep: "Twój następny krok",
+    yourAnswers: "Do Twojej wiadomości",
+  },
+
   personas: {
     title: "Wczytaj przykładowe gospodarstwo domowe",
     subtitle:
@@ -155,6 +166,9 @@ export const pl: Dictionary = {
     acSublabel: "Sprawna klimatyzacja w domu",
     unheatedRooms: "Pomieszczenia nieogrzewane",
     unheatedRoomsPlaceholder: "np. brak: cały dom ogrzewany",
+    insulationWhySummary: "Dlaczego pytamy o ocieplenie",
+    insulationWhyBody:
+      "Ocieplenie decyduje o tym, ile ciepła Twój dom naprawdę potrzebuje w ciągu roku, liczone w kWh na metr kwadratowy. Ta jedna liczba wpływa na dwie rzeczy: ile będzie kosztować eksploatacja nowego systemu i który poziom dofinansowania z Czystego Powietrza jest dla Ciebie dostępny. Pokazujemy ją wprost, zamiast chować w punktacji.",
   },
 
   heating: {
@@ -278,7 +292,7 @@ export const pl: Dictionary = {
   baseline: {
     title: "Ile płacisz dzisiaj",
     subtitle:
-      "Twój obecny rok na węglu, odtworzony z Twoich odpowiedzi. To jest kwota, z którą porównamy każdą opcję poniżej.",
+      "Twój obecny rok na węglu, odtworzony z Twoich własnych odpowiedzi. Wszystko, co dalej, mierzymy względem tej jednej kwoty, więc sprawdź przez chwilę, czy wygląda jak Twoje życie.",
     totalOutflow: "Łączny wydatek",
     perMonth: "miesięcznie",
     perYear: "rocznie",
@@ -306,6 +320,12 @@ export const pl: Dictionary = {
     gapClosing:
       " Wyceniliśmy rachunek, który podałeś, a nie nasze oszacowanie.",
     assumptionsSummary: (count: number) => `Co założyliśmy (${count})`,
+    whyTotalSummary: "Skąd bierze się ta kwota",
+    whyTotalBody:
+      "Bierzemy węgiel, który podałeś, energię zawartą w tym sortymencie i to, ile z niej Twoja klasa kotła naprawdę zamienia w ciepło. Ciepłą wodę i całą resztę licznika wyceniamy z rachunku, który podałeś, a nie ze średniej krajowej. Wszystko, co musieliśmy założyć, wypisujemy powyżej, prostym językiem.",
+    whyConditionSummary: "Dlaczego ta liczba tyle znaczy",
+    whyConditionBody:
+      "kWh/m²/rok to stan Twojego budynku w jednej liczbie: ile ciepła potrzebuje na metr kwadratowy. Czyste Powietrze posługuje się tą samą miarą. Powyżej 140 program nie sfinansuje samego źródła ciepła bez termomodernizacji i dopiero powyżej 140 otwiera się najwyższy poziom dofinansowania. Nic nie jest punktowane po cichu: to jest ta liczba, a krok 5 pokazuje dokładnie, co oznacza dla Twojej dotacji.",
   },
 
   alternatives: {
@@ -335,10 +355,23 @@ export const pl: Dictionary = {
       },
     },
 
+    trust: {
+      czystePowietrze: {
+        label: "Objęte Czystym Powietrzem",
+        detail:
+          "Wszystkie trzy opcje to rozwiązania finansowane przez program krajowy. Ile przysługuje właśnie Twojemu gospodarstwu, liczymy w kroku 5, na podstawie Twoich danych.",
+      },
+      zum: {
+        label: "Tylko urządzenia z listy ZUM",
+        detail:
+          "Dotacja obejmuje wyłącznie sprzęt z oficjalnej rządowej listy ZUM. Link znajdziesz niżej, żeby sprawdzić konkretny model, zanim się na niego zdecydujesz.",
+      },
+    },
+
     compare: {
       title: "Porównaj wymianę",
       subtitle:
-        "Wybierz jedną opcję, aby zobaczyć jej koszty eksploatacji na dzisiejszych liczbach. Fotowoltaika, dotacje i finansowanie są niżej: tutaj liczy się sam koszt energii.",
+        "Jedna opcja naraz, żeby porównanie pozostało uczciwe. Ten krok to sam koszt energii: fotowoltaika, dotacje i finansowanie mają niżej własne kroki.",
       fieldLabel: "Opcja wymiany",
       addSolarLabel: "Dodaj fotowoltaikę do tej inwestycji",
       addSolarSublabel: (price: string, kwh: string) =>
@@ -373,13 +406,13 @@ export const pl: Dictionary = {
       ) =>
         `${verb} ${amount} rocznie${worse ? " więcej" : ""}, w porównaniu z ${baseline}/rok na węglu dzisiaj.`,
       caveat:
-        "Sam koszt energii to tylko część obrazu. Za węgiel nie zostało już nic do spłacenia za instalację; cena zakupu wymiany, dotacja na nią i finansowanie mogą jeszcze zmienić, która opcja ma sens, gdy je doliczymy.",
+        "Sam koszt energii to tylko część obrazu i to jest moment, w którym wygląda on najgorzej. Za węgiel nie zostało już nic do spłacenia za instalację, a wymiana nie ma jeszcze doliczonej ani dotacji, ani finansowania. Czytaj dalej: kolejne trzy kroki dokładają jedno i drugie.",
     },
 
     capex: {
       title: "Ile kosztuje montaż",
       subtitle: (name: string, withSolar: boolean) =>
-        `Urządzenie i montaż dla opcji: ${name}${withSolar ? ", plus fotowoltaika" : ""}. To cena przed dotacją i kredytem: oba są w kolejnych krokach.`,
+        `Urządzenie i montaż dla opcji: ${name}${withSolar ? ", plus fotowoltaika" : ""}. To pełna cena, zanim dojdzie jakakolwiek pomoc: dotacja w kroku 5, finansowanie w kroku 6.`,
       hardware: "Urządzenie",
       installation: "Montaż",
       typically: (range: string) => `Zwykle ${range}`,
@@ -401,7 +434,7 @@ export const pl: Dictionary = {
     grants: {
       title: "Dotacje (Czyste Powietrze)",
       subtitle:
-        "Ile program dopłaca do tej inwestycji i ile zostaje do znalezienia po Twojej stronie.",
+        "Ile program dopłaca do tej inwestycji i ile naprawdę zostaje po Twojej stronie. Wybierz poziom dochodów pasujący do Twojego gospodarstwa: dopóki tego nie zrobisz, zakładamy najmniej korzystny, więc realna kwota może być tylko lepsza.",
       incomeLevel: "Twój poziom dochodów",
       tiers: {
         basic: "Podstawowy",
@@ -500,25 +533,26 @@ export const pl: Dictionary = {
   },
 
   earlyAccess: {
-    title: "Gotowy na kolejny krok?",
+    title: "Dalej przejmuje to człowiek",
     subtitle:
-      "Te liczby to dopiero początek. Zostaw swoje dane, a pomożemy zamienić je w konkretną wycenę.",
+      "Masz już liczby. Teraz zaczyna się część, na której większość gospodarstw utyka, i tę część robimy razem z Tobą, zamiast wręczyć Ci listę i życzyć powodzenia.",
+    reviewNote:
+      "Cokolwiek wybierzesz, zaczyna się tak samo. Zanim ktokolwiek się z Tobą skontaktuje, ktoś z zespołu HeatFit przegląda audyt, który właśnie wypełniłeś: Twój budynek, Twoje liczby, Twoje ograniczenia.",
     valueProps: {
       installers: {
-        title: "Połączymy Cię ze sprawdzonymi instalatorami",
+        title: "Dobieramy sprawdzonych lokalnych instalatorów",
         description:
-          "Zweryfikowani wykonawcy działający w Twojej okolicy, gotowi wycenić montaż.",
+          "Sprawdzamy, kto naprawdę pracuje w Twojej okolicy, i przedstawiamy Cię osobiście. To nie katalog ani lista numerów do obdzwonienia.",
       },
       grant: {
-        title: "Pomożemy zdobyć dotację z Czystego Powietrza",
+        title: "Przechodzimy z Tobą przez formalności Czystego Powietrza",
         description:
-          "Poprowadzimy Cię przez formalności, żebyś nie stracił ani złotówki dofinansowania.",
+          "Człowiek prowadzi Twój wniosek, żeby dofinansowanie nie przepadło przez drobiazg albo przegapiony termin.",
       },
       financing: {
-        title:
-          "Połączymy Cię z bankami partnerskimi w sprawie zielonego finansowania",
+        title: "Układamy zielone finansowanie z bankami partnerskimi",
         description:
-          "Kredyty i raty dopasowane dokładnie do takiej wymiany ogrzewania.",
+          "Jeśli wolisz rozłożyć koszt, przynosimy opcje kredytu już dopasowane do tej konkretnej inwestycji.",
       },
     },
     modal: {

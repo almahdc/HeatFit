@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Loader2, Mail, X } from "lucide-react";
+import { Loader2, UserRound, X } from "lucide-react";
+import { StepEyebrow } from "./FormPrimitives";
 import { useT } from "../i18n";
 import type { Dictionary } from "../i18n";
 
@@ -157,12 +158,17 @@ export function EarlyAccessBlock() {
   return (
     <section className="rounded-[20px] border border-accent-tint2 bg-white p-6 shadow-block">
       <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-[10px] bg-accent text-white">
-        <Mail className="h-5 w-5" aria-hidden />
+        <UserRound className="h-5 w-5" aria-hidden />
       </div>
+      <StepEyebrow>{t.roadmap.nextStep}</StepEyebrow>
       <h2 className="text-[23px] font-bold tracking-tight text-ink">
         {ea.title}
       </h2>
       <p className="mt-2 text-base text-ink-soft">{ea.subtitle}</p>
+
+      <p className="mt-4 rounded-[14px] border border-accent-tint2 bg-accent-tint px-4 py-3 text-[13.5px] leading-relaxed text-accent-600">
+        {ea.reviewNote}
+      </p>
 
       <ul className="mt-5 flex flex-col gap-3">
         {INTENTS.map((id) => {
