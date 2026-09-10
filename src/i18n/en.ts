@@ -464,6 +464,31 @@ export const en = {
         `${gross} gross, less ${grants} in grants.`,
     },
 
+    taxRelief: {
+      fieldLabel: "Your income tax rate",
+      rates: {
+        pit12: { label: "12%", sublabel: "The first PIT bracket" },
+        pit32: { label: "32%", sublabel: "Above 120 000 zł a year" },
+        flat19: { label: "19%", sublabel: "Flat rate, self-employed" },
+        none: {
+          label: "No income tax",
+          sublabel: "The relief is worth nothing",
+        },
+      },
+      lineLabel: "Estimated tax return (Ulga Termomodernizacyjna)",
+      lineSub: (pct: number, base: string) =>
+        `${pct}% of ${base} deducted from your taxable income`,
+      cappedSub: (cap: string, pct: number) =>
+        `Deduction capped at ${cap} per taxpayer, returning ${pct}% of it`,
+      unit: "back later",
+      finalNetCost: "Final net cost, after grant and tax relief",
+      finalNetCostDetail: (net: string, relief: string) =>
+        `${net} left after the grant, less ${relief} returned through your tax return.`,
+      note: "The relief is a deduction from taxable income, not a payment: you get your own tax rate back on it, and it arrives with your annual tax return rather than up front. That is why step 6 still sizes the loan on the full amount left after the grant.",
+      capAndIncomeNote: (cap: string, years: number) =>
+        `At most ${cap} per taxpayer across all thermal modernisation work, with any unused part carried forward for up to ${years} years. This assumes your taxable income is high enough to absorb the deduction: we never asked what you earn, and we are not going to.`,
+    },
+
     trueCost: {
       title: "Your true monthly cost",
       subtitle:

@@ -11,6 +11,8 @@ import {
   Package,
   Plug,
   Receipt,
+  ReceiptText,
+  Percent,
   BadgeCheck,
   ShieldCheck,
   Sun,
@@ -46,6 +48,15 @@ import {
   type IncomeTier,
 } from "../engines/grants";
 import {
+  calculateTaxRelief,
+  DEFAULT_TAX_RATE,
+  TAX_RATES,
+  TAX_RATE_VALUE,
+  TAX_RELIEF_CAP_PLN,
+  TAX_RELIEF_CARRY_FORWARD_YEARS,
+  type TaxRate,
+} from "../engines/taxRelief";
+import {
   calculateLoan,
   trueMonthlyCost,
   LOAN_OPTIONS,
@@ -73,6 +84,13 @@ const OPTION_ICON: Record<AlternativeHeatingId, LucideIcon> = {
   airToAirHp: Wind,
   airToWaterHp: Waves,
   pellet: Package,
+};
+
+const TAX_RATE_ICON: Record<TaxRate, LucideIcon> = {
+  pit12: Percent,
+  pit32: Percent,
+  flat19: Percent,
+  none: Percent,
 };
 
 const TIER_ICON: Record<IncomeTier, LucideIcon> = {
@@ -157,6 +175,10 @@ export function AlternativeHeatingOptions({
   const [loanYears, setLoanYears] = useState<string>(
     String(DEFAULT_LOAN_TERMS.years),
   );
+  // Like the grant tier above, this starts at the least generous of the two
+  // scale rates, so nothing is overstated for a household that never touches
+  // it. We do not ask what anyone earns; the bracket is all this needs.
+  const [taxRate, setTaxRate] = useState<TaxRate>(DEFAULT_TAX_RATE);
 
   const cardOptions = ALTERNATIVE_HEATING_IDS.map((id) => ({
     value: id,
@@ -207,11 +229,16 @@ export function AlternativeHeatingOptions({
     grantPln: grant.totalGrantPln,
     terms,
   });
+  const taxRelief = calculateTaxRelief({
+    netCapexPln: loan.netCapexPln,
+    rate: taxRate,
+  });
   const trueCost = trueMonthlyCost(result.totalPlnPerMonth, loan);
   const baselineMonthly = baseline.cost.totalPlnPerYear / 12;
   const trueSaving = baselineMonthly - trueCost.truePlnPerMonth;
 
   const c = t.alternatives.compare;
+  const TR = t.alternatives.taxRelief;
 
   return (
     <>
@@ -543,6 +570,74 @@ export function AlternativeHeatingOptions({
             )}
           </p>
         </div>
+
+        {/*
+          The thermal modernisation relief, claimed on what is left AFTER the
+          grant: art. 26h ust. 5 pkt 1 excludes anything the programme already
+          paid for. It comes back through a tax return rather than up front,
+          so it lowers the final cost without lowering what step 6 finances.
+        */}
+        <div>
+          <FieldLabel>{TR.fieldLabel}</FieldLabel>
+          <IconCardGroup
+            columns={4}
+            value={taxRate}
+            onChange={setTaxRate}
+            options={TAX_RATES.map((rate) => ({
+              value: rate,
+              label: TR.rates[rate].label,
+              sublabel: TR.rates[rate].sublabel,
+              icon: TAX_RATE_ICON[rate],
+            }))}
+          />
+        </div>
+
+        {taxRelief.cashBackPln > 0 && (
+          <dl className="divide-y divide-line border-y border-line">
+            <Line
+              icon={ReceiptText}
+              label={TR.lineLabel}
+              sub={
+                taxRelief.cappedOut
+                  ? TR.cappedSub(
+                      zl(taxRelief.capPln),
+                      Math.round(TAX_RATE_VALUE[taxRate] * 100),
+                    )
+                  : TR.lineSub(
+                      Math.round(TAX_RATE_VALUE[taxRate] * 100),
+                      zl(taxRelief.deductionBasePln),
+                    )
+              }
+              value={taxRelief.cashBackPln}
+              unit={TR.unit}
+            />
+          </dl>
+        )}
+
+        <div className="rounded-[16px] border border-accent-tint2 bg-accent-tint p-5">
+          <p className="text-[12px] font-semibold uppercase tracking-wider text-accent-600">
+            {TR.finalNetCost}
+          </p>
+          <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span className="text-[28px] font-bold leading-none tracking-tight text-accent-600">
+              {zl(taxRelief.finalNetCostPln)}
+            </span>
+          </div>
+          <p className="mt-1.5 text-[13.5px] text-accent-600/80">
+            {TR.finalNetCostDetail(
+              zl(loan.netCapexPln),
+              zl(taxRelief.cashBackPln),
+            )}
+          </p>
+        </div>
+
+        <p className="text-[13px] leading-relaxed text-ink-soft">{TR.note}</p>
+        <p className="text-[12.5px] leading-relaxed text-ink-soft/80">
+          {TR.capAndIncomeNote(
+            zl(TAX_RELIEF_CAP_PLN),
+            TAX_RELIEF_CARRY_FORWARD_YEARS,
+          )}
+        </p>
       </Block>
 
       {/* Block 6: running cost + repayment. The one figure a household feels. */}

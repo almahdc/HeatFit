@@ -459,6 +459,31 @@ export const pl: Dictionary = {
         `${gross} brutto, minus ${grants} dotacji.`,
     },
 
+    taxRelief: {
+      fieldLabel: "Twoja stawka podatku dochodowego",
+      rates: {
+        pit12: { label: "12%", sublabel: "Pierwszy próg PIT" },
+        pit32: { label: "32%", sublabel: "Powyżej 120 000 zł rocznie" },
+        flat19: { label: "19%", sublabel: "Podatek liniowy" },
+        none: {
+          label: "Nie płacę podatku",
+          sublabel: "Ulga nic wtedy nie daje",
+        },
+      },
+      lineLabel: "Szacowany zwrot podatku (ulga termomodernizacyjna)",
+      lineSub: (pct: number, base: string) =>
+        `${pct}% z ${base} odliczone od dochodu`,
+      cappedSub: (cap: string, pct: number) =>
+        `Odliczenie ograniczone do ${cap} na podatnika, zwrot to ${pct}% tej kwoty`,
+      unit: "zwrot później",
+      finalNetCost: "Ostateczny koszt netto, po dotacji i uldze",
+      finalNetCostDetail: (net: string, relief: string) =>
+        `${net} zostaje po dotacji, minus ${relief} zwrócone w rozliczeniu rocznym.`,
+      note: "Ulga to odliczenie od dochodu, a nie wypłata: odzyskujesz swoją stawkę podatku od tej kwoty i dostajesz ją z rocznym zeznaniem, a nie z góry. Dlatego krok 6 wciąż liczy kredyt od pełnej kwoty, która zostaje po dotacji.",
+      capAndIncomeNote: (cap: string, years: number) =>
+        `Maksymalnie ${cap} na podatnika, łącznie za wszystkie prace termomodernizacyjne, a niewykorzystaną część można rozliczać jeszcze przez ${years} lat. Zakładamy, że Twój dochód jest wystarczająco wysoki, żeby odliczenie się zmieściło: nie pytaliśmy, ile zarabiasz, i nie zamierzamy.`,
+    },
+
     trueCost: {
       title: "Twój rzeczywisty koszt miesięczny",
       subtitle:
