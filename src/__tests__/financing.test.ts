@@ -99,14 +99,27 @@ describe("subsidy engine", () => {
   });
 
   it("survives the amounts being edited live, which is the whole point", () => {
+    // The cap has to be edited to something that actually BINDS to prove the
+    // edit took effect. At the basic tier the programme pays 40%, so on a
+    // 45 000 zł job the rate alone caps the award at 18 000 — editing the
+    // ceiling to anything above that changes nothing, which is correct
+    // behaviour and useless as a test. It also has to stay the LARGEST award
+    // on offer, or the exclusion pass hands the device to Ciepłe Mieszkanie
+    // instead and Clean Air correctly drops to zero.
     const edited = DEFAULT_PROGRAMMES.map((p) =>
       p.id === "czystePowietrze"
-        ? { ...p, maxByLevel: { ...p.maxByLevel, basic: 30000 } }
+        ? { ...p, maxByLevel: { ...p.maxByLevel, basic: 15000 } }
         : p,
     );
     const out = subsidiesFor("heatPump", 45000, READY, edited);
     const cp = out.detail.find((d) => d.programme.id === "czystePowietrze");
-    expect(cp?.amount.mid).toBe(30000);
+    expect(cp?.amount.mid).toBe(15000);
+
+    const unedited = subsidiesFor("heatPump", 45000, READY);
+    const before = unedited.detail.find(
+      (d) => d.programme.id === "czystePowietrze",
+    );
+    expect(before?.amount.mid).toBe(18000);
   });
 });
 

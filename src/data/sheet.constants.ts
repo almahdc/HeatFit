@@ -1,9 +1,9 @@
 /**
  * Constants transcribed from the `price_calculator` Google Sheet.
  *
- * Scope: every tab EXCEPT the subsidies tab. Each block below names the tab
- * section it came from so any number here can be checked against the sheet in
- * a few seconds.
+ * Scope: all four tabs — `price_calculator`, `final`, `subsidies` and
+ * `homeowners_real_numbers`. Each block below names the tab section it came
+ * from so any number here can be checked against the sheet in a few seconds.
  *
  * These are POINT values, exactly as the sheet holds them. That is deliberate
  * and it is the difference between this file and `constants.pl.ts`:
@@ -419,3 +419,242 @@ export const ELECTRIC_BOILER_EFFICIENCY = 0.98;
  * replacement-scenario step.
  */
 export const GAS_BOILER_EFFICIENCY = 0.95;
+
+// --- CAPEX block (price_calculator rows 380-398) -----------------------------
+
+/**
+ * The sheet's own turnkey capex table.
+ *
+ * NOTE FOR ANYONE READING capex.ts: that engine prices hardware and
+ * installation from `constants.pl.ts`'s independently sourced low/mid/high
+ * bands, NOT from this table, and the two disagree — air-to-air is 12 600 zł
+ * mid there against 19 000 zł here. Both are defensible (the sheet quotes a
+ * fuller multisplit job) and neither is quietly corrected, per this file's
+ * header rule. Transcribed here so the disagreement is visible and so the
+ * grant chain, which the sheet calibrates against THESE numbers, can be
+ * checked against the sheet's own `final` tab.
+ *
+ * Only the rows HeatFit currently models are transcribed. The coal rows all
+ * carry 13 000 zł but are never used: the sheet marks coal scenarios "capex in
+ * the past" and zeroes them out.
+ */
+export const SHEET_CAPEX: Record<
+  "air-to-water HP" | "air-to-air HP" | "Pellet" | "PV 5 kWp",
+  {
+    unitPln: number;
+    installPln: number;
+    extraWorkPln: number;
+    totalPln: number;
+  }
+> = {
+  "air-to-water HP": {
+    unitPln: 32000,
+    installPln: 8000,
+    extraWorkPln: 0,
+    totalPln: 40000,
+  },
+  "air-to-air HP": {
+    unitPln: 14000,
+    installPln: 5000,
+    extraWorkPln: 0,
+    totalPln: 19000,
+  },
+  Pellet: {
+    unitPln: 22000,
+    installPln: 5000,
+    extraWorkPln: 3000,
+    totalPln: 30000,
+  },
+  "PV 5 kWp": {
+    unitPln: 26000,
+    installPln: 4000,
+    extraWorkPln: 0,
+    totalPln: 30000,
+  },
+};
+
+// --- SUBSIDIES tab -----------------------------------------------------------
+
+/**
+ * Czyste Powietrze funding level. The sheet calls these "Basic", "Increased"
+ * and "Highest"; they are set by household income, not by choice.
+ */
+export type IncomeTier = "basic" | "increased" | "highest";
+
+export const INCOME_TIERS: IncomeTier[] = ["basic", "increased", "highest"];
+
+/**
+ * Share of eligible cost the programme pays, by tier.
+ * Subsidies tab rows 28-30.
+ */
+export const SHEET_FUNDING_RATE: Record<IncomeTier, number> = {
+  basic: 0.4,
+  increased: 0.7,
+  highest: 1.0,
+};
+
+export interface SheetGrantLine {
+  /** The subsidies tab's own row id (H3, H4, ...), so a figure is findable in seconds. */
+  id: string;
+  label: string;
+  /** Maximum grant in złoty, by tier. */
+  capByTier: Record<IncomeTier, number>;
+  note?: string;
+}
+
+/**
+ * Heat-source grant caps, subsidies tab "2 Heat source" rows.
+ *
+ * The three tier columns are not independent: every line's basic and increased
+ * caps are exactly its highest cap times the funding rate above
+ * (35 200 x 0.4 = 14 080, x 0.7 = 24 640). So the cap is already tier-scaled,
+ * and `grants.ts` still applies the rate to the household's actual cost — the
+ * two bind independently and the smaller wins.
+ *
+ * Only the lines HeatFit's three replacement options can claim are transcribed.
+ * The envelope table (T1-T7) and its group caps are deliberately left out:
+ * HeatFit does not model insulation work, so there is nothing here that could
+ * use them, and transcribing figures no code reads invites them to rot.
+ */
+export const SHEET_GRANT_LINES: Record<string, SheetGrantLine> = {
+  H2: {
+    id: "H2",
+    label: "Air/water heat pump, standard class",
+    capByTier: { basic: 12600, increased: 22000, highest: 31500 },
+    note:
+      "TIME-LIMITED: eligible only for applications filed within 4 months of the call date. " +
+      "Must be on lista ZUM. This is the line the price_calculator tab's own GRANT block still uses. " +
+      "Its increased cap is also the one line that breaks the tier pattern: 22 000 where 31 500 x 0.7 gives 22 050.",
+  },
+  H3: {
+    id: "H3",
+    label: "Air/water heat pump, increased efficiency class",
+    capByTier: { basic: 14080, increased: 24640, highest: 35200 },
+    note: "Must be on lista ZUM at invoice date. The subsidies tab names this the default HeatFit air-to-water line.",
+  },
+  H4: {
+    id: "H4",
+    label: "Air-to-air heat pump",
+    capByTier: { basic: 4480, increased: 7840, highest: 11200 },
+    note: "UNVERIFIED in the sheet: its source text describes an air/water unit under this heading. Flagged there for Magda to confirm the air-to-air ZUM listing.",
+  },
+  H7: {
+    id: "H7",
+    label: "Wood pellet boiler, higher standard",
+    capByTier: { basic: 8200, increased: 14350, highest: 20500 },
+    note: "Automatic feed only, no emergency grate. ZUM listed. Chimney sweep report required.",
+  },
+};
+
+/**
+ * PV grant as a SHARE of the array's cost, by tier.
+ * price_calculator GRANT block row 407 — the one row there that holds rates
+ * rather than złoty caps.
+ *
+ * The subsidies tab disagrees with this and says PV support runs through
+ * `przydomowemagazyny.gov.pl`, capped at 7 000 zł at up to 50%, and that the
+ * programme is PAUSED. `grants.ts` computes the sheet's figure but attaches
+ * that warning rather than presenting the money as available.
+ */
+export const SHEET_PV_GRANT_RATE: Record<IncomeTier, number> = {
+  basic: 0.12,
+  increased: 0.2,
+  highest: 0.32,
+};
+
+/** Subsidies tab row 58: the paused programme's own cap on a PV array. */
+export const SHEET_PV_GRANT_PAUSED_CAP_PLN = 7000;
+
+/**
+ * Income thresholds that set the tier. price_calculator rows 417-419.
+ *
+ * Read in this order — highest, then increased, then basic — because they
+ * nest: everyone under the highest threshold is also under the increased one.
+ * "single" and "multi" are one-person and multi-person households.
+ */
+export const SHEET_INCOME_TIERS = {
+  /** Basic tier ceiling on TOTAL household income. 11 250 x 12 = 135 000 zł/y. */
+  basicMaxHouseholdPlnPerMonth: 11250,
+  /** Increased tier ceiling, PER PERSON. */
+  increasedMaxPerPersonPlnPerMonth: { single: 3150, multi: 2250 },
+  /** Highest tier ceiling, PER PERSON. */
+  highestMaxPerPersonPlnPerMonth: { single: 1800, multi: 1300 },
+} as const;
+
+export interface SheetScopeBand {
+  /** Upper bound on pre-project demand, kWh/m²/y. Exclusive. */
+  maxKwhPerM2: number;
+  /** The sheet's own project type number. */
+  projectType: 1 | 2 | 3;
+  /** Can a heat-source-only project claim anything at all in this band? */
+  heatSourceAloneEligible: boolean;
+  /** Is the highest funding tier reachable in this band? */
+  highestTierAvailable: boolean;
+  requiredEndState: string;
+}
+
+/**
+ * The scope gate, subsidies tab rows 33-37.
+ *
+ * The consequential row is the last one. Above 140 kWh/m²/y a heat-source-only
+ * project is NOT eligible — the building must be insulated too, to at least a
+ * 40% cut and a maximum of 140. HeatFit only models heat-source swaps, so for
+ * those households the honest answer is that the grant is zero until they add
+ * insulation, and `grants.ts` says exactly that rather than quietly paying out.
+ */
+export const SHEET_SCOPE_BANDS: SheetScopeBand[] = [
+  {
+    maxKwhPerM2: 80,
+    projectType: 1,
+    heatSourceAloneEligible: true,
+    highestTierAvailable: false,
+    requiredEndState: "must stay below 80 kWh/m²/y",
+  },
+  {
+    maxKwhPerM2: 140,
+    projectType: 2,
+    heatSourceAloneEligible: true,
+    highestTierAvailable: false,
+    requiredEndState:
+      "heat source only: no increase. With thermal modernisation: max 80 and at least a 40% reduction",
+  },
+  {
+    maxKwhPerM2: Number.POSITIVE_INFINITY,
+    projectType: 3,
+    heatSourceAloneEligible: false,
+    highestTierAvailable: true,
+    requiredEndState: "max 140 kWh/m²/y and at least a 40% reduction",
+  },
+];
+
+/** Mandatory paperwork, subsidies tab rows 2-3. Grant, not cost — see grants.ts. */
+export const SHEET_AUDIT_GRANT = {
+  /** A1 — energy audit and its summary document. */
+  auditCapByTier: { basic: 480, increased: 840, highest: 1200 },
+  /** A2 — energy performance certificate, issued after the works. */
+  certificateCapByTier: { basic: 160, increased: 280, highest: 400 },
+  /** Both together are capped at this, whatever the two lines add up to. */
+  combinedCapPln: 1600,
+} as const;
+
+// --- LOAN block (price_calculator rows 410-413) ------------------------------
+
+export interface SheetLoanOption {
+  years: number;
+  /** Nominal annual interest, e.g. 0.10 for 10%. */
+  annualInterest: number;
+}
+
+/** The three terms the sheet offers, longest first, as it lists them. */
+export const SHEET_LOAN_OPTIONS: SheetLoanOption[] = [
+  { years: 15, annualInterest: 0.1 },
+  { years: 10, annualInterest: 0.09 },
+  { years: 5, annualInterest: 0.07 },
+];
+
+/**
+ * The row the sheet's live `monthly capex` formula actually points at (B413).
+ * Every worked figure on the `final` tab is this term, so it is the default
+ * here too — changing it changes which numbers reconcile against the sheet.
+ */
+export const SHEET_DEFAULT_LOAN_YEARS = 5;

@@ -63,7 +63,7 @@ export const ROUTES: Record<string, FinancingRoute> = {
     id: "bankRoute",
     label: "Clean Air bank loan",
     subtitle: "grant is paid directly to the bank",
-    status: "open",
+    status: "suspended",
     annualRate: 0.0676, // WIBOR 6M 3.77% + 2.99pp margin, as at 06.02.2026
     arrangementFee: 0.02,
     maxTermMonths: 144,
@@ -89,6 +89,7 @@ export const ROUTES: Record<string, FinancingRoute> = {
       "BOŚ Bank, Pożyczka Zielona. Representative example: 8.43% nominal, 8.76% APR on 60 000 zł. " +
       "Promotion 03.06.2026-30.09.2026, 0% arrangement fee, requires the signed WFOŚiGW agreement.",
     readOn: "2026-08-19",
+    note: "EXPIRES 30.09.2026: the 0% arrangement fee is a promotion. After that date this route costs more than modelled here.",
   },
   cash: {
     id: "cash",

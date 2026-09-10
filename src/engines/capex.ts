@@ -7,10 +7,13 @@
  * no netting against the running-cost savings those files compute. Those are
  * the next step; this one only answers "what's the sticker price".
  *
- * Source is `constants.pl.ts`, not `sheet.constants.ts` — the sheet's own
- * SCENARIOS tab carries capex as a placeholder column of zeros (coal options
- * are marked "capex in the past"), so there is nothing in the sheet to
- * reproduce here. These are independently sourced Polish market prices, held
+ * Source is `constants.pl.ts`, not `sheet.constants.ts`. The sheet DOES carry
+ * a capex table (transcribed as `SHEET_CAPEX`; an earlier version of this
+ * comment wrongly said it did not, having only seen the scenario columns,
+ * which are zeroed for coal because those options are "capex in the past").
+ * It is not used here, and the two disagree — the sheet puts air-to-air at
+ * 19 000 zł against 12 600 mid below. Both are defensible and neither is
+ * quietly reconciled. These are independently sourced Polish market prices, held
  * as low/mid/high bands rather than sheet point values, because capex is
  * genuinely far less certain than a fuel's calorific value: turnkey heat
  * pump quotes vary by more than 2x depending on radiators, sizing and

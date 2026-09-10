@@ -1,14 +1,22 @@
 import { useState } from "react";
 import {
+  Banknote,
+  CalendarDays,
+  Coins,
   Droplets,
   ExternalLink,
+  Gift,
+  HandCoins,
   HardHat,
   Package,
   Plug,
+  Receipt,
   ShieldCheck,
   Sun,
   TrendingDown,
   TrendingUp,
+  TriangleAlert,
+  Wallet,
   Waves,
   Wind,
   Wrench,
@@ -25,11 +33,27 @@ import {
   calculateSolarAddOn,
   ZUM_DATABASE_URL,
 } from "../engines/capex";
+import {
+  calculateGrant,
+  INCOME_TIER_LABEL,
+  type IncomeTier,
+} from "../engines/grants";
+import {
+  calculateLoan,
+  trueMonthlyCost,
+  LOAN_OPTIONS,
+  DEFAULT_LOAN_TERMS,
+} from "../engines/loan";
+import * as S from "../data/sheet.constants";
 import type { Baseline } from "../engines/baseline";
 import type { ElectricityTariffCase } from "./householdCases";
 
+// useGrouping because pl-PL otherwise leaves four-digit numbers
+// ungrouped, which put "9600 zł" next to "33 000 zł" in the same grant block.
 const zl = (n: number) =>
-  `${Math.round(n).toLocaleString("pl-PL").replace(/\xa0/g, " ")} zł`;
+  `${Math.round(n)
+    .toLocaleString("pl-PL", { useGrouping: true })
+    .replace(/\xa0/g, " ")} zł`;
 
 const zlRange = (low: number, high: number) => `${zl(low)}–${zl(high)}`;
 
@@ -44,6 +68,23 @@ const OPTION_SHORT_LABEL: Record<AlternativeHeatingId, string> = {
   airToAirHp: "About 4x on electricity",
   airToWaterHp: "About 3x on electricity",
   pellet: "85% efficient",
+};
+
+const TIER_ICON: Record<IncomeTier, LucideIcon> = {
+  basic: Banknote,
+  increased: Coins,
+  highest: HandCoins,
+};
+
+/**
+ * The sheet's own income thresholds, said in the household's terms. Increased
+ * and highest are per-person figures; basic is a ceiling on the whole
+ * household, which is why it reads differently from the other two.
+ */
+const TIER_SUBLABEL: Record<IncomeTier, string> = {
+  basic: `Up to ${zl(S.SHEET_INCOME_TIERS.basicMaxHouseholdPlnPerMonth)}/month for the household`,
+  increased: `Up to ${zl(S.SHEET_INCOME_TIERS.increasedMaxPerPersonPlnPerMonth.multi)}/month each (${zl(S.SHEET_INCOME_TIERS.increasedMaxPerPersonPlnPerMonth.single)} living alone)`,
+  highest: `Up to ${zl(S.SHEET_INCOME_TIERS.highestMaxPerPersonPlnPerMonth.multi)}/month each (${zl(S.SHEET_INCOME_TIERS.highestMaxPerPersonPlnPerMonth.single)} living alone)`,
 };
 
 const FUEL_UNIT_LABEL: Record<"kWh" | "t", string> = {
@@ -84,6 +125,14 @@ export function AlternativeHeatingOptions({
   // since "would you add solar" is a question about the project, not about
   // any one option.
   const [addSolar, setAddSolar] = useState(false);
+  // Never collected by the wizard, and deliberately not asked for as a złoty
+  // figure — the household picks the band their income falls in. Basic is the
+  // default because it is the least generous, so nothing is ever overstated by
+  // a household that has not touched this.
+  const [tier, setTier] = useState<IncomeTier>("basic");
+  const [loanYears, setLoanYears] = useState<string>(
+    String(DEFAULT_LOAN_TERMS.years),
+  );
 
   const cardOptions = ALTERNATIVE_HEATING_OPTIONS.map((option) => ({
     value: option.id,
@@ -116,11 +165,32 @@ export function AlternativeHeatingOptions({
   const Icon = OPTION_ICON[selected];
   const saving = result.savingsPlnPerYear >= 0;
 
+  // The grant is claimed against the gross figure Block 4 is showing, so
+  // "gross minus grant is net" holds for a household reading down the page.
+  const grant = calculateGrant({
+    optionId: selected,
+    heatingCapexPln: heatingCapex.totalGross.midPln,
+    solarCapexPln: addSolar ? solarAddOn.capexPln : 0,
+    tier,
+    spaceHeatPerM2: baseline.energy.spaceHeatPerM2,
+  });
+  const terms =
+    LOAN_OPTIONS.find((o) => String(o.years) === loanYears) ??
+    DEFAULT_LOAN_TERMS;
+  const loan = calculateLoan({
+    grossCapexPln: capexTotal.midPln,
+    grantPln: grant.totalGrantPln,
+    terms,
+  });
+  const trueCost = trueMonthlyCost(result.totalPlnPerMonth, loan);
+  const baselineMonthly = baseline.cost.totalPlnPerYear / 12;
+  const trueSaving = baselineMonthly - trueCost.truePlnPerMonth;
+
   return (
     <>
       <Block
         title="Compare a replacement"
-        subtitle="Pick one option to see its running cost on today's numbers. Solar, financing, and grants come later — this is energy cost alone."
+        subtitle="Pick one option to see its running cost on today's numbers. Solar, grants and financing come further down — this is energy cost alone."
       >
         <div>
           <FieldLabel>Replacement option</FieldLabel>
@@ -246,7 +316,7 @@ export function AlternativeHeatingOptions({
       {/* Block 4: equipment cost — the sticker price, before any grant or loan. */}
       <Block
         title="What it costs to install"
-        subtitle={`Hardware and installation for ${result.name.toLowerCase()}${addSolar ? ", plus solar" : ""}. Grants and loan repayment are the next step — this is the price before either.`}
+        subtitle={`Hardware and installation for ${result.name.toLowerCase()}${addSolar ? ", plus solar" : ""}. This is the price before any grant or loan — both come next.`}
       >
         <dl className="divide-y divide-line border-y border-line">
           <Line
@@ -309,6 +379,164 @@ export function AlternativeHeatingOptions({
               <ExternalLink className="h-3.5 w-3.5" aria-hidden />
             </a>
           </div>
+        </div>
+      </Block>
+
+      {/* Block 5: the grant, and what is genuinely left to find after it. */}
+      <Block
+        title="Grants (Czyste Powietrze)"
+        subtitle="What the programme pays towards this, and what is left for you to find."
+      >
+        <div>
+          <FieldLabel>Your income level</FieldLabel>
+          <IconCardGroup
+            columns={3}
+            value={tier}
+            onChange={setTier}
+            options={S.INCOME_TIERS.map((t) => ({
+              value: t,
+              label: INCOME_TIER_LABEL[t],
+              sublabel: TIER_SUBLABEL[t],
+              icon: TIER_ICON[t],
+            }))}
+          />
+        </div>
+
+        {grant.warnings.map((warning) => (
+          <div
+            key={warning}
+            className="flex gap-3 rounded-[14px] border border-line bg-[#fbfaf8] p-4 text-[13.5px] text-ink-soft"
+          >
+            <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+            <p>{warning}</p>
+          </div>
+        ))}
+
+        {(grant.heating || grant.solar) && (
+          <dl className="divide-y divide-line border-y border-line">
+            {grant.heating && (
+              <Line
+                icon={Gift}
+                label={`Grant toward ${result.name.toLowerCase()}`}
+                sub={
+                  grant.heating.cappedOut
+                    ? `Capped at ${zl(grant.heating.capPln)} for this device (sheet line ${grant.heating.sheetLineId})`
+                    : `${Math.round(grant.heating.rate * 100)}% of ${zl(grant.heating.eligibleCostPln)} (sheet line ${grant.heating.sheetLineId})`
+                }
+                value={grant.heating.amountPln}
+                unit="off the price"
+              />
+            )}
+            {grant.solar && (
+              <Line
+                icon={Sun}
+                label="Grant toward solar"
+                sub={`${Math.round(grant.solar.rate * 100)}% of ${zl(grant.solar.eligibleCostPln)}`}
+                value={grant.solar.amountPln}
+                unit="off the price"
+              />
+            )}
+          </dl>
+        )}
+
+        <div className="rounded-[16px] border border-line bg-[#fbfaf8] p-5">
+          <p className="text-[12px] font-semibold uppercase tracking-wider text-ink-soft">
+            Net capex, after grants
+          </p>
+          <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span className="text-[28px] font-bold leading-none tracking-tight text-ink">
+              {zl(loan.netCapexPln)}
+            </span>
+            <span className="text-[15px] font-medium text-ink-soft">
+              left to pay
+            </span>
+          </div>
+          <p className="mt-1.5 text-[13.5px] text-ink-soft">
+            {zl(loan.grossCapexPln)} gross, less {zl(grant.totalGrantPln)} in
+            grants.
+          </p>
+        </div>
+      </Block>
+
+      {/* Block 6: running cost + repayment. The one figure a household feels. */}
+      <Block
+        title="Your true monthly cost"
+        subtitle="Running cost plus the repayment on what is left — the number you would actually feel each month."
+      >
+        <div>
+          <FieldLabel>Loan term</FieldLabel>
+          <IconCardGroup
+            columns={3}
+            value={loanYears}
+            onChange={setLoanYears}
+            options={LOAN_OPTIONS.map((option) => ({
+              value: String(option.years),
+              label: `${option.years} years`,
+              sublabel: `${Math.round(option.annualInterest * 100)}% interest`,
+              icon: CalendarDays,
+            }))}
+          />
+        </div>
+
+        <dl className="divide-y divide-line border-y border-line">
+          <Line
+            icon={Wallet}
+            label="Running cost"
+            sub={`Energy for ${result.name.toLowerCase()}${addSolar ? ", with solar" : ""}`}
+            value={trueCost.runningPlnPerMonth}
+            unit="per month"
+          />
+          <Line
+            icon={Receipt}
+            label="Loan repayment"
+            sub={`${zl(loan.netCapexPln)} over ${terms.years} years at ${Math.round(terms.annualInterest * 100)}%`}
+            value={trueCost.capexPlnPerMonth}
+            unit="per month"
+          />
+        </dl>
+
+        <div
+          className={`rounded-[16px] border p-5 ${
+            trueSaving >= 0
+              ? "border-accent-tint2 bg-accent-tint"
+              : "border-line bg-[#fbfaf8]"
+          }`}
+        >
+          <p
+            className={`text-[12px] font-semibold uppercase tracking-wider ${
+              trueSaving >= 0 ? "text-accent-600/80" : "text-ink-soft"
+            }`}
+          >
+            True monthly cost
+          </p>
+          <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span
+              className={`text-[28px] font-bold leading-none tracking-tight ${
+                trueSaving >= 0 ? "text-accent-600" : "text-ink"
+              }`}
+            >
+              {zl(trueCost.truePlnPerMonth)}
+            </span>
+            <span
+              className={`text-[15px] font-medium ${
+                trueSaving >= 0 ? "text-accent-600/80" : "text-ink-soft"
+              }`}
+            >
+              per month while you repay
+            </span>
+          </div>
+          <p
+            className={`mt-1.5 text-[13.5px] ${
+              trueSaving >= 0 ? "text-accent-600/80" : "text-ink-soft"
+            }`}
+          >
+            {trueSaving >= 0 ? "Still " : ""}
+            {zl(Math.abs(trueSaving))}/month{" "}
+            {trueSaving >= 0 ? "cheaper than" : "more than"} the{" "}
+            {zl(baselineMonthly)} you pay on coal today. Drops to{" "}
+            {zl(trueCost.afterLoanPlnPerMonth)}/month once the loan is repaid in{" "}
+            {terms.years} years.
+          </p>
         </div>
       </Block>
     </>

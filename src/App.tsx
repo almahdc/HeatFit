@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowLeft, ClipboardList } from "lucide-react";
 import { EnergyAssessmentForm } from "./wizard/EnergyAssessmentForm";
 import { AssessmentState } from "./wizard/assessmentTypes";
 import { HouseholdCaseInputs } from "./wizard/householdCases";
@@ -106,15 +106,14 @@ function FinancialsPlaceholder({
 
             <section className="rounded-[20px] border border-line bg-white p-6 shadow-block">
               <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-[10px] bg-chip text-ink-soft">
-                <Sparkles className="h-5 w-5" aria-hidden />
+                <ClipboardList className="h-5 w-5" aria-hidden />
               </div>
               <h2 className="text-[23px] font-bold tracking-tight text-ink">
-                Solar, grants, and financing are coming next
+                The answers behind these numbers
               </h2>
               <p className="mt-2 text-base text-ink-soft">
-                Netting out solar panels, which subsidies you qualify for, and
-                what the monthly figure looks like on a loan will layer onto the
-                running costs above. For now, here is what was collected:
+                Every figure above is built from what you told us. Here it is
+                back, so you can check anything that looks wrong.
               </p>
 
               <dl className="mt-6 grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">

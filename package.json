@@ -9,6 +9,7 @@
     "test": "tsc --noEmit && vitest run",
     "verify:baseline": "vite-node scripts/verify-baseline.ts",
     "verify:alternatives": "vite-node scripts/verify-alternative-heating.ts",
+    "verify:financing": "vite-node scripts/verify-grants-financing.ts",
     "watch": "vitest",
     "typecheck": "tsc --noEmit",
     "build:pages": "tsc --noEmit && vite build --mode pages",

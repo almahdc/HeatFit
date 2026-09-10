@@ -2,7 +2,9 @@
 
 Companion to [baseline-model.md](baseline-model.md). That document is what a
 household pays today, on coal; this one is what the same household would pay
-if only the space heating source changed. Read the baseline doc first — this
+if only the space heating source changed. What the state pays towards it and
+what the monthly figure looks like on a loan continue in
+[grants-and-financing-model.md](grants-and-financing-model.md). Read the baseline doc first — this
 one assumes its vocabulary (`spaceHeatKwh`, the three-way cost split, the
 sheet's point-value FUEL table).
 
@@ -128,7 +130,14 @@ rather than being skipped.
 Code: [`src/engines/capex.ts`](../src/engines/capex.ts). Hardware and
 installation, split from a sourced turnkey total (see `constants.pl.ts`'s
 capex section), for whichever option is selected. No grants, no loan
-repayment — the price before either.
+repayment — the price before either; both are picked up in
+[grants-and-financing-model.md](grants-and-financing-model.md).
+
+Note that these bands DISAGREE with the sheet's own CAPEX table, which is
+higher (air-to-air 19 000 zł against 12 600 mid here). The sheet's figures are
+transcribed as `SHEET_CAPEX` in `sheet.constants.ts` so the disagreement is
+visible rather than hidden — capex.ts's header used to claim the sheet carried
+no capex at all, which was wrong, and is now corrected.
 
 ### PV is not part of this total, on purpose
 
