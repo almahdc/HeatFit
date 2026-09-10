@@ -1,81 +1,26 @@
 import { ReactNode } from "react";
 
 /**
- * StepShell — one question in the continuous-scroll flow.
+ * StepShell — one question in the all-at-once layout.
  *
- * active=true  -> full editor: progress bar, helper text, Back/Next.
- * active=false -> a completed row: smaller title, the same input control
- *                 (so the chosen answer is still visible and still editable),
- *                 no nav. Clicking anywhere on a completed row jumps back to
- *                 it — editing in place rather than a separate "edit" mode.
+ * Every step renders in full (title, helper text, input) and stays that way;
+ * there is no collapsed/completed state and no Next/Back navigation. The
+ * user scrolls the page to move between steps and answers can be edited in
+ * place at any time.
  */
 
 export interface StepShellProps {
-  stepIndex: number; // 0-based
-  totalSteps: number;
   title: string;
   helper?: string;
   children: ReactNode;
-  onBack?: () => void;
-  onNext?: () => void;
-  nextLabel?: string;
-  nextDisabled?: boolean;
-  hideNext?: boolean;
-  /** Is this the step currently being answered? */
-  active: boolean;
-  /** Called when a completed (non-active) row is clicked, to jump back to it. */
-  onActivate?: () => void;
-  /** Attaches the DOM node so the wizard can scroll to it on Next. */
-  innerRef?: (el: HTMLDivElement | null) => void;
 }
 
-export function StepShell({
-  title,
-  helper,
-  children,
-  onBack,
-  onNext,
-  nextLabel = "Next",
-  nextDisabled = false,
-  hideNext = false,
-  active,
-  onActivate,
-  innerRef,
-}: StepShellProps) {
+export function StepShell({ title, helper, children }: StepShellProps) {
   return (
-    <div
-      ref={innerRef}
-      className={active ? "step-block active" : "step-block completed"}
-      onClick={!active ? onActivate : undefined}
-    >
+    <div className="step-block">
       <h2 className="step-title">{title}</h2>
-      {active && helper && <p className="step-helper">{helper}</p>}
-
-      <div className="step-body" onClick={(e) => active && e.stopPropagation()}>
-        {children}
-      </div>
-
-      {active && (
-        <div className="step-nav">
-          {onBack ? (
-            <button type="button" className="btn-secondary" onClick={onBack}>
-              Back
-            </button>
-          ) : (
-            <span />
-          )}
-          {!hideNext && onNext && (
-            <button
-              type="button"
-              className="btn-primary"
-              onClick={onNext}
-              disabled={nextDisabled}
-            >
-              {nextLabel}
-            </button>
-          )}
-        </div>
-      )}
+      {helper && <p className="step-helper">{helper}</p>}
+      <div className="step-body">{children}</div>
     </div>
   );
 }

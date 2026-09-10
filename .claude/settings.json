@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(find / -iname \"chromium-cli*\" -maxdepth 6)",
+      "Bash(npm ls *)",
+      "Bash(npx --yes playwright --version)"
+    ]
+  }
+}
