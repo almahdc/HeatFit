@@ -504,6 +504,55 @@ export const en = {
     no: "No",
   },
 
+  earlyAccess: {
+    title: "Ready for the next step?",
+    subtitle:
+      "These numbers are the start. Leave your details and we'll help turn them into an actual quote.",
+    valueProps: {
+      installers: {
+        title: "Connect to vetted installers",
+        description:
+          "Screened installers who work in your area, ready to quote the job.",
+      },
+      grant: {
+        title: "Get help securing the Czyste Powietrze grant",
+        description:
+          "We walk you through the paperwork so you don't leave funding on the table.",
+      },
+      financing: {
+        title: "Connect to partner banks for green financing",
+        description:
+          "Loans and instalment plans built for exactly this kind of upgrade.",
+      },
+    },
+    modal: {
+      title: "Get early access",
+      subtitle:
+        "Leave your details and we'll reach out personally once HeatFit opens its doors.",
+      regarding: (topic: string) => `Regarding: ${topic}`,
+      nameLabel: "Name",
+      namePlaceholder: "e.g., Jan Kowalski",
+      contactLabel: "Phone or email",
+      contactPlaceholder: "e.g., 600 123 456 or jan@example.com",
+      noteLabel: "A short note (optional)",
+      notePlaceholder: "Anything you'd like us to know...",
+      submit: "Send my details",
+      close: "Close",
+      nameRequired: "Enter your name.",
+      contactRequired: "Enter a phone number or email so we can reach you.",
+      successTitle: "You're on the list",
+      successBody: (email: string) =>
+        `Your email app should have opened with your details ready to send. If it didn't, email us directly at ${email}.`,
+      emailSubject: "HeatFit early access request",
+      emailInterest: "Interest",
+      emailName: "Name",
+      emailContact: "Phone or email",
+      emailNote: "Note",
+    },
+    disclaimer:
+      "Note: You are signing up for early access. HeatFit is currently in development and not yet fully operational: we will reach out as soon as we launch!",
+  },
+
   /**
    * Engine-generated messages. `baseline.ts` and `grants.ts` emit typed
    * descriptors ({ code, ...params }) rather than prose, so the sentence a

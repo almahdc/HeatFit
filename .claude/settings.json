@@ -15,7 +15,8 @@
       "Read(//Users/alma/.cache/**)",
       "Bash(npm run *)",
       "Bash(lsof -ti:5173 -sTCP:LISTEN)",
-      "Bash(xargs -r kill)"
+      "Bash(xargs -r kill)",
+      "Bash(node -e \"const m = require\\('/Users/alma/Desktop/HeatFit/node_modules/lucide-react/dist/cjs/lucide-react.js'\\); console.log\\('X' in m, 'Mail' in m, 'ShieldCheck' in m, 'Gift' in m, 'Banknote' in m, 'Loader2' in m\\);\")"
     ]
   }
 }

@@ -6,6 +6,7 @@ import { AssessmentState } from "./wizard/assessmentTypes";
 import { HouseholdCaseInputs } from "./wizard/householdCases";
 import { BaselineSummary } from "./wizard/BaselineSummary";
 import { AlternativeHeatingOptions } from "./wizard/AlternativeHeatingOptions";
+import { EarlyAccessBlock } from "./wizard/EarlyAccessBlock";
 import { calculateUserBaseline } from "./engines/baseline";
 import { StyleTile } from "./StyleTile";
 import { useScrollToTopOnChange } from "./hooks/useScrollToTopOnChange";
@@ -109,6 +110,8 @@ function FinancialsPlaceholder({
               electricityTariff={household.electricityTariff}
               hasPvPanels={household.hasPvPanels}
             />
+
+            <EarlyAccessBlock />
 
             <section className="rounded-[20px] border border-line bg-white p-6 shadow-block">
               <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-[10px] bg-chip text-ink-soft">

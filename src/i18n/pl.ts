@@ -499,6 +499,57 @@ export const pl: Dictionary = {
     no: "Nie",
   },
 
+  earlyAccess: {
+    title: "Gotowy na kolejny krok?",
+    subtitle:
+      "Te liczby to dopiero początek. Zostaw swoje dane, a pomożemy zamienić je w konkretną wycenę.",
+    valueProps: {
+      installers: {
+        title: "Połączymy Cię ze sprawdzonymi instalatorami",
+        description:
+          "Zweryfikowani wykonawcy działający w Twojej okolicy, gotowi wycenić montaż.",
+      },
+      grant: {
+        title: "Pomożemy zdobyć dotację z Czystego Powietrza",
+        description:
+          "Poprowadzimy Cię przez formalności, żebyś nie stracił ani złotówki dofinansowania.",
+      },
+      financing: {
+        title:
+          "Połączymy Cię z bankami partnerskimi w sprawie zielonego finansowania",
+        description:
+          "Kredyty i raty dopasowane dokładnie do takiej wymiany ogrzewania.",
+      },
+    },
+    modal: {
+      title: "Zapisz się na wczesny dostęp",
+      subtitle:
+        "Zostaw swoje dane, a odezwiemy się osobiście, gdy tylko HeatFit ruszy.",
+      regarding: (topic: string) => `Dotyczy: ${topic}`,
+      nameLabel: "Imię i nazwisko",
+      namePlaceholder: "np. Jan Kowalski",
+      contactLabel: "Telefon lub e-mail",
+      contactPlaceholder: "np. 600 123 456 lub jan@example.com",
+      noteLabel: "Krótka wiadomość (opcjonalnie)",
+      notePlaceholder: "Cokolwiek chcesz, żebyśmy wiedzieli...",
+      submit: "Wyślij zgłoszenie",
+      close: "Zamknij",
+      nameRequired: "Podaj imię i nazwisko.",
+      contactRequired:
+        "Podaj numer telefonu lub e-mail, żebyśmy mogli się skontaktować.",
+      successTitle: "Jesteś na liście",
+      successBody: (email: string) =>
+        `Twoja aplikacja pocztowa powinna otworzyć się z gotową wiadomością. Jeśli tak się nie stało, napisz do nas bezpośrednio na ${email}.`,
+      emailSubject: "Zgłoszenie o wczesny dostęp do HeatFit",
+      emailInterest: "Zainteresowanie",
+      emailName: "Imię i nazwisko",
+      emailContact: "Telefon lub e-mail",
+      emailNote: "Wiadomość",
+    },
+    disclaimer:
+      "Uwaga: zapisujesz się na wczesny dostęp. HeatFit jest obecnie w budowie i nie działa jeszcze w pełni: odezwiemy się, gdy tylko wystartujemy!",
+  },
+
   assumptions: {
     coalGradeAssumed: (fuel: string) =>
       `Założyliśmy węgiel ${fuel.toLowerCase()}, ponieważ nie podałeś sortymentu.`,
