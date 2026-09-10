@@ -375,6 +375,86 @@ export const PELLET_BOILER_INSTALLED_COST: SourcedBand = {
     "lifts this above a bare boiler swap. Needs a real quote.",
 };
 
+/**
+ * Air-to-air heat pump (multisplit), turnkey, hardware and installation.
+ *
+ * `HEAT_PUMP_INSTALLED_COST` above is specifically an air-to-water figure —
+ * its own source text is about hydronic systems sized for a whole house. An
+ * air-to-air multisplit is a different, materially cheaper job: no radiator
+ * or hydronic plumbing work, so the split between the two bands below is
+ * sourced independently rather than inherited from the air-to-water number.
+ */
+export const AIR_TO_AIR_HP_HARDWARE_COST: SourcedBand = {
+  low: 6000,
+  mid: 9000,
+  high: 12000,
+  unit: "zł, equipment only, incl. VAT",
+  source:
+    "Polish multisplit/AC market pricing 2026: outdoor unit plus 2-4 indoor " +
+    "units quoted 6 000-12 000 zł for equipment alone",
+  readOn: "2026-09-10",
+  certainty: "low",
+  note:
+    "Sourced from air conditioning market pricing, since most inverter split " +
+    "units sold in Poland are already reverse-cycle (heating-capable). Not " +
+    "confirmed against a heat-pump-labelled quote specifically.",
+};
+
+export const AIR_TO_AIR_HP_INSTALLATION_COST: SourcedBand = {
+  low: 3000,
+  mid: 3600,
+  high: 4300,
+  unit: "zł, installation labour only, incl. VAT",
+  source:
+    "Polish installer pricing 2026: multisplit installation (2-3 indoor " +
+    "units) quoted 2 967-4 300 zł, national average around 3 622 zł",
+  readOn: "2026-09-10",
+  certainty: "medium",
+  note:
+    "More indoor units or a longer pipe run push this toward the high end. " +
+    "Some sources report a higher all-in total (up to ~18 000 zł) than " +
+    "hardware plus installation here sums to; that gap is unresolved and " +
+    "probably reflects bigger units or four-plus rooms.",
+};
+
+/**
+ * Share of the AIR-TO-WATER heat pump's turnkey price that is installation
+ * labour, not equipment. Used only to split `HEAT_PUMP_INSTALLED_COST`
+ * into a hardware line and an installation line for display — it changes
+ * nothing about the total, which stays whatever that constant already says.
+ */
+export const HEAT_PUMP_INSTALL_SHARE_OF_TOTAL: Sourced<number> = {
+  value: 0.35,
+  source:
+    "Polish installer pricing 2026: installation labour commonly cited at " +
+    "30-40% of total price; a worked 10 kW example (17 000-25 000 zł " +
+    "equipment, 12 000-16 000 zł installation) implies close to 40%. 35% " +
+    "is the midpoint of the commonly-cited range.",
+  readOn: "2026-09-10",
+  certainty: "low",
+  note:
+    "The least certain number in this file's capex section. It moves how a " +
+    "single turnkey quote is split into two display lines, never the total.",
+};
+
+/** Same idea as above, for the pellet boiler. */
+export const PELLET_BOILER_INSTALL_SHARE_OF_TOTAL: Sourced<number> = {
+  value: 0.15,
+  source:
+    "Polish installer pricing 2026: pellet boiler installation labour " +
+    "quoted 2 500-5 000 zł against a 20 000-24 000 zł boiler price " +
+    "('z pełnym osprzętem') - roughly 10-20% of the combined figure",
+  readOn: "2026-09-10",
+  certainty: "low",
+  note:
+    "Markedly lower than the heat pump share above: a pellet boiler swap " +
+    "is plumbing and a flue, not refrigerant lines and an outdoor unit. " +
+    "One general source claims installation can reach 30-40% of a full " +
+    "boiler-room job, which would include work (a new flue, a buffer tank) " +
+    "that may already sit inside PELLET_BOILER_INSTALLED_COST's own range " +
+    "rather than being additional to it.",
+};
+
 export const PV_INSTALLED_COST_PER_KWP: SourcedBand = {
   low: 3500,
   mid: 4200,
@@ -542,6 +622,10 @@ export const ALL_CONSTANTS: Record<string, Sourced<unknown> | SourcedBand> = {
   HEAT_PUMP_OFFPEAK_SHARE,
   HEAT_PUMP_INSTALLED_COST,
   PELLET_BOILER_INSTALLED_COST,
+  AIR_TO_AIR_HP_HARDWARE_COST,
+  AIR_TO_AIR_HP_INSTALLATION_COST,
+  HEAT_PUMP_INSTALL_SHARE_OF_TOTAL,
+  PELLET_BOILER_INSTALL_SHARE_OF_TOTAL,
   PV_INSTALLED_COST_PER_KWP,
   COAL_BOILER_REPLACEMENT_COST,
   HEAT_PUMP_LIFE_YEARS,

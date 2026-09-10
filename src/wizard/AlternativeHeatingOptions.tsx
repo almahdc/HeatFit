@@ -1,12 +1,16 @@
 import { useState } from "react";
 import {
   Droplets,
+  ExternalLink,
+  HardHat,
   Package,
   Plug,
+  ShieldCheck,
   TrendingDown,
   TrendingUp,
   Waves,
   Wind,
+  Wrench,
   type LucideIcon,
 } from "lucide-react";
 import { Block, FieldLabel, IconCardGroup } from "./FormPrimitives";
@@ -15,11 +19,14 @@ import {
   calculateAlternativeHeatingCost,
   type AlternativeHeatingId,
 } from "../engines/alternativeHeating";
+import { calculateCapexBreakdown, ZUM_DATABASE_URL } from "../engines/capex";
 import type { Baseline } from "../engines/baseline";
 import type { ElectricityTariffCase } from "./householdCases";
 
 const zl = (n: number) =>
   `${Math.round(n).toLocaleString("pl-PL").replace(/\xa0/g, " ")} zł`;
+
+const zlRange = (low: number, high: number) => `${zl(low)}–${zl(high)}`;
 
 const OPTION_ICON: Record<AlternativeHeatingId, LucideIcon> = {
   airToAirHp: Wind,
@@ -69,6 +76,7 @@ export function AlternativeHeatingOptions({
     baseline,
     electricityTariff,
   );
+  const capex = calculateCapexBreakdown(selected);
   const Icon = OPTION_ICON[selected];
   const saving = result.savingsPlnPerYear >= 0;
 
@@ -183,6 +191,67 @@ export function AlternativeHeatingOptions({
           </p>
         )}
       </Block>
+
+      {/* Block 4: equipment cost — the sticker price, before any grant or loan. */}
+      <Block
+        title="What it costs to install"
+        subtitle={`Hardware and installation for ${result.name.toLowerCase()}. Grants and loan repayment are the next step — this is the price before either.`}
+      >
+        <dl className="divide-y divide-line border-y border-line">
+          <Line
+            icon={Wrench}
+            label="Hardware"
+            sub={`Typically ${zlRange(capex.hardware.lowPln, capex.hardware.highPln)}`}
+            value={capex.hardware.midPln}
+            unit="equipment"
+          />
+          <Line
+            icon={HardHat}
+            label="Installation"
+            sub={`Typically ${zlRange(capex.installation.lowPln, capex.installation.highPln)}`}
+            value={capex.installation.midPln}
+            unit="labour"
+          />
+        </dl>
+
+        <div className="rounded-[16px] border border-line bg-[#fbfaf8] p-5">
+          <p className="text-[12px] font-semibold uppercase tracking-wider text-ink-soft">
+            Total gross capex
+          </p>
+          <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span className="text-[28px] font-bold leading-none tracking-tight text-ink">
+              {zl(capex.totalGross.midPln)}
+            </span>
+            <span className="text-[15px] font-medium text-ink-soft">
+              turnkey, incl. VAT
+            </span>
+          </div>
+          <p className="mt-1.5 text-[13.5px] text-ink-soft">
+            Typically{" "}
+            {zlRange(capex.totalGross.lowPln, capex.totalGross.highPln)} —
+            installer quotes vary this much by sizing, radiators, and region.
+          </p>
+        </div>
+
+        <div className="flex gap-3 rounded-[14px] border border-accent-tint2 bg-accent-tint p-4 text-sm text-accent-600">
+          <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+          <div>
+            <p>
+              Note: Selected heat pumps and pellet boilers must be listed on the
+              official ZUM database to qualify for Czyste Powietrze subsidies.
+            </p>
+            <a
+              href={ZUM_DATABASE_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mt-2 inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-accent-600 underline decoration-accent-tint2 underline-offset-2 hover:decoration-accent-600"
+            >
+              Check the official Lista ZUM
+              <ExternalLink className="h-3.5 w-3.5" aria-hidden />
+            </a>
+          </div>
+        </div>
+      </Block>
     </>
   );
 }
@@ -192,11 +261,13 @@ function Line({
   label,
   sub,
   value,
+  unit = "per year",
 }: {
   icon: LucideIcon;
   label: string;
   sub: string;
   value: number;
+  unit?: string;
 }) {
   return (
     <div className="flex items-center justify-between gap-4 py-3.5">
@@ -213,7 +284,7 @@ function Line({
         <span className="text-[16px] font-bold tabular-nums text-ink">
           {zl(value)}
         </span>
-        <span className="block text-[12px] text-ink-soft">per year</span>
+        <span className="block text-[12px] text-ink-soft">{unit}</span>
       </dd>
     </div>
   );
