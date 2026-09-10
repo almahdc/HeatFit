@@ -1,7 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { calculateCapexBreakdown, ZUM_DATABASE_URL } from "../engines/capex";
+import {
+  calculateCapexBreakdown,
+  calculateSolarAddOn,
+  ZUM_DATABASE_URL,
+} from "../engines/capex";
 import { ALTERNATIVE_HEATING_OPTIONS } from "../engines/alternativeHeating";
 import * as C from "../data/constants.pl";
+import * as S from "../data/sheet.constants";
 
 describe("calculateCapexBreakdown", () => {
   it("sums hardware and installation to the total, band for band, for every option", () => {
@@ -92,6 +97,34 @@ describe("calculateCapexBreakdown", () => {
       const b = calculateCapexBreakdown(option.id);
       expect(b.source.length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe("calculateCapexBreakdown never involves PV", () => {
+  // PV is not part of the heating system's own cost — see calculateSolarAddOn
+  // below for the separate, opt-in add-on. calculateCapexBreakdown takes no
+  // PV-related input at all, so this is really just re-confirming the
+  // heating-only invariant holds regardless of anyone's PV status.
+  it("totals exactly hardware plus installation, for every option", () => {
+    for (const option of ALTERNATIVE_HEATING_OPTIONS) {
+      const b = calculateCapexBreakdown(option.id);
+      expect(b.hardware.midPln + b.installation.midPln).toBeCloseTo(
+        b.totalGross.midPln,
+        6,
+      );
+    }
+  });
+});
+
+describe("calculateSolarAddOn", () => {
+  it("reads production straight from the sheet's flat PV assumption", () => {
+    const solar = calculateSolarAddOn();
+    expect(solar.productionKwhPerYear).toBe(S.SHEET_PV.productionKwhPerYear);
+  });
+
+  it("prices the array at PV_CAPEX_PLN", () => {
+    const solar = calculateSolarAddOn();
+    expect(solar.capexPln).toBe(C.PV_CAPEX_PLN.value);
   });
 });
 

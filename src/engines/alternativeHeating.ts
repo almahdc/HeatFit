@@ -16,8 +16,9 @@
  *     water heater; that is a real question, but a different one from "what
  *     does the space heating alone cost", and folding it in here would hide
  *     which number moved. See docs/alternative-heating-model.md.
- *   - No PV netting, no capex, no financing, no subsidy. Those layer on top of
- *     this number later; they do not change it.
+ *   - No capex, no financing, no subsidy. Those layer on top of this number
+ *     later; they do not change it. PV running-cost netting is the one
+ *     exception — see below.
  *   - The useful heat a replacement has to deliver is taken from the coal
  *     system's own `spaceHeatKwh` — the building needs the same warmth
  *     regardless of what makes it, so anchoring on the coal system's own
@@ -30,10 +31,26 @@
  *     sheet point values here with the low/mid/high bands `constants.pl.ts`
  *     uses elsewhere in this codebase.
  *
- * Knows nothing about React.
+ * PV: a heat pump's new electricity draw joins the SAME household meter that
+ * `baseline.ts` already nets PV self-consumption and export against — it is
+ * not a separate pool. So a heat pump's space heating cost here is priced as
+ * the MARGINAL cost of adding its kWh on top of the household's existing
+ * consumption, run back through `baseline.ts`'s own `electricityCost()`:
+ *
+ *   marginal cost = electricityCost(existing + new, ...) - electricityCost(existing, ...)
+ *
+ * With no PV this collapses to exactly `new kWh x price` — the same figure
+ * this file always computed, so nothing changes for a household without
+ * panels. With PV, the extra consumption raises the self-consumed share
+ * (a fixed 25% of whatever the meter draws), so the marginal cost of the new
+ * kWh comes out lower than the flat rate would suggest. Water heating and
+ * "electricity & cooling" are untouched either way — they are still whatever
+ * `baseline.ts` already priced for the household's existing consumption, PV
+ * included.
  */
 
 import * as S from "../data/sheet.constants";
+import { electricityCost } from "./baseline";
 import type { Baseline } from "./baseline";
 import type { ElectricityTariffCase } from "../wizard/householdCases";
 
@@ -85,6 +102,13 @@ export interface AlternativeHeatingCost {
   fuelUnit: "kWh" | "t";
   /** What that fuel costs, space heating only — the one line that changed. */
   spaceHeatingPlnPerYear: number;
+  /**
+   * How much of `spaceHeatingPlnPerYear`'s absence PV is responsible for:
+   * the flat, un-netted cost of the same kWh minus what was actually
+   * charged. Zero for a household with no PV, and always zero for pellet
+   * (combustion, not electricity — PV cannot touch its fuel cost).
+   */
+  pvSavingsOnSpaceHeatingPlnPerYear: number;
 
   /** Carried over from the baseline, unchanged by this swap. */
   waterHeatingPlnPerYear: number;
@@ -108,12 +132,17 @@ function electricityPricePerKwh(tariff: ElectricityTariffCase): number {
  * `usefulHeatKwh` is the coal system's own `spaceHeatKwh` unless a caller has
  * a better figure — there usually is not one, since a building's heat demand
  * does not depend on what currently meets it.
+ *
+ * `hasPvPanels` should be the same value `baseline` itself was computed with
+ * — this only prices the NEW electricity a heat pump adds; it does not
+ * re-derive whether the household has panels at all.
  */
 export function calculateAlternativeHeatingCost(
   id: AlternativeHeatingId,
   baseline: Baseline,
   electricityTariff: ElectricityTariffCase,
   usefulHeatKwh: number = baseline.energy.spaceHeatKwh,
+  hasPvPanels: boolean = false,
 ): AlternativeHeatingCost {
   const option = ALTERNATIVE_HEATING_OPTIONS.find((o) => o.id === id);
   if (!option) {
@@ -123,9 +152,11 @@ export function calculateAlternativeHeatingCost(
   let fuelPerYear: number;
   let fuelUnit: "kWh" | "t";
   let spaceHeatingPlnPerYear: number;
+  let pvSavingsOnSpaceHeatingPlnPerYear = 0;
 
   if (id === "pellet") {
     // Combustion efficiency below one: input = useful heat / efficiency.
+    // Not electric, so PV has nothing to net against here.
     const spec = S.SHEET_FUELS.Pellet;
     const tonnes = usefulHeatKwh / (spec.kwhPerUnit * spec.efficiency);
     fuelPerYear = tonnes;
@@ -139,7 +170,23 @@ export function calculateAlternativeHeatingCost(
     const kwh = usefulHeatKwh / spec.efficiency;
     fuelPerYear = kwh;
     fuelUnit = "kWh";
-    spaceHeatingPlnPerYear = kwh * electricityPricePerKwh(electricityTariff);
+
+    const price = electricityPricePerKwh(electricityTariff);
+    const tariff = S.TARIFF_FROM_WIZARD[electricityTariff];
+    const flatCost = kwh * price;
+
+    // This new draw shares the household's one meter with everything else,
+    // so it is priced as what adding it changes the household's total
+    // electricity bill by — not as if it were its own separate, unpaneled
+    // connection.
+    const existingKwh =
+      baseline.electricity.measuredKwh ?? baseline.electricity.modelledKwh;
+    const marginalCost =
+      electricityCost(existingKwh + kwh, tariff, hasPvPanels) -
+      electricityCost(existingKwh, tariff, hasPvPanels);
+
+    spaceHeatingPlnPerYear = marginalCost;
+    pvSavingsOnSpaceHeatingPlnPerYear = flatCost - marginalCost;
   }
 
   const waterHeatingPlnPerYear = baseline.cost.waterHeatingPlnPerYear;
@@ -161,6 +208,7 @@ export function calculateAlternativeHeatingCost(
     fuelPerYear,
     fuelUnit,
     spaceHeatingPlnPerYear,
+    pvSavingsOnSpaceHeatingPlnPerYear,
     waterHeatingPlnPerYear,
     electricityAndCoolingPlnPerYear,
     totalPlnPerYear,
@@ -174,8 +222,15 @@ export function calculateAlternativeHeatingCost(
 export function calculateAllAlternativeHeatingCosts(
   baseline: Baseline,
   electricityTariff: ElectricityTariffCase,
+  hasPvPanels: boolean = false,
 ): AlternativeHeatingCost[] {
   return ALTERNATIVE_HEATING_OPTIONS.map((option) =>
-    calculateAlternativeHeatingCost(option.id, baseline, electricityTariff),
+    calculateAlternativeHeatingCost(
+      option.id,
+      baseline,
+      electricityTariff,
+      undefined,
+      hasPvPanels,
+    ),
   );
 }

@@ -123,14 +123,59 @@ gives. Subsidy and financing exist precisely because running cost alone does
 not make the case; that is the honest reason PV, capex and grants come next
 rather than being skipped.
 
+## Block 4 — what it costs to install
+
+Code: [`src/engines/capex.ts`](../src/engines/capex.ts). Hardware and
+installation, split from a sourced turnkey total (see `constants.pl.ts`'s
+capex section), for whichever option is selected. No grants, no loan
+repayment — the price before either.
+
+### PV is not part of this total, on purpose
+
+`calculateCapexBreakdown()` takes no PV-related input at all. PV is handled
+by a completely separate function, `calculateSolarAddOn()`, and only ever
+shown as a distinct, optional add-on — never folded into the heating
+system's own capex. The rule the UI applies:
+
+- **Household already has PV** (`hasPvPanels` true) — show nothing extra, no
+  toggle offered. Their panels are a sunk cost that has nothing to do with
+  replacing the heating system, and the running-cost benefit is already
+  silently inside every number in Block 2/3 (`baseline.ts` and
+  `alternativeHeating.ts`'s marginal-cost formula both already net it in —
+  see above). Calling it out again here would present an old,
+  already-accounted-for fact as if it were something new.
+- **Household has no PV yet** (`hasPvPanels` false) — a real, interactive
+  `ToggleCard`, "Add solar to this project", sits right after the option
+  picker, above Block 2. Flipping it sets `addSolar` (component-local state)
+  and RECOMPUTES the headline numbers with it: `calculateAlternativeHeatingCost()`
+  is called with `hasPvPanels` OR'd against `addSolar`, so Block 2/3's
+  totals, savings, and Block 4's capex (heating total + `PV_CAPEX_PLN`, with
+  its own line item) all update live. This is not a separate preview
+  alongside an unchanged headline — once toggled on, solar IS the scenario
+  being shown, exactly as if the household had said they already had it.
+  Switching between the three replacement options preserves the toggle's
+  state, since "would you add solar" is a question about the project, not
+  about any one option.
+
+This went through two corrections before landing here. First pass: PV was
+shown as a (zero-cost) capex line only when the household ALREADY had it,
+backwards for a feature meant to cost out a decision. Second pass: fixed the
+direction, but only as inert text — a static "would save you ~X/year" note
+next to an unchanged headline, no way to actually see the numbers with
+solar in them. Landed on making it a real toggle that recomputes the
+displayed numbers, per the explicit request: "there has to be a toggle...
+not just text, and then the numbers recalculated below".
+
 ## Verified
 
 `npm run verify:alternatives` recomputes every number above longhand, from
 constants re-transcribed independently inside the script, for all four
-personas across all three options (24 checks) — the same audit discipline as
+personas across all three options (24 checks), plus a synthetic PV
+household and the solar add-on figures — the same audit discipline as
 `verify:baseline`, confirmed to actually fail by deliberately mistyping the
-pellet energy content and checking the script caught it before restoring the
-correct value.
+pellet energy content, the PV production constant, and `PV_CAPEX_PLN` in
+turn, checking the script caught each one, then restoring the correct
+value.
 
 ## Open questions
 

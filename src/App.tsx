@@ -101,6 +101,7 @@ function FinancialsPlaceholder({
             <AlternativeHeatingOptions
               baseline={baseline}
               electricityTariff={household.electricityTariff}
+              hasPvPanels={household.hasPvPanels}
             />
 
             <section className="rounded-[20px] border border-line bg-white p-6 shadow-block">

@@ -1,7 +1,7 @@
 /**
- * capex.ts — what a replacement costs to buy and install, split into
- * hardware and installation, for the three options `alternativeHeating.ts`
- * already prices to run.
+ * capex.ts — what a replacement heating system costs to buy and install,
+ * split into hardware and installation, for the three options
+ * `alternativeHeating.ts` already prices to run.
  *
  * Deliberately scoped to equipment cost alone: no grants, no loan repayment,
  * no netting against the running-cost savings those files compute. Those are
@@ -24,9 +24,17 @@
  * different jobs (hydronic plumbing vs. a multisplit with no radiator work)
  * priced from different sources — see `AIR_TO_AIR_HP_HARDWARE_COST`'s own
  * comment in constants.pl.ts.
+ *
+ * PV is deliberately NOT part of this breakdown — see `calculateSolarAddOn`
+ * at the bottom. A household that already has panels is describing a sunk
+ * cost that has nothing to do with replacing the heating system, so it does
+ * not belong in "what this replacement costs". A household with no panels
+ * yet gets a separate, clearly optional add-on line instead of it being
+ * folded into this total silently.
  */
 
 import * as C from "../data/constants.pl";
+import * as S from "../data/sheet.constants";
 import type { AlternativeHeatingId } from "./alternativeHeating";
 
 export interface CapexBand {
@@ -124,6 +132,28 @@ export function calculateCapexBreakdown(
       };
     }
   }
+}
+
+export interface SolarAddOn {
+  /** New spend to fit an array, since this is only ever offered when there isn't one yet. */
+  capexPln: number;
+  /** The sheet's flat production assumption for a fitted array, kWh/y. */
+  productionKwhPerYear: number;
+}
+
+/**
+ * What adding solar WOULD cost, for a household that does not have it yet.
+ *
+ * Deliberately has no household parameter: this only makes sense to call at
+ * all when `hasPvPanels` is false, and the UI is what decides that — a
+ * household already describing panels should never see this, since for them
+ * there is nothing new to add.
+ */
+export function calculateSolarAddOn(): SolarAddOn {
+  return {
+    capexPln: C.PV_CAPEX_PLN.value,
+    productionKwhPerYear: S.SHEET_PV.productionKwhPerYear,
+  };
 }
 
 /** The official Polish "green devices and materials" database — Lista ZUM. */

@@ -466,6 +466,29 @@ export const PV_INSTALLED_COST_PER_KWP: SourcedBand = {
   note: "Unverified this session. Confirm before any slide quotes a heat pump plus PV figure.",
 };
 
+/**
+ * Flat capex for a NEW PV array sized to the sheet's own flat production
+ * assumption (`SHEET_PV.productionKwhPerYear`, 5 000 kWh/y — see
+ * sheet.constants.ts).
+ *
+ * This is a point figure, not a band, given directly for this feature rather
+ * than independently re-derived. Cross-check against the per-kWp band above:
+ * 5 000 kWh/y at a typical Polish yield of ~1 000 kWh/kWp/y is roughly a
+ * 5 kWp system, and 5 kWp x PV_INSTALLED_COST_PER_KWP.mid (4 200 zł/kWp) is
+ * 21 000 zł — noticeably below this figure. The two are not reconciled here;
+ * that gap is real and should be looked at before this number is quoted
+ * anywhere that matters.
+ */
+export const PV_CAPEX_PLN: Sourced<number> = {
+  value: 30000,
+  source: "Given directly for the PV capex feature, 2026-09",
+  readOn: "2026-09",
+  certainty: "low",
+  note:
+    "Runs above the per-kWp cross-check (~21 000 zł for an equivalent " +
+    "5 kWp system). Treat as a placeholder pending a real quote.",
+};
+
 export const COAL_BOILER_REPLACEMENT_COST: SourcedBand = {
   low: 0,
   mid: 0,
@@ -627,6 +650,7 @@ export const ALL_CONSTANTS: Record<string, Sourced<unknown> | SourcedBand> = {
   HEAT_PUMP_INSTALL_SHARE_OF_TOTAL,
   PELLET_BOILER_INSTALL_SHARE_OF_TOTAL,
   PV_INSTALLED_COST_PER_KWP,
+  PV_CAPEX_PLN,
   COAL_BOILER_REPLACEMENT_COST,
   HEAT_PUMP_LIFE_YEARS,
   PELLET_BOILER_LIFE_YEARS,

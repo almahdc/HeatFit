@@ -6,6 +6,7 @@ import {
   Package,
   Plug,
   ShieldCheck,
+  Sun,
   TrendingDown,
   TrendingUp,
   Waves,
@@ -13,13 +14,17 @@ import {
   Wrench,
   type LucideIcon,
 } from "lucide-react";
-import { Block, FieldLabel, IconCardGroup } from "./FormPrimitives";
+import { Block, FieldLabel, IconCardGroup, ToggleCard } from "./FormPrimitives";
 import {
   ALTERNATIVE_HEATING_OPTIONS,
   calculateAlternativeHeatingCost,
   type AlternativeHeatingId,
 } from "../engines/alternativeHeating";
-import { calculateCapexBreakdown, ZUM_DATABASE_URL } from "../engines/capex";
+import {
+  calculateCapexBreakdown,
+  calculateSolarAddOn,
+  ZUM_DATABASE_URL,
+} from "../engines/capex";
 import type { Baseline } from "../engines/baseline";
 import type { ElectricityTariffCase } from "./householdCases";
 
@@ -58,11 +63,27 @@ const FUEL_UNIT_LABEL: Record<"kWh" | "t", string> = {
 export function AlternativeHeatingOptions({
   baseline,
   electricityTariff,
+  hasPvPanels,
 }: {
   baseline: Baseline;
   electricityTariff: ElectricityTariffCase;
+  /**
+   * Read straight from the household's own data (Step 4's PV toggle).
+   *
+   * True means solar is already part of today's setup — it is already
+   * netted into every number below silently, and there is nothing left to
+   * decide about it here, so nothing about it is called out on screen.
+   * False means the household could add it alongside this replacement — that
+   * is a real, unmade decision, so Block 4 offers it as a distinct add-on.
+   */
+  hasPvPanels: boolean;
 }) {
   const [selected, setSelected] = useState<AlternativeHeatingId>("airToAirHp");
+  // Only offered, and only meaningful, when the household has no PV yet —
+  // see the toggle itself below. Persists across switching between options,
+  // since "would you add solar" is a question about the project, not about
+  // any one option.
+  const [addSolar, setAddSolar] = useState(false);
 
   const cardOptions = ALTERNATIVE_HEATING_OPTIONS.map((option) => ({
     value: option.id,
@@ -71,12 +92,27 @@ export function AlternativeHeatingOptions({
     icon: OPTION_ICON[option.id],
   }));
 
+  // True PV already existing counts on its own; toggling the add-on counts
+  // the same way running-cost-wise — a panel is a panel, whichever screen it
+  // was decided on. Every number below reacts to this one value.
+  const effectiveHasPv = hasPvPanels || addSolar;
+
   const result = calculateAlternativeHeatingCost(
     selected,
     baseline,
     electricityTariff,
+    undefined,
+    effectiveHasPv,
   );
-  const capex = calculateCapexBreakdown(selected);
+  const heatingCapex = calculateCapexBreakdown(selected);
+  const solarAddOn = calculateSolarAddOn();
+  const capexTotal = addSolar
+    ? {
+        lowPln: heatingCapex.totalGross.lowPln + solarAddOn.capexPln,
+        midPln: heatingCapex.totalGross.midPln + solarAddOn.capexPln,
+        highPln: heatingCapex.totalGross.highPln + solarAddOn.capexPln,
+      }
+    : heatingCapex.totalGross;
   const Icon = OPTION_ICON[selected];
   const saving = result.savingsPlnPerYear >= 0;
 
@@ -97,6 +133,21 @@ export function AlternativeHeatingOptions({
         </div>
 
         <p className="text-[14.5px] text-ink-soft">{result.description}</p>
+
+        {/*
+          Only offered when the household has no PV yet — a household that
+          already has it has nothing to toggle. Everything below reacts live:
+          this is a real input into the numbers, not a separate preview.
+        */}
+        {!hasPvPanels && (
+          <ToggleCard
+            icon={Sun}
+            label="Add solar to this project"
+            sublabel={`+${zl(solarAddOn.capexPln)} for a ${solarAddOn.productionKwhPerYear.toLocaleString("pl-PL").replace(/\xa0/g, " ")} kWh/year array`}
+            checked={addSolar}
+            onChange={setAddSolar}
+          />
+        )}
 
         {/* Block 2: running cost on the household's own numbers. */}
         <div className="rounded-[16px] border border-line bg-[#fbfaf8] p-5">
@@ -141,7 +192,7 @@ export function AlternativeHeatingOptions({
       {/* Block 3: the plain delta against the baseline. */}
       <Block
         title="Savings vs. coal"
-        subtitle={`${result.name} compared directly against what you are paying now.`}
+        subtitle={`${result.name}${addSolar ? " with solar" : ""} compared directly against what you are paying now.`}
       >
         <div
           className={`flex items-start gap-4 rounded-[16px] border p-5 ${
@@ -195,40 +246,48 @@ export function AlternativeHeatingOptions({
       {/* Block 4: equipment cost — the sticker price, before any grant or loan. */}
       <Block
         title="What it costs to install"
-        subtitle={`Hardware and installation for ${result.name.toLowerCase()}. Grants and loan repayment are the next step — this is the price before either.`}
+        subtitle={`Hardware and installation for ${result.name.toLowerCase()}${addSolar ? ", plus solar" : ""}. Grants and loan repayment are the next step — this is the price before either.`}
       >
         <dl className="divide-y divide-line border-y border-line">
           <Line
             icon={Wrench}
             label="Hardware"
-            sub={`Typically ${zlRange(capex.hardware.lowPln, capex.hardware.highPln)}`}
-            value={capex.hardware.midPln}
+            sub={`Typically ${zlRange(heatingCapex.hardware.lowPln, heatingCapex.hardware.highPln)}`}
+            value={heatingCapex.hardware.midPln}
             unit="equipment"
           />
           <Line
             icon={HardHat}
             label="Installation"
-            sub={`Typically ${zlRange(capex.installation.lowPln, capex.installation.highPln)}`}
-            value={capex.installation.midPln}
+            sub={`Typically ${zlRange(heatingCapex.installation.lowPln, heatingCapex.installation.highPln)}`}
+            value={heatingCapex.installation.midPln}
             unit="labour"
           />
+          {addSolar && (
+            <Line
+              icon={Sun}
+              label="Solar panels (PV)"
+              sub={`New, ${solarAddOn.productionKwhPerYear.toLocaleString("pl-PL").replace(/\xa0/g, " ")} kWh/year array`}
+              value={solarAddOn.capexPln}
+              unit="added"
+            />
+          )}
         </dl>
 
         <div className="rounded-[16px] border border-line bg-[#fbfaf8] p-5">
           <p className="text-[12px] font-semibold uppercase tracking-wider text-ink-soft">
-            Total gross capex
+            Total gross capex{addSolar && " (incl. solar)"}
           </p>
           <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
             <span className="text-[28px] font-bold leading-none tracking-tight text-ink">
-              {zl(capex.totalGross.midPln)}
+              {zl(capexTotal.midPln)}
             </span>
             <span className="text-[15px] font-medium text-ink-soft">
               turnkey, incl. VAT
             </span>
           </div>
           <p className="mt-1.5 text-[13.5px] text-ink-soft">
-            Typically{" "}
-            {zlRange(capex.totalGross.lowPln, capex.totalGross.highPln)} —
+            Typically {zlRange(capexTotal.lowPln, capexTotal.highPln)} —
             installer quotes vary this much by sizing, radiators, and region.
           </p>
         </div>

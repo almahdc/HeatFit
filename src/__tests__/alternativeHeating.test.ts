@@ -4,7 +4,11 @@ import {
   calculateAlternativeHeatingCost,
   calculateAllAlternativeHeatingCosts,
 } from "../engines/alternativeHeating";
-import { calculateBaseline, calculateUserBaseline } from "../engines/baseline";
+import {
+  calculateBaseline,
+  calculateUserBaseline,
+  electricityCost,
+} from "../engines/baseline";
 import * as S from "../data/sheet.constants";
 
 // Mrs. Teresa: coal boiler lit year-round, 130 m², living alone, class 3.
@@ -183,6 +187,130 @@ describe("calculateAllAlternativeHeatingCosts", () => {
         expect(r.fuelPerYear).toBeGreaterThan(0);
       }
     }
+  });
+});
+
+describe("PV", () => {
+  // Same household as above, but now with panels.
+  const pvInputs = { ...teresaInputs, hasPvPanels: true };
+  const baselineNoPv = calculateBaseline(teresaInputs);
+  const baselineWithPv = calculateBaseline(pvInputs);
+
+  it("does not change a heat pump's price when the household has no PV", () => {
+    const result = calculateAlternativeHeatingCost(
+      "airToAirHp",
+      baselineNoPv,
+      "G11",
+      undefined,
+      false,
+    );
+    const kwh = baselineNoPv.energy.spaceHeatKwh / 4.0;
+    expect(result.spaceHeatingPlnPerYear).toBeCloseTo(kwh * 1.0, 6);
+    expect(result.pvSavingsOnSpaceHeatingPlnPerYear).toBe(0);
+  });
+
+  it("prices the new kWh as the marginal cost against the household's existing meter", () => {
+    const result = calculateAlternativeHeatingCost(
+      "airToAirHp",
+      baselineWithPv,
+      "G11",
+      undefined,
+      true,
+    );
+    const kwh = baselineWithPv.energy.spaceHeatKwh / 4.0;
+    const existing =
+      baselineWithPv.electricity.measuredKwh ??
+      baselineWithPv.electricity.modelledKwh;
+    const expectedMarginal =
+      electricityCost(existing + kwh, "Standard", true) -
+      electricityCost(existing, "Standard", true);
+    expect(result.spaceHeatingPlnPerYear).toBeCloseTo(expectedMarginal, 6);
+  });
+
+  it("charges less than the flat rate once PV is added", () => {
+    const withoutPv = calculateAlternativeHeatingCost(
+      "airToAirHp",
+      baselineNoPv,
+      "G11",
+      undefined,
+      false,
+    );
+    const withPv = calculateAlternativeHeatingCost(
+      "airToAirHp",
+      baselineWithPv,
+      "G11",
+      undefined,
+      true,
+    );
+    // Same useful heat, same COP, same tariff — only PV differs.
+    expect(withPv.spaceHeatingPlnPerYear).toBeLessThan(
+      withoutPv.spaceHeatingPlnPerYear,
+    );
+    expect(withPv.pvSavingsOnSpaceHeatingPlnPerYear).toBeGreaterThan(0);
+  });
+
+  it("reports the PV saving as exactly flat cost minus what was actually charged", () => {
+    const result = calculateAlternativeHeatingCost(
+      "airToWaterHp",
+      baselineWithPv,
+      "G11",
+      undefined,
+      true,
+    );
+    const kwh = baselineWithPv.energy.spaceHeatKwh / 3.0;
+    const flat = kwh * 1.0;
+    expect(result.pvSavingsOnSpaceHeatingPlnPerYear).toBeCloseTo(
+      flat - result.spaceHeatingPlnPerYear,
+      6,
+    );
+  });
+
+  it("never nets PV against the pellet boiler's fuel cost", () => {
+    const result = calculateAlternativeHeatingCost(
+      "pellet",
+      baselineWithPv,
+      "G11",
+      undefined,
+      true,
+    );
+    expect(result.pvSavingsOnSpaceHeatingPlnPerYear).toBe(0);
+    const tonnes = baselineWithPv.energy.spaceHeatKwh / (4800 * 0.85);
+    expect(result.spaceHeatingPlnPerYear).toBeCloseTo(tonnes * 1450, 6);
+  });
+
+  it("still sums its three lines to its total, with PV in the mix", () => {
+    for (const option of ALTERNATIVE_HEATING_OPTIONS) {
+      const result = calculateAlternativeHeatingCost(
+        option.id,
+        baselineWithPv,
+        "G11",
+        undefined,
+        true,
+      );
+      const sum =
+        result.spaceHeatingPlnPerYear +
+        result.waterHeatingPlnPerYear +
+        result.electricityAndCoolingPlnPerYear;
+      expect(sum).toBeCloseTo(result.totalPlnPerYear, 6);
+    }
+  });
+
+  it("passes hasPvPanels through calculateAllAlternativeHeatingCosts", () => {
+    const withPv = calculateAllAlternativeHeatingCosts(
+      baselineWithPv,
+      "G11",
+      true,
+    );
+    const withoutPv = calculateAllAlternativeHeatingCosts(
+      baselineWithPv,
+      "G11",
+      false,
+    );
+    const heatPumpWithPv = withPv.find((r) => r.id === "airToAirHp")!;
+    const heatPumpWithoutPv = withoutPv.find((r) => r.id === "airToAirHp")!;
+    expect(heatPumpWithPv.spaceHeatingPlnPerYear).toBeLessThan(
+      heatPumpWithoutPv.spaceHeatingPlnPerYear,
+    );
   });
 });
 
