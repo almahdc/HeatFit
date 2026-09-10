@@ -533,13 +533,19 @@ export const pl: Dictionary = {
       noteLabel: "Krótka wiadomość (opcjonalnie)",
       notePlaceholder: "Cokolwiek chcesz, żebyśmy wiedzieli...",
       submit: "Wyślij zgłoszenie",
+      submitting: "Wysyłanie...",
       close: "Zamknij",
       nameRequired: "Podaj imię i nazwisko.",
       contactRequired:
         "Podaj numer telefonu lub e-mail, żebyśmy mogli się skontaktować.",
       successTitle: "Jesteś na liście",
-      successBody: (email: string) =>
+      successBody:
+        "Dziękujemy! Twoje zgłoszenie zostało wysłane do zespołu HeatFit. Odezwiemy się wkrótce.",
+      successBodyMailtoFallback: (email: string) =>
         `Twoja aplikacja pocztowa powinna otworzyć się z gotową wiadomością. Jeśli tak się nie stało, napisz do nas bezpośrednio na ${email}.`,
+      errorTitle: "Nie udało się wysłać",
+      errorBody: (email: string) =>
+        `Nie udało się tego wysłać automatycznie. Spróbuj ponownie albo napisz do nas bezpośrednio na ${email}.`,
       emailSubject: "Zgłoszenie o wczesny dostęp do HeatFit",
       emailInterest: "Zainteresowanie",
       emailName: "Imię i nazwisko",

@@ -537,12 +537,18 @@ export const en = {
       noteLabel: "A short note (optional)",
       notePlaceholder: "Anything you'd like us to know...",
       submit: "Send my details",
+      submitting: "Sending...",
       close: "Close",
       nameRequired: "Enter your name.",
       contactRequired: "Enter a phone number or email so we can reach you.",
       successTitle: "You're on the list",
-      successBody: (email: string) =>
+      successBody:
+        "Thank you! Your request has been sent to the HeatFit team. We will be in touch soon.",
+      successBodyMailtoFallback: (email: string) =>
         `Your email app should have opened with your details ready to send. If it didn't, email us directly at ${email}.`,
+      errorTitle: "That didn't go through",
+      errorBody: (email: string) =>
+        `We couldn't send that automatically. Please try again, or email us directly at ${email}.`,
       emailSubject: "HeatFit early access request",
       emailInterest: "Interest",
       emailName: "Name",
