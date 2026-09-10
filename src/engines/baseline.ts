@@ -26,6 +26,7 @@ import {
   initialHouseholdCase,
 } from "../wizard/householdCases";
 import type {
+  BoilerClass,
   CoalType,
   ElectricityTariffCase,
   HouseholdCaseInputs,
@@ -47,6 +48,12 @@ export interface BaselineInputs {
 
   // Coal
   coalType: CoalType;
+  /**
+   * Emission class of the boiler burning it. Sets the conversion efficiency,
+   * which the sheet flattens to 0.80 for every coal row. Omit it and that flat
+   * sheet figure is used, which is what the sheet-regression tests rely on.
+   */
+  boilerClass?: BoilerClass;
   /** Tonnes bought per season, paid for at `coalPricePerTonnePln`. */
   coalTonnesPerSeason: number;
   /** What they actually paid. Beats the sheet's grade price, so it wins. */
@@ -67,9 +74,15 @@ export interface BaselineInputs {
 export interface BaselineEnergy {
   /** Useful heat the coal boiler actually delivered, kWh/y. */
   coalHeatDeliveredKwh: number;
-  /** Hot water drawn off, litres/y. */
+  /**
+   * Hot water drawn off, litres/y — the full tap volume, not blended down.
+   * `waterEnergyKwh` is the one that reflects `HOT_WATER_BLEND_FACTOR`.
+   */
   hotWaterLitresPerYear: number;
-  /** Useful energy that hot water needs, kWh/y, however it is made. */
+  /**
+   * Useful energy that hot water needs, kWh/y, however it is made. Already
+   * accounts for tap blending: not every litre drawn needed the full lift.
+   */
   waterEnergyKwh: number;
   /** The share of that made by the coal boiler, kWh/y. */
   waterEnergyFromCoalKwh: number;
@@ -147,14 +160,32 @@ export interface Baseline {
  *
  *   tonnes x kWh per tonne x boiler efficiency
  *
- * The sheet folds boiler efficiency into the fuel row rather than asking for
- * the boiler's emission class, so a class 5 and a no-class boiler burning
- * orzech deliver the same heat here. That is a known simplification; see
- * docs/baseline-model.md.
+ * The energy content comes from the fuel row; the efficiency does not have to.
+ * The sheet folds a flat 0.80 into every coal row, which credits a no-class
+ * kopciuch and a class 5 unit with exactly the same output from the same
+ * tonnage. Pass `efficiency` (from `boilerEfficiency`) to use the real class
+ * instead. Omitting it keeps the sheet's figure, which is what lets the
+ * sheet-regression tests stay honest.
  */
-export function coalHeatDelivered(tonnes: number, fuel: S.SheetFuel): number {
+export function coalHeatDelivered(
+  tonnes: number,
+  fuel: S.SheetFuel,
+  efficiency?: number,
+): number {
   const spec = S.SHEET_FUELS[fuel];
-  return tonnes * spec.kwhPerUnit * spec.efficiency;
+  return tonnes * spec.kwhPerUnit * (efficiency ?? spec.efficiency);
+}
+
+/**
+ * Emission class -> conversion efficiency.
+ *
+ * Undefined when the class was not collected, which is the signal to fall back
+ * to the fuel row's own figure rather than guess a class.
+ */
+export function boilerEfficiency(
+  boilerClass?: BoilerClass,
+): number | undefined {
+  return boilerClass ? S.BOILER_EFFICIENCY[boilerClass] : undefined;
 }
 
 // --- step 2: hot water ------------------------------------------------------
@@ -173,9 +204,29 @@ export function hotWaterLitres(
   return occupants * showersBathsPerWeek * S.LITRES_PER_SHOWER * 52;
 }
 
-/** Litres -> useful energy, kWh/y, at the sheet's 45 °C lift. */
+/**
+ * Litres -> useful energy, kWh/y, at the sheet's 45 °C lift.
+ *
+ * Sheet-verbatim: no blending here. `calculateBaseline` runs the litres through
+ * `effectiveHotWaterLitres` first — see that function for why — which keeps
+ * this one reproducing the sheet's own formula exactly and testable against it
+ * on its own.
+ */
 export function waterEnergyKwh(litres: number): number {
   return litres * S.WATER_KWH_PER_LITRE_45C;
+}
+
+/**
+ * Litres drawn at the tap -> litres that actually needed the full 45 °C lift.
+ *
+ * A shower or bath is not neat hot water: a mixing valve tempers water from
+ * the tank or boiler coil with cold mains to reach a comfortable temperature,
+ * so part of every litre counted by `hotWaterLitres` never touched the heat
+ * source. `HOT_WATER_BLEND_FACTOR` is the correction — see its docs for why it
+ * exists and what it deliberately does not change.
+ */
+export function effectiveHotWaterLitres(litres: number): number {
+  return litres * S.HOT_WATER_BLEND_FACTOR;
 }
 
 /**
@@ -270,10 +321,27 @@ export function calculateBaseline(input: BaselineInputs): Baseline {
     );
   }
 
+  // The boiler, not the fuel, sets how much of that energy reaches the rooms.
+  // Free coal burns in the same boiler, so it gets the same efficiency.
+  const efficiency = boilerEfficiency(input.boilerClass);
+  if (input.boilerClass) {
+    assumptions.push(
+      `Boiler taken as ${Math.round(S.BOILER_EFFICIENCY[input.boilerClass] * 100)}% efficient, the working figure for a ${S.BOILER_CLASS_LABEL[input.boilerClass]} boiler. The sheet assumes a flat 80% for every coal boiler; we use the class you gave instead.`,
+    );
+  } else {
+    assumptions.push(
+      `Boiler class was not given; used the sheet's flat ${Math.round(S.SHEET_FUELS[fuel].efficiency * 100)}% efficiency. The class changes this by up to a quarter, so it is worth asking.`,
+    );
+  }
+
   const freeTonnes = input.freeCoalTonnes ?? 0;
-  const paidHeat = coalHeatDelivered(input.coalTonnesPerSeason, fuel);
+  const paidHeat = coalHeatDelivered(
+    input.coalTonnesPerSeason,
+    fuel,
+    efficiency,
+  );
   const freeHeat = freeTonnes
-    ? coalHeatDelivered(freeTonnes, S.FREE_COAL_FUEL)
+    ? coalHeatDelivered(freeTonnes, S.FREE_COAL_FUEL, efficiency)
     : 0;
   const coalHeatDeliveredKwh = paidHeat + freeHeat;
 
@@ -290,9 +358,10 @@ export function calculateBaseline(input: BaselineInputs): Baseline {
 
   // --- hot water ------------------------------------------------------------
   const litres = hotWaterLitres(input.occupants, input.showersBathsPerWeek);
-  const waterEnergy = waterEnergyKwh(litres);
+  const effectiveLitres = effectiveHotWaterLitres(litres);
+  const waterEnergy = waterEnergyKwh(effectiveLitres);
   assumptions.push(
-    `Hot water assumes ${S.LITRES_PER_SHOWER} l per shower or bath; the sheet does not give this figure.`,
+    `Hot water assumes ${S.LITRES_PER_SHOWER} l per shower or bath, of which ${Math.round(S.HOT_WATER_BLEND_FACTOR * 100)}% needed full heating — the rest is cold water blended in at the tap.`,
   );
 
   const coalShare = coalShareOfHotWater(input.waterHeating);
@@ -305,7 +374,12 @@ export function calculateBaseline(input: BaselineInputs): Baseline {
   const waterEnergyFromCoalKwh = waterEnergy * coalShare;
   const waterEnergyFromElectricityKwh = waterEnergy - waterEnergyFromCoalKwh;
   const waterElectricityKwh =
-    waterEnergyFromElectricityKwh / S.SHEET_FUELS["electric boiler"].efficiency;
+    waterEnergyFromElectricityKwh / S.ELECTRIC_BOILER_EFFICIENCY;
+  if (waterEnergyFromElectricityKwh > 0) {
+    assumptions.push(
+      `Electric water heating taken as ${Math.round(S.ELECTRIC_BOILER_EFFICIENCY * 100)}% efficient.`,
+    );
+  }
 
   // --- space heat -----------------------------------------------------------
   // Whatever the boiler delivered that did not go into the taps.
@@ -443,8 +517,8 @@ export function calculateUserBaseline(
 /**
  * Wizard answers -> baseline inputs.
  *
- * The wizard collects more than the baseline needs (boiler class, radiator
- * notes, replacement preference). Narrowing here keeps `calculateBaseline`
+ * The wizard collects more than the baseline needs (radiator notes, coal
+ * provider, replacement preference). Narrowing here keeps `calculateBaseline`
  * honest about what it actually reads.
  */
 export function toBaselineInputs(h: HouseholdCaseInputs): BaselineInputs {
@@ -455,6 +529,7 @@ export function toBaselineInputs(h: HouseholdCaseInputs): BaselineInputs {
     acAvailable: h.acAvailable,
 
     coalType: h.coalType,
+    boilerClass: h.boilerClass,
     coalTonnesPerSeason: h.coalTonnesPerSeason,
     coalPricePerTonnePln: h.coalPricePerTonnePln,
     // The wizard keeps the tonnage field blank until the toggle is on, so an

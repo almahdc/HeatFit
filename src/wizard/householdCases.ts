@@ -9,7 +9,6 @@
 
 export type CoalType = "orzech" | "groszek" | "kostka" | "mul" | "other";
 export type BoilerClass = "bezklasowy" | "class3" | "class4" | "class5";
-export type FeedType = "manual" | "automatic";
 export type CityDeadlineNotice = "none" | "pressOrMediaOnly" | "officialLetter";
 export type RadiatorKind = "standard" | "floorHeating" | "mixed";
 export type HouseKind = "detached" | "semiDetached" | "apartment";
@@ -47,7 +46,6 @@ export interface HouseholdCaseInputs {
   freeCoalNote: string;
   boilerYear: number | "";
   boilerClass: BoilerClass;
-  feedType: FeedType;
   cityDeadlineNotice: CityDeadlineNotice;
   replacementPreference: ReplacementPreference;
   coalProvider: string;
@@ -86,7 +84,6 @@ export const initialHouseholdCase: HouseholdCaseInputs = {
   freeCoalNote: "",
   boilerYear: "",
   boilerClass: "class4",
-  feedType: "manual",
   cityDeadlineNotice: "none",
   replacementPreference: "undecided",
   coalProvider: "",
@@ -139,7 +136,6 @@ export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
       freeCoalNote: "Not asked",
       boilerYear: 2011,
       boilerClass: "bezklasowy",
-      feedType: "manual",
       cityDeadlineNotice: "pressOrMediaOnly",
       replacementPreference: "gas",
       coalProvider: "PGG (pgg.pl), delivered via regional KDW depot",
@@ -184,7 +180,6 @@ export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
       freeCoalNote: "From a relative's farm",
       boilerYear: 2017,
       boilerClass: "class4",
-      feedType: "manual",
       cityDeadlineNotice: "none",
       replacementPreference: "gas",
       coalProvider: "Private agricultural depot",
@@ -229,7 +224,6 @@ export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
       freeCoalNote: "",
       boilerYear: 2011,
       boilerClass: "class3",
-      feedType: "manual",
       cityDeadlineNotice: "none",
       replacementPreference: "pelletOrHeatPump",
       coalProvider: "Local fuel merchant with private transport",
@@ -273,7 +267,6 @@ export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
       freeCoalNote: "",
       boilerYear: 2013,
       boilerClass: "class3",
-      feedType: "manual",
       cityDeadlineNotice: "none",
       replacementPreference: "pelletOrHeatPump",
       coalProvider: "Local private fuel depot (skład opału)",

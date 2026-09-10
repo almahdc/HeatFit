@@ -1,11 +1,13 @@
 import { describe, expect, it } from "vitest";
 import {
+  boilerEfficiency,
   calculateBaseline,
   calculateUserBaseline,
   coalHeatDelivered,
   coalShareOfHotWater,
   coolingElectricity,
   electricityCost,
+  effectiveHotWaterLitres,
   hotWaterLitres,
   waterEnergyKwh,
 } from "../engines/baseline";
@@ -218,7 +220,7 @@ describe("calculateBaseline", () => {
 
   it("reports a building-condition figure the subsidy scope gate can band", () => {
     const b = calculateBaseline(teresa);
-    // 4.5 t x 8056 kWh/t x 0.80 = 29 002 kWh, less 416 kWh of hot water, over 130 m².
+    // 4.5 t x 8056 kWh/t x 0.80 = 29 002 kWh, less the (blended) hot water, over 130 m².
     expect(b.energy.spaceHeatPerM2).toBeGreaterThan(140);
   });
 
@@ -388,6 +390,189 @@ describe("calculateUserBaseline", () => {
     expect(janek.cost.coalPlnPerYear).toBe(noFree.cost.coalPlnPerYear);
     expect(janek.energy.coalHeatDeliveredKwh).toBeGreaterThan(
       noFree.energy.coalHeatDeliveredKwh,
+    );
+  });
+});
+
+describe("boiler efficiency by emission class", () => {
+  const base = {
+    heatedAreaM2: 100,
+    occupants: 2,
+    showersBathsPerWeek: 4,
+    acAvailable: false,
+    coalType: "orzech" as const,
+    coalTonnesPerSeason: 4,
+    coalPricePerTonnePln: 1300,
+    electricityTariff: "G11" as const,
+    electricityBillPlnPerMonth: 200,
+    waterHeating: "electricBoilerNew" as const,
+  };
+
+  it("maps each class to its agreed efficiency", () => {
+    expect(boilerEfficiency("bezklasowy")).toBe(0.6);
+    expect(boilerEfficiency("class3")).toBe(0.75);
+    expect(boilerEfficiency("class4")).toBe(0.75);
+    expect(boilerEfficiency("class5")).toBe(0.85);
+  });
+
+  it("returns undefined when no class was collected", () => {
+    expect(boilerEfficiency(undefined)).toBeUndefined();
+  });
+
+  it("uses the class efficiency instead of the fuel row's flat 0.80", () => {
+    const b = calculateBaseline({ ...base, boilerClass: "bezklasowy" });
+    expect(b.energy.coalHeatDeliveredKwh).toBeCloseTo(4 * 8056 * 0.6, 6);
+  });
+
+  it("falls back to the sheet's flat figure when the class is absent", () => {
+    const b = calculateBaseline(base);
+    expect(b.energy.coalHeatDeliveredKwh).toBeCloseTo(4 * 8056 * 0.8, 6);
+  });
+
+  it("rates free coal by the same boiler, not the fuel row", () => {
+    const b = calculateBaseline({
+      ...base,
+      boilerClass: "bezklasowy",
+      freeCoalTonnes: 1,
+    });
+    expect(b.energy.coalHeatDeliveredKwh).toBeCloseTo(
+      4 * 8056 * 0.6 + 1 * 7800 * 0.6,
+      6,
+    );
+  });
+
+  it("a worse boiler means less heat delivered from the same tonnage", () => {
+    const bad = calculateBaseline({ ...base, boilerClass: "bezklasowy" });
+    const good = calculateBaseline({ ...base, boilerClass: "class5" });
+    expect(bad.energy.coalHeatDeliveredKwh).toBeLessThan(
+      good.energy.coalHeatDeliveredKwh,
+    );
+    // ...which reads as a BETTER-insulated house, since the same rooms were
+    // heated on less delivered energy. This is the whole reason class matters.
+    expect(bad.energy.spaceHeatPerM2).toBeLessThan(good.energy.spaceHeatPerM2);
+  });
+
+  it("does not change what the household paid", () => {
+    const bad = calculateBaseline({ ...base, boilerClass: "bezklasowy" });
+    const good = calculateBaseline({ ...base, boilerClass: "class5" });
+    expect(bad.cost.totalPlnPerYear).toBeCloseTo(good.cost.totalPlnPerYear, 6);
+  });
+
+  it("names the efficiency it used in the assumptions", () => {
+    const b = calculateBaseline({ ...base, boilerClass: "class5" });
+    expect(b.assumptions.some((a) => /85% efficient.*class 5/.test(a))).toBe(
+      true,
+    );
+  });
+
+  it("says so in the assumptions when the class was not given", () => {
+    const b = calculateBaseline(base);
+    expect(b.assumptions.some((a) => /class was not given/i.test(a))).toBe(
+      true,
+    );
+  });
+
+  it("names the electric water heater efficiency when one is used", () => {
+    const b = calculateBaseline(base);
+    expect(
+      b.assumptions.some((a) => /Electric water heating taken as 98%/.test(a)),
+    ).toBe(true);
+  });
+
+  it("omits the electric water line when the coal boiler makes all of it", () => {
+    const b = calculateBaseline({
+      ...base,
+      waterHeating: "coalCentralAllYear",
+    });
+    expect(b.assumptions.some((a) => /Electric water heating/.test(a))).toBe(
+      false,
+    );
+  });
+
+  it("carries the persona's class through calculateUserBaseline", () => {
+    // Krysia's boiler is bezklasowy; Marek's is class 3.
+    const krysia = calculateUserBaseline("grandmaKrysia");
+    expect(krysia.energy.coalHeatDeliveredKwh).toBeCloseTo(5 * 8056 * 0.6, 6);
+    const marek = calculateUserBaseline("mrMarek");
+    expect(marek.energy.coalHeatDeliveredKwh).toBeCloseTo(5.5 * 8056 * 0.75, 6);
+  });
+});
+
+describe("hot water blending", () => {
+  it("discounts the drawn volume before pricing it as energy", () => {
+    expect(effectiveHotWaterLitres(1000)).toBeCloseTo(600, 6);
+  });
+
+  it("leaves the sheet-verbatim conversion untouched", () => {
+    // waterEnergyKwh on its own still reproduces the sheet's formula exactly —
+    // the blend is applied before this function is called, not inside it.
+    expect(waterEnergyKwh(1000)).toBe(50);
+  });
+
+  it("reports the full drawn volume, not the blended one", () => {
+    const teresa = {
+      heatedAreaM2: 130,
+      occupants: 1,
+      showersBathsPerWeek: 4,
+      acAvailable: false,
+      coalType: "kostka" as const,
+      coalTonnesPerSeason: 4.5,
+      coalPricePerTonnePln: 1400,
+      electricityTariff: "G11" as const,
+      electricityBillPlnPerMonth: 150,
+      waterHeating: "coalCentralAllYear" as const,
+    };
+    const b = calculateBaseline(teresa);
+    const litres = hotWaterLitres(teresa.occupants, teresa.showersBathsPerWeek);
+    expect(b.energy.hotWaterLitresPerYear).toBe(litres);
+    // But the energy those litres cost is the blended figure, not the raw one.
+    expect(b.energy.waterEnergyKwh).toBeCloseTo(
+      waterEnergyKwh(effectiveHotWaterLitres(litres)),
+      6,
+    );
+    expect(b.energy.waterEnergyKwh).toBeLessThan(waterEnergyKwh(litres));
+  });
+
+  it("tames the overestimate for a large, frequently-showering household", () => {
+    // Grandma Krysia: 5 people x 7 showers/week. Unblended, that is
+    // 5x7x40x52 = 72 800 l/y, an implausible amount of hot water for a house
+    // this size — the exact case the blend factor exists to fix.
+    const krysia = {
+      heatedAreaM2: 125,
+      occupants: 5,
+      showersBathsPerWeek: 7,
+      acAvailable: false,
+      coalType: "orzech" as const,
+      coalTonnesPerSeason: 5,
+      coalPricePerTonnePln: 1300,
+      electricityTariff: "G11" as const,
+      electricityBillPlnPerMonth: 400,
+      waterHeating: "electricBoilerNew" as const,
+    };
+    const b = calculateBaseline(krysia);
+    const rawLitres = hotWaterLitres(5, 7);
+    const naiveEnergy = waterEnergyKwh(rawLitres);
+    expect(b.energy.waterEnergyKwh).toBeCloseTo(naiveEnergy * 0.6, 6);
+    // Her electricity bill (400 zł/mo, G11 -> 4 800 kWh/y) now sits close to
+    // what the model expects, rather than badly understating it.
+    expect(Math.abs(b.electricity.gapKwh!)).toBeLessThan(500);
+  });
+
+  it("names the blend in the assumptions", () => {
+    const b = calculateBaseline({
+      heatedAreaM2: 100,
+      occupants: 2,
+      showersBathsPerWeek: 4,
+      acAvailable: false,
+      coalType: "orzech" as const,
+      coalTonnesPerSeason: 4,
+      coalPricePerTonnePln: 1300,
+      electricityTariff: "G11" as const,
+      electricityBillPlnPerMonth: 200,
+      waterHeating: "electricBoilerNew" as const,
+    });
+    expect(b.assumptions.some((a) => /60% needed full heating/.test(a))).toBe(
+      true,
     );
   });
 });

@@ -145,7 +145,6 @@ function FinancialsPlaceholder({
             label="Boiler"
             value={`${household.boilerClass}, ${household.boilerYear || "—"}`}
           />
-          <Fact label="Feed type" value={household.feedType} />
           <Fact
             label="Free/discounted coal"
             value={
@@ -182,6 +181,12 @@ function FinancialsPlaceholder({
             label="Gas connection"
             value={household.gasConnectionAvailable ? "Yes" : "No"}
           />
+          {/*
+            Battery and heat storage are still on HouseholdCaseInputs (the
+            wizard just does not collect them right now), so if either is ever
+            true — a persona edited by hand, say — it still shows up here
+            rather than silently vanishing.
+          */}
           <Fact
             label="PV / battery / storage"
             value={

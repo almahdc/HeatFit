@@ -335,3 +335,87 @@ export const DEFAULT_CONDITION_KWH_PER_M2 = SHEET_HOUSE_1.conditionKwhPerM2Year;
  * depends on it goes in front of a household.
  */
 export const LITRES_PER_SHOWER = 40;
+
+/**
+ * Share of a shower or bath's drawn volume that actually needed the full
+ * 45 °C lift.
+ *
+ * NOT IN THE SHEET, and not a sourced figure — an engineering-judgment
+ * correction, softer than `LITRES_PER_SHOWER` itself and equally reviewable.
+ *
+ * A shower is not neat hot water at the tap: a mixing valve tempers water
+ * heated in the tank (or the coal boiler's coil) with cold mains to reach a
+ * comfortable ~38-40 °C, so a chunk of the 40 l counted per shower never went
+ * near the heat source. Without this correction, `hotWaterLitres` scales
+ * linearly with occupants × showers per week, and a large household showering
+ * often (Grandma Krysia: 5 people × 7/week) reads as needing far more hot-water
+ * energy than a real coal boiler or immersion tank would show for it.
+ *
+ * Applying 0.6 here changes only the ENERGY side of the calculation
+ * (`waterEnergyKwh`, and everything downstream of it — the coal/electric split,
+ * the electricity reconciliation gap, the water-heating cost line). It does
+ * NOT change `hotWaterLitresPerYear`, which stays the full drawn volume: that
+ * number describes water a household actually used, and shrinking it to match
+ * the energy figure would misreport their own usage back to them.
+ */
+export const HOT_WATER_BLEND_FACTOR = 0.6;
+
+/**
+ * Boiler efficiency by emission class.
+ *
+ * NOT IN THE SHEET, and a deliberate departure from it. The sheet folds a flat
+ * 0.80 into every coal FUEL row, so a 1990s kopciuch and a modern class 5 unit
+ * burning the same orzech deliver the same heat. They do not, and the gap is
+ * large enough to move the number this whole product turns on: the building
+ * condition figure, which decides the Czyste Powietrze scope band.
+ *
+ * Using these means a household that burns a lot of coal through a bad boiler
+ * is no longer credited with a well-insulated house.
+ *
+ * These are the working figures agreed for the model, not sheet values. They
+ * sit in the range the class definitions imply (PN-EN 303-5 sets minimum
+ * efficiencies that rise with class) but they have no single published source
+ * yet, so treat them as reviewable.
+ */
+export const BOILER_EFFICIENCY: Record<
+  "bezklasowy" | "class3" | "class4" | "class5",
+  number
+> = {
+  bezklasowy: 0.6,
+  class3: 0.75,
+  class4: 0.75,
+  class5: 0.85,
+};
+
+/** Human-readable name per class, for assumption lines shown to the user. */
+export const BOILER_CLASS_LABEL: Record<
+  "bezklasowy" | "class3" | "class4" | "class5",
+  string
+> = {
+  bezklasowy: "no-class (bezklasowy)",
+  class3: "class 3",
+  class4: "class 4",
+  class5: "class 5",
+};
+
+/**
+ * Electric resistance water heater / boiler efficiency.
+ *
+ * Agrees with the sheet's own "electric boiler" FUEL row (0.98), so nothing
+ * moves by naming it here. It exists as its own constant because the water
+ * heating path should not have to reach into a fuel table to find it.
+ */
+export const ELECTRIC_BOILER_EFFICIENCY = 0.98;
+
+/**
+ * Gas boiler efficiency.
+ *
+ * DISAGREES WITH THE SHEET, which carries 0.92 in its gas FUEL row. 0.95 is the
+ * agreed working figure for a modern condensing unit. The sheet row is left
+ * untouched — this file does not quietly reconcile the two — so anything
+ * pricing gas must choose deliberately which one it means.
+ *
+ * Unused at baseline: a household still on coal has no gas boiler. Here for the
+ * replacement-scenario step.
+ */
+export const GAS_BOILER_EFFICIENCY = 0.95;

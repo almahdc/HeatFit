@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  BatteryCharging,
   Building,
   Calendar,
   Check,
@@ -9,7 +8,6 @@ import {
   FileText,
   Flame,
   Gauge,
-  Hand,
   Home,
   ListChecks,
   Mail,
@@ -19,7 +17,6 @@ import {
   Package,
   Receipt,
   Scale,
-  Settings,
   Shield,
   Snowflake,
   Sun,
@@ -46,7 +43,6 @@ import {
   CityDeadlineNotice,
   CoalType,
   ElectricityTariffCase,
-  FeedType,
   HOUSEHOLD_CASE_PRESETS,
   HouseholdCaseInputs,
   HouseKind,
@@ -127,21 +123,6 @@ const BOILER_CLASS_OPTIONS: IconCardOption<BoilerClass>[] = [
   { value: "class3", label: "Class 3", icon: Gauge },
   { value: "class4", label: "Class 4", icon: Gauge },
   { value: "class5", label: "Class 5", icon: Gauge },
-];
-
-const FEED_TYPE_OPTIONS: IconCardOption<FeedType>[] = [
-  {
-    value: "manual",
-    label: "Manual",
-    sublabel: "By hand, with a shovel",
-    icon: Hand,
-  },
-  {
-    value: "automatic",
-    label: "Automatic",
-    sublabel: "Feeder",
-    icon: Settings,
-  },
 ];
 
 const CITY_DEADLINE_OPTIONS: IconCardOption<CityDeadlineNotice>[] = [
@@ -498,15 +479,6 @@ export function CurrentHeatingSection({ value, onChange }: Props) {
       </div>
 
       <div>
-        <FieldLabel icon={Hand}>Feed type</FieldLabel>
-        <IconCardGroup
-          value={value.feedType}
-          onChange={(v) => onChange(update(value, "feedType", v))}
-          options={FEED_TYPE_OPTIONS}
-        />
-      </div>
-
-      <div>
         <FieldLabel icon={Megaphone}>Deadline info from city</FieldLabel>
         <IconCardGroup
           columns={3}
@@ -623,28 +595,20 @@ export function ElectricityWaterSection({ value, onChange }: Props) {
       </div>
 
       <div>
-        <FieldLabel>PV & storage setup</FieldLabel>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <FieldLabel>PV setup</FieldLabel>
+        {/*
+          Battery and heat storage are collected on HouseholdCaseInputs and
+          still shown on the financials summary once set, but hidden here for
+          now — coming back to this UI later. Do not delete hasBattery /
+          hasHeatStorage from the data model for this.
+        */}
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <ToggleCard
             icon={Sun}
             label="PV panels"
             sublabel="Solar electricity"
             checked={value.hasPvPanels}
             onChange={(v) => onChange(update(value, "hasPvPanels", v))}
-          />
-          <ToggleCard
-            icon={BatteryCharging}
-            label="Battery"
-            sublabel="Stores solar power"
-            checked={value.hasBattery}
-            onChange={(v) => onChange(update(value, "hasBattery", v))}
-          />
-          <ToggleCard
-            icon={Zap}
-            label="Heat storage"
-            sublabel="Buffer / thermal tank"
-            checked={value.hasHeatStorage}
-            onChange={(v) => onChange(update(value, "hasHeatStorage", v))}
           />
         </div>
       </div>
