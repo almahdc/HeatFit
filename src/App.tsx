@@ -4,6 +4,7 @@ import { EnergyAssessmentForm } from "./wizard/EnergyAssessmentForm";
 import { AssessmentState } from "./wizard/assessmentTypes";
 import { HouseholdCaseInputs } from "./wizard/householdCases";
 import { BaselineSummary } from "./wizard/BaselineSummary";
+import { AlternativeHeatingOptions } from "./wizard/AlternativeHeatingOptions";
 import { calculateUserBaseline } from "./engines/baseline";
 import { StyleTile } from "./StyleTile";
 
@@ -89,123 +90,143 @@ function FinancialsPlaceholder({
         The household state is already the merged result of a persona plus any
         edits, so it is passed wholesale as the override set with no persona id.
       */}
-      <BaselineSummary baseline={calculateUserBaseline("", household)} />
+      {(() => {
+        const baseline = calculateUserBaseline("", household);
+        return (
+          <div className="flex flex-col gap-6">
+            <BaselineSummary baseline={baseline} />
+            <AlternativeHeatingOptions
+              baseline={baseline}
+              electricityTariff={household.electricityTariff}
+            />
 
-      <section className="mt-6 rounded-[20px] border border-line bg-white p-6 shadow-block">
-        <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-[10px] bg-chip text-ink-soft">
-          <Sparkles className="h-5 w-5" aria-hidden />
-        </div>
-        <h2 className="text-[23px] font-bold tracking-tight text-ink">
-          The rest is coming soon
-        </h2>
-        <p className="mt-2 text-base text-ink-soft">
-          What a replacement costs, which subsidies you qualify for, and what
-          the monthly figure looks like on a loan will appear here next. For
-          now, here is what was collected:
-        </p>
+            <section className="rounded-[20px] border border-line bg-white p-6 shadow-block">
+              <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-[10px] bg-chip text-ink-soft">
+                <Sparkles className="h-5 w-5" aria-hidden />
+              </div>
+              <h2 className="text-[23px] font-bold tracking-tight text-ink">
+                Solar, grants, and financing are coming next
+              </h2>
+              <p className="mt-2 text-base text-ink-soft">
+                Netting out solar panels, which subsidies you qualify for, and
+                what the monthly figure looks like on a loan will layer onto the
+                running costs above. For now, here is what was collected:
+              </p>
 
-        <dl className="mt-6 grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
-          <Fact
-            label="Postal code"
-            value={assessment.location.postalCode || "—"}
-          />
-        </dl>
+              <dl className="mt-6 grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+                <Fact
+                  label="Postal code"
+                  value={assessment.location.postalCode || "—"}
+                />
+              </dl>
 
-        <h3 className="mt-8 text-xs font-semibold uppercase tracking-wider text-ink-soft/70">
-          Home & comfort
-        </h3>
-        <dl className="mt-3 grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
-          <Fact label="House type" value={household.houseKind} />
-          <Fact label="Insulation" value={household.insulation} />
-          <Fact label="Window frames" value={household.windowFrame} />
-          <Fact label="Heated area" value={`${household.heatedAreaM2} m²`} />
-          <Fact label="Radiators" value={household.radiatorType} />
-          <Fact label="Occupants" value={String(household.occupants)} />
-          <Fact
-            label="AC available"
-            value={household.acAvailable ? "Yes" : "No"}
-          />
-          <Fact label="Unheated rooms" value={household.unheatedRooms || "—"} />
-        </dl>
+              <h3 className="mt-8 text-xs font-semibold uppercase tracking-wider text-ink-soft/70">
+                Home & comfort
+              </h3>
+              <dl className="mt-3 grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+                <Fact label="House type" value={household.houseKind} />
+                <Fact label="Insulation" value={household.insulation} />
+                <Fact label="Window frames" value={household.windowFrame} />
+                <Fact
+                  label="Heated area"
+                  value={`${household.heatedAreaM2} m²`}
+                />
+                <Fact label="Radiators" value={household.radiatorType} />
+                <Fact label="Occupants" value={String(household.occupants)} />
+                <Fact
+                  label="AC available"
+                  value={household.acAvailable ? "Yes" : "No"}
+                />
+                <Fact
+                  label="Unheated rooms"
+                  value={household.unheatedRooms || "—"}
+                />
+              </dl>
 
-        <h3 className="mt-8 text-xs font-semibold uppercase tracking-wider text-ink-soft/70">
-          Current heating & fuel
-        </h3>
-        <dl className="mt-3 grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
-          <Fact label="Coal type" value={household.coalType} />
-          <Fact
-            label="Also burns wood"
-            value={household.usesWoodToo ? "Yes" : "No"}
-          />
-          <Fact
-            label="Coal bought"
-            value={`${household.coalTonnesPerSeason} t/season @ ${household.coalPricePerTonnePln} zł/t`}
-          />
-          <Fact
-            label="Boiler"
-            value={`${household.boilerClass}, ${household.boilerYear || "—"}`}
-          />
-          <Fact
-            label="Free/discounted coal"
-            value={
-              household.freeCoalReceived
-                ? `Yes (${household.freeCoalTonnes} t)`
-                : "No"
-            }
-          />
-          <Fact
-            label="City deadline notice"
-            value={household.cityDeadlineNotice}
-          />
-          <Fact
-            label="Replacement preference"
-            value={household.replacementPreference}
-          />
-          <Fact label="Coal provider" value={household.coalProvider || "—"} />
-        </dl>
+              <h3 className="mt-8 text-xs font-semibold uppercase tracking-wider text-ink-soft/70">
+                Current heating & fuel
+              </h3>
+              <dl className="mt-3 grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+                <Fact label="Coal type" value={household.coalType} />
+                <Fact
+                  label="Also burns wood"
+                  value={household.usesWoodToo ? "Yes" : "No"}
+                />
+                <Fact
+                  label="Coal bought"
+                  value={`${household.coalTonnesPerSeason} t/season @ ${household.coalPricePerTonnePln} zł/t`}
+                />
+                <Fact
+                  label="Boiler"
+                  value={`${household.boilerClass}, ${household.boilerYear || "—"}`}
+                />
+                <Fact
+                  label="Free/discounted coal"
+                  value={
+                    household.freeCoalReceived
+                      ? `Yes (${household.freeCoalTonnes} t)`
+                      : "No"
+                  }
+                />
+                <Fact
+                  label="City deadline notice"
+                  value={household.cityDeadlineNotice}
+                />
+                <Fact
+                  label="Replacement preference"
+                  value={household.replacementPreference}
+                />
+                <Fact
+                  label="Coal provider"
+                  value={household.coalProvider || "—"}
+                />
+              </dl>
 
-        <h3 className="mt-8 text-xs font-semibold uppercase tracking-wider text-ink-soft/70">
-          Electricity & water
-        </h3>
-        <dl className="mt-3 grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
-          <Fact
-            label="Electricity"
-            value={`${household.electricityTariff}, ${household.electricityBillPlnPerMonth} zł/mo`}
-          />
-          <Fact label="Water heating" value={household.waterHeating} />
-          <Fact
-            label="Showers/baths per week, per person"
-            value={String(household.showersBathsPerWeek)}
-          />
-          <Fact
-            label="Gas connection"
-            value={household.gasConnectionAvailable ? "Yes" : "No"}
-          />
-          {/*
+              <h3 className="mt-8 text-xs font-semibold uppercase tracking-wider text-ink-soft/70">
+                Electricity & water
+              </h3>
+              <dl className="mt-3 grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+                <Fact
+                  label="Electricity"
+                  value={`${household.electricityTariff}, ${household.electricityBillPlnPerMonth} zł/mo`}
+                />
+                <Fact label="Water heating" value={household.waterHeating} />
+                <Fact
+                  label="Showers/baths per week, per person"
+                  value={String(household.showersBathsPerWeek)}
+                />
+                <Fact
+                  label="Gas connection"
+                  value={household.gasConnectionAvailable ? "Yes" : "No"}
+                />
+                {/*
             Battery and heat storage are still on HouseholdCaseInputs (the
             wizard just does not collect them right now), so if either is ever
             true — a persona edited by hand, say — it still shows up here
             rather than silently vanishing.
           */}
-          <Fact
-            label="PV / battery / storage"
-            value={
-              [
-                household.hasPvPanels && "PV",
-                household.hasBattery && "Battery",
-                household.hasHeatStorage && "Heat storage",
-              ]
-                .filter(Boolean)
-                .join(", ") || "None"
-            }
-          />
-        </dl>
-        {household.additionalNotes && (
-          <p className="mt-4 text-sm italic text-ink-soft">
-            “{household.additionalNotes}”
-          </p>
-        )}
-      </section>
+                <Fact
+                  label="PV / battery / storage"
+                  value={
+                    [
+                      household.hasPvPanels && "PV",
+                      household.hasBattery && "Battery",
+                      household.hasHeatStorage && "Heat storage",
+                    ]
+                      .filter(Boolean)
+                      .join(", ") || "None"
+                  }
+                />
+              </dl>
+              {household.additionalNotes && (
+                <p className="mt-4 text-sm italic text-ink-soft">
+                  “{household.additionalNotes}”
+                </p>
+              )}
+            </section>
+          </div>
+        );
+      })()}
     </div>
   );
 }

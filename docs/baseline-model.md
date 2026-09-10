@@ -479,6 +479,8 @@ open, and question 4 above is the one that actually changes an answer.
 - **Capex and financing** — the SCENARIOS tab's `Capex /m` column is all zeros
   for the coal options (they carry `Is capex in the past? = TRUE`), so there is
   nothing to extract for the baseline. `financing.ts` covers this.
-- **Replacement options** — the fuel table's gas, pellet and heat pump rows are
-  transcribed and ready in `sheet.constants.ts`, but `baseline.ts` does not
-  price them. Baseline first, as asked.
+- **Replacement options** — RESOLVED for air-to-air HP, air-to-water HP and
+  pellet, at running cost only. See
+  [alternative-heating-model.md](alternative-heating-model.md). Gas is still
+  transcribed and unpriced; PV, capex, financing and subsidy remain layers on
+  top, not folded into this pass.

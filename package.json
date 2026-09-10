@@ -8,6 +8,7 @@
     "preview": "vite preview",
     "test": "tsc --noEmit && vitest run",
     "verify:baseline": "vite-node scripts/verify-baseline.ts",
+    "verify:alternatives": "vite-node scripts/verify-alternative-heating.ts",
     "watch": "vitest",
     "typecheck": "tsc --noEmit",
     "build:pages": "tsc --noEmit && vite build --mode pages",

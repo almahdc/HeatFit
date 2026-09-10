@@ -269,7 +269,7 @@ describe("calculateBaseline", () => {
     expect(b.electricity.modelledKwh).toBeGreaterThanOrEqual(
       S.DEFAULT_BASE_ELECTRICITY_KWH,
     );
-    expect(b.assumptions.some((a) => a.includes("No electricity bill"))).toBe(
+    expect(b.assumptions.some((a) => a.includes("did not give a bill"))).toBe(
       true,
     );
   });
@@ -460,14 +460,14 @@ describe("boiler efficiency by emission class", () => {
 
   it("names the efficiency it used in the assumptions", () => {
     const b = calculateBaseline({ ...base, boilerClass: "class5" });
-    expect(b.assumptions.some((a) => /85% efficient.*class 5/.test(a))).toBe(
-      true,
-    );
+    expect(
+      b.assumptions.some((a) => /class 5 boiler converts 85%/.test(a)),
+    ).toBe(true);
   });
 
   it("says so in the assumptions when the class was not given", () => {
     const b = calculateBaseline(base);
-    expect(b.assumptions.some((a) => /class was not given/i.test(a))).toBe(
+    expect(b.assumptions.some((a) => /did not tell us its class/.test(a))).toBe(
       true,
     );
   });
@@ -475,7 +475,9 @@ describe("boiler efficiency by emission class", () => {
   it("names the electric water heater efficiency when one is used", () => {
     const b = calculateBaseline(base);
     expect(
-      b.assumptions.some((a) => /Electric water heating taken as 98%/.test(a)),
+      b.assumptions.some((a) =>
+        /electric water heater is 98% efficient/.test(a),
+      ),
     ).toBe(true);
   });
 
@@ -484,7 +486,7 @@ describe("boiler efficiency by emission class", () => {
       ...base,
       waterHeating: "coalCentralAllYear",
     });
-    expect(b.assumptions.some((a) => /Electric water heating/.test(a))).toBe(
+    expect(b.assumptions.some((a) => /electric water heater/.test(a))).toBe(
       false,
     );
   });
@@ -571,7 +573,7 @@ describe("hot water blending", () => {
       electricityBillPlnPerMonth: 200,
       waterHeating: "electricBoilerNew" as const,
     });
-    expect(b.assumptions.some((a) => /60% needed full heating/.test(a))).toBe(
+    expect(b.assumptions.some((a) => /60% needed to be heated/.test(a))).toBe(
       true,
     );
   });

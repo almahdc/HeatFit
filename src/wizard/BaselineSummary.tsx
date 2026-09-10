@@ -112,6 +112,14 @@ export function BaselineSummary({ baseline }: { baseline: Baseline }) {
         Math.abs(electricity.gapKwh) > 500 &&
         (() => {
           const over = electricity.gapKwh! > 0;
+          // Hot water and cooling are the only two things our estimate adds on
+          // top of a flat "everything else" baseline. If neither contributed
+          // any kWh, they cannot be why a smaller-than-expected bill looks low
+          // - the flat baseline itself, sized for a typical household, is the
+          // only thing left that could be. Blaming hot water or cooling here
+          // would point at the wrong number.
+          const modelIncludedWaterOrCooling =
+            energy.waterElectricityKwh > 0 || energy.coolingElectricityKwh > 0;
           return (
             <div className="mt-5 flex gap-3 rounded-[14px] border border-line bg-[#fbfaf8] p-4 text-sm text-ink-soft">
               <AlertTriangle
@@ -129,7 +137,9 @@ export function BaselineSummary({ baseline }: { baseline: Baseline }) {
                 than we would expect from your answers.{" "}
                 {over
                   ? "That usually means an electric heater, an immersion tank, or a workshop we have not asked about yet."
-                  : "That usually means our hot water or cooling estimate is too generous for your household."}{" "}
+                  : modelIncludedWaterOrCooling
+                    ? "That usually means our hot water or cooling estimate is too generous for your household."
+                    : "That usually means the typical household we compare everyday electricity use against (lighting, fridge, and similar) uses more than your household does."}{" "}
                 We priced the bill you gave us, not our estimate.
               </p>
             </div>

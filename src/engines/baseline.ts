@@ -317,7 +317,7 @@ export function calculateBaseline(input: BaselineInputs): Baseline {
   const fuel = S.FUEL_FROM_COAL_TYPE[input.coalType];
   if (input.coalType === "other") {
     assumptions.push(
-      `Coal grade was not given; priced and rated as ${fuel}. Asking the grade is worth more than any other single answer here.`,
+      `We assumed ${fuel.toLowerCase()} coal, since you did not tell us the grade.`,
     );
   }
 
@@ -326,11 +326,11 @@ export function calculateBaseline(input: BaselineInputs): Baseline {
   const efficiency = boilerEfficiency(input.boilerClass);
   if (input.boilerClass) {
     assumptions.push(
-      `Boiler taken as ${Math.round(S.BOILER_EFFICIENCY[input.boilerClass] * 100)}% efficient, the working figure for a ${S.BOILER_CLASS_LABEL[input.boilerClass]} boiler. The sheet assumes a flat 80% for every coal boiler; we use the class you gave instead.`,
+      `We assumed your ${S.BOILER_CLASS_LABEL[input.boilerClass]} boiler converts ${Math.round(S.BOILER_EFFICIENCY[input.boilerClass] * 100)}% of the coal's energy into heat.`,
     );
   } else {
     assumptions.push(
-      `Boiler class was not given; used the sheet's flat ${Math.round(S.SHEET_FUELS[fuel].efficiency * 100)}% efficiency. The class changes this by up to a quarter, so it is worth asking.`,
+      `We assumed your boiler converts ${Math.round(S.SHEET_FUELS[fuel].efficiency * 100)}% of the coal's energy into heat, since you did not tell us its class.`,
     );
   }
 
@@ -349,7 +349,7 @@ export function calculateBaseline(input: BaselineInputs): Baseline {
     input.coalPricePerTonnePln ?? S.SHEET_FUELS[fuel].plnPerUnit;
   if (input.coalPricePerTonnePln === undefined) {
     assumptions.push(
-      `No price given for coal; used the sheet's ${fuel} price of ${pricePerTonne} zł/t.`,
+      `We assumed a coal price of ${pricePerTonne} zł per tonne, since you did not give one.`,
     );
   }
   const coalPlnPerYear =
@@ -361,13 +361,13 @@ export function calculateBaseline(input: BaselineInputs): Baseline {
   const effectiveLitres = effectiveHotWaterLitres(litres);
   const waterEnergy = waterEnergyKwh(effectiveLitres);
   assumptions.push(
-    `Hot water assumes ${S.LITRES_PER_SHOWER} l per shower or bath, of which ${Math.round(S.HOT_WATER_BLEND_FACTOR * 100)}% needed full heating — the rest is cold water blended in at the tap.`,
+    `We assumed ${S.LITRES_PER_SHOWER} litres of water per shower or bath, of which ${Math.round(S.HOT_WATER_BLEND_FACTOR * 100)}% needed to be heated. The rest mixes in as cold water at the tap.`,
   );
 
   const coalShare = coalShareOfHotWater(input.waterHeating);
   if (input.waterHeating === "electricSummerCoalWinter") {
     assumptions.push(
-      `Boiler shut for the summer: ${Math.round(SUMMER_DHW_SHARE.mid * 100)}% of hot water assumed made electrically (SUMMER_DHW_SHARE, unsourced).`,
+      `We assumed ${Math.round(SUMMER_DHW_SHARE.mid * 100)}% of your hot water is heated electrically over summer, since your boiler is shut down for the season.`,
     );
   }
 
@@ -377,7 +377,7 @@ export function calculateBaseline(input: BaselineInputs): Baseline {
     waterEnergyFromElectricityKwh / S.ELECTRIC_BOILER_EFFICIENCY;
   if (waterEnergyFromElectricityKwh > 0) {
     assumptions.push(
-      `Electric water heating taken as ${Math.round(S.ELECTRIC_BOILER_EFFICIENCY * 100)}% efficient.`,
+      `We assumed your electric water heater is ${Math.round(S.ELECTRIC_BOILER_EFFICIENCY * 100)}% efficient.`,
     );
   }
 
@@ -412,7 +412,7 @@ export function calculateBaseline(input: BaselineInputs): Baseline {
   const consumptionKwh = measuredKwh ?? modelledKwh;
   if (measuredKwh === null) {
     assumptions.push(
-      `No electricity bill given; modelled ${Math.round(modelledKwh)} kWh/y from the sheet's ${S.DEFAULT_BASE_ELECTRICITY_KWH} kWh base plus water heating and cooling.`,
+      `We assumed your yearly electricity use is about ${Math.round(modelledKwh)} kWh, based on a typical household's usage plus your hot water and cooling, since you did not give a bill.`,
     );
   }
 
