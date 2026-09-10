@@ -6,6 +6,13 @@
 // narrower domain than the generic AssessmentState used by the rest of the
 // wizard: so this stays its own module rather than folding into
 // assessmentTypes.ts.
+//
+// The free-text fields below (radiatorNote, unheatedRooms, coalPriceNote,
+// freeCoalNote, coalProvider, electricityBillNote, additionalNotes) are left
+// empty here on purpose: they are display prose, not data, so their real
+// values live in the i18n dictionary under `personas.cases.<id>.seed` and are
+// merged in at load time, in whichever language is active. See
+// `loadPreset` in HouseholdCaseStudy.tsx.
 
 export type CoalType = "orzech" | "groszek" | "kostka" | "mul" | "other";
 export type BoilerClass = "bezklasowy" | "class3" | "class4" | "class5";
@@ -121,33 +128,32 @@ export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
       radiatorNote: "",
       occupants: 5,
       acAvailable: false,
-      unheatedRooms: "None: whole house heated",
+      unheatedRooms: "",
 
       coalType: "orzech",
       usesWoodToo: false,
       coalTonnesPerSeason: 5,
       coalPricePerTonnePln: 1300,
-      coalPriceNote: "300 zł/t is transport: 1,000 zł/t ex-works",
+      coalPriceNote: "",
       freeCoalReceived: false,
       freeCoalTonnes: "",
-      freeCoalNote: "Not asked",
+      freeCoalNote: "",
       boilerYear: 2011,
       boilerClass: "bezklasowy",
       cityDeadlineNotice: "pressOrMediaOnly",
       replacementPreference: "gas",
-      coalProvider: "PGG (pgg.pl), delivered via regional KDW depot",
+      coalProvider: "",
 
       electricityTariff: "G11",
       electricityBillPlnPerMonth: 400,
-      electricityBillNote: "Prognoza, flat, 6-month settlement",
+      electricityBillNote: "",
       waterHeating: "electricBoilerNew",
       showersBathsPerWeek: 7,
       gasConnectionAvailable: true,
       hasPvPanels: false,
       hasBattery: false,
       hasHeatStorage: false,
-      additionalNotes:
-        "90% finances, 10% doesn't see why switching to clean energy is needed.",
+      additionalNotes: "",
     },
   },
   {
@@ -158,24 +164,24 @@ export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
       windowFrame: "woodenOld",
       heatedAreaM2: 130,
       radiatorType: "standard",
-      radiatorNote: "Small standard panels",
+      radiatorNote: "",
       occupants: 2,
       acAvailable: false,
-      unheatedRooms: "Guest room (~20 m²)",
+      unheatedRooms: "",
 
       coalType: "groszek",
       usesWoodToo: false,
       coalTonnesPerSeason: 4.8,
       coalPricePerTonnePln: 1250,
-      coalPriceNote: "Mixed grades (groszek / mieszanka)",
+      coalPriceNote: "",
       freeCoalReceived: true,
       freeCoalTonnes: 1,
-      freeCoalNote: "From a relative's farm",
+      freeCoalNote: "",
       boilerYear: 2017,
       boilerClass: "class4",
       cityDeadlineNotice: "none",
       replacementPreference: "gas",
-      coalProvider: "Private agricultural depot",
+      coalProvider: "",
 
       electricityTariff: "G11",
       electricityBillPlnPerMonth: 190,
@@ -197,11 +203,10 @@ export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
       windowFrame: "woodenOld",
       heatedAreaM2: 130,
       radiatorType: "standard",
-      radiatorNote: "Old, massive cast-iron radiators: extremely hot to touch",
+      radiatorNote: "",
       occupants: 1,
       acAvailable: false,
-      unheatedRooms:
-        "Upper-floor bedrooms / storage rooms (~50 m²) left completely unheated",
+      unheatedRooms: "",
 
       coalType: "kostka",
       usesWoodToo: false,
@@ -215,7 +220,7 @@ export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
       boilerClass: "class3",
       cityDeadlineNotice: "none",
       replacementPreference: "pelletOrHeatPump",
-      coalProvider: "Local fuel merchant with private transport",
+      coalProvider: "",
 
       electricityTariff: "G11",
       electricityBillPlnPerMonth: 150,
@@ -237,10 +242,10 @@ export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
       windowFrame: "doublePanePvc",
       heatedAreaM2: 150,
       radiatorType: "standard",
-      radiatorNote: "Old, large cast-iron radiators: extremely hot to touch",
+      radiatorNote: "",
       occupants: 4,
       acAvailable: false,
-      unheatedRooms: "Uninsulated attic space (~15 m²)",
+      unheatedRooms: "",
 
       coalType: "orzech",
       usesWoodToo: false,
@@ -254,7 +259,7 @@ export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
       boilerClass: "class3",
       cityDeadlineNotice: "none",
       replacementPreference: "pelletOrHeatPump",
-      coalProvider: "Local private fuel depot (skład opału)",
+      coalProvider: "",
 
       electricityTariff: "G12",
       electricityBillPlnPerMonth: 380,

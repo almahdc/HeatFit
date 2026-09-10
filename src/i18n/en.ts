@@ -84,24 +84,64 @@ export const en = {
         name: "Grandma Krysia",
         tagline: "Why touch it? Why change it?",
         description: "Uses an old off-class manual coal boiler.",
+        seed: {
+          radiatorNote: "",
+          unheatedRooms: "None: whole house heated",
+          coalPriceNote: "300 zł/t is transport: 1,000 zł/t ex-works",
+          freeCoalNote: "Not asked",
+          coalProvider: "PGG (pgg.pl), delivered via regional KDW depot",
+          electricityBillNote: "Prognoza, flat, 6-month settlement",
+          additionalNotes:
+            "90% finances, 10% doesn't see why switching to clean energy is needed.",
+        },
       },
       grandpaJanek: {
         name: "Grandpa Janek",
         tagline: "Everything at the last minute",
         description:
           "Has a gas connection at the fence and an aging Class 4 boiler from 2017.",
+        seed: {
+          radiatorNote: "Small standard panels",
+          unheatedRooms: "Guest room (~20 m²)",
+          coalPriceNote: "Mixed grades (groszek / mieszanka)",
+          freeCoalNote: "From a relative's farm",
+          coalProvider: "Private agricultural depot",
+          electricityBillNote: "",
+          additionalNotes: "",
+        },
       },
       mrsTeresa: {
         name: "Mrs. Teresa",
         tagline: "In the big house",
         description:
           "Living alone in a large legacy home with massive radiators and unheated upper rooms.",
+        seed: {
+          radiatorNote:
+            "Old, massive cast-iron radiators: extremely hot to touch",
+          unheatedRooms:
+            "Upper-floor bedrooms / storage rooms (~50 m²) left completely unheated",
+          coalPriceNote: "",
+          freeCoalNote: "",
+          coalProvider: "Local fuel merchant with private transport",
+          electricityBillNote: "",
+          additionalNotes: "",
+        },
       },
       mrMarek: {
         name: "Mr. Marek",
         tagline: "On the night tariff",
         description:
           "A pragmatic optimizer using the G12 night tariff, Orzech coal, and night-active water heating.",
+        seed: {
+          radiatorNote:
+            "Old, large cast-iron radiators: extremely hot to touch",
+          unheatedRooms: "Uninsulated attic space (~15 m²)",
+          coalPriceNote: "",
+          freeCoalNote: "",
+          coalProvider: "Local private fuel depot (skład opału)",
+          electricityBillNote: "",
+          additionalNotes: "",
+        },
       },
     },
   },

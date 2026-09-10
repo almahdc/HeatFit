@@ -234,11 +234,18 @@ export function PersonaPicker({ value, onChange }: Props) {
   const [selectedPresetId, setSelectedPresetId] =
     useState<HouseholdCaseId>("grandmaKrysia");
 
+  // The free-text fields (coalProvider, unheatedRooms, and so on) are display
+  // prose, not data, so they live in the dictionary rather than on the preset
+  // itself: merging them in here is what makes a loaded persona read in
+  // whichever language is active. Loading again later (or switching language
+  // and reloading the same persona) always reapplies this language's text; it
+  // is only the fields the household has since typed over that this leaves
+  // alone, because loading does not run again on its own.
   const loadPreset = (id: HouseholdCaseId) => {
     const preset = HOUSEHOLD_CASE_PRESETS.find((p) => p.id === id);
     if (!preset) return;
     setSelectedPresetId(id);
-    onChange(preset.data);
+    onChange({ ...preset.data, ...t.personas.cases[id].seed });
   };
 
   useEffect(() => {
@@ -246,9 +253,13 @@ export function PersonaPicker({ value, onChange }: Props) {
       (p) => p.id === "grandmaKrysia",
     );
     if (grandmaPreset) {
-      onChange(grandmaPreset.data);
+      onChange({
+        ...grandmaPreset.data,
+        ...t.personas.cases.grandmaKrysia.seed,
+      });
     }
-  }, []); // Load Grandma Krysia on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Load Grandma Krysia on mount, in whichever language is active then.
 
   return (
     <Block title={t.personas.title} subtitle={t.personas.subtitle}>

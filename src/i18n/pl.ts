@@ -78,24 +78,63 @@ export const pl: Dictionary = {
         name: "Babcia Krysia",
         tagline: "Po co to ruszać? Po co zmieniać?",
         description: "Używa starego, bezklasowego kotła węglowego zasypowego.",
+        seed: {
+          radiatorNote: "",
+          unheatedRooms: "Brak: cały dom ogrzewany",
+          coalPriceNote: "300 zł/t to transport: 1000 zł/t loco kopalnia",
+          freeCoalNote: "Nie pytano",
+          coalProvider: "PGG (pgg.pl), dostawa przez regionalny skład KDW",
+          electricityBillNote: "Prognoza, ryczałt, rozliczenie co pół roku",
+          additionalNotes:
+            "90% finansuje, 10% nie widzi potrzeby przechodzenia na czystą energię.",
+        },
       },
       grandpaJanek: {
         name: "Dziadek Janek",
         tagline: "Wszystko na ostatnią chwilę",
         description:
           "Ma przyłącze gazowe przy płocie i starzejący się kocioł klasy 4 z 2017 roku.",
+        seed: {
+          radiatorNote: "Małe standardowe grzejniki płytowe",
+          unheatedRooms: "Pokój gościnny (~20 m²)",
+          coalPriceNote: "Mieszane sortymenty (groszek / mieszanka)",
+          freeCoalNote: "Z gospodarstwa krewnego",
+          coalProvider: "Prywatny skład rolniczy",
+          electricityBillNote: "",
+          additionalNotes: "",
+        },
       },
       mrsTeresa: {
         name: "Pani Teresa",
         tagline: "W dużym domu",
         description:
           "Mieszka sama w dużym, starym domu z ogromnymi grzejnikami i nieogrzewanymi pokojami na piętrze.",
+        seed: {
+          radiatorNote:
+            "Stare, masywne żeliwne grzejniki: bardzo gorące w dotyku",
+          unheatedRooms:
+            "Sypialnie / pomieszczenia gospodarcze na piętrze (~50 m²) całkowicie nieogrzewane",
+          coalPriceNote: "",
+          freeCoalNote: "",
+          coalProvider: "Lokalny skład opału z własnym transportem",
+          electricityBillNote: "",
+          additionalNotes: "",
+        },
       },
       mrMarek: {
         name: "Pan Marek",
         tagline: "Na taryfie nocnej",
         description:
           "Praktyczny optymalizator: taryfa nocna G12, węgiel orzech i podgrzewanie wody w nocy.",
+        seed: {
+          radiatorNote: "Stare, duże żeliwne grzejniki: bardzo gorące w dotyku",
+          unheatedRooms: "Nieocieplony strych (~15 m²)",
+          coalPriceNote: "",
+          freeCoalNote: "",
+          coalProvider: "Lokalny prywatny skład opału",
+          electricityBillNote: "",
+          additionalNotes: "",
+        },
       },
     },
   },

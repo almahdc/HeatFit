@@ -26,15 +26,22 @@ const I18nContext = createContext<I18nValue | null>(null);
 const isLanguage = (value: string | null): value is Language =>
   value !== null && (LANGUAGES as readonly string[]).includes(value);
 
-/** Stored choice first, then the browser's own language, then English. */
+/**
+ * Stored choice first, then Polish.
+ *
+ * This tool is scoped to Polish addresses and Polish subsidy programmes, so
+ * Polish is the default regardless of the browser's own language: a visitor
+ * with an English browser is not assumed to want English any more than a
+ * Polish one is.
+ */
 function initialLanguage(): Language {
   try {
     const stored = window.localStorage.getItem(STORAGE_KEY);
     if (isLanguage(stored)) return stored;
   } catch {
-    // Private mode or blocked site data: fall through to the browser default.
+    // Private mode or blocked site data: fall through to the default.
   }
-  return navigator.language.toLowerCase().startsWith("pl") ? "pl" : "en";
+  return "pl";
 }
 
 export function I18nProvider({ children }: { children: ReactNode }) {
