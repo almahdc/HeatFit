@@ -1,11 +1,11 @@
 /**
- * subsidy.ts — which grants apply, how much, and what cannot be stacked.
+ * subsidy.ts: which grants apply, how much, and what cannot be stacked.
  *
  * Design rule: THIS FILE CONTAINS NO ZŁOTY AMOUNT IN ITS LOGIC.
  *
  * Every figure lives in a ProgrammeSet, which is data. Amounts are contested
  * (public sources disagree by an order of magnitude) and the programme changed
- * on 20.07.2026. So the amounts must be editable at runtime — including live on
+ * on 20.07.2026. So the amounts must be editable at runtime: including live on
  * stage, mid-demo, when someone says "that number is wrong."
  *
  * The engine's job is the part that does not change: eligibility gates and the
@@ -61,7 +61,7 @@ export interface Programme {
   shareByLevel: Partial<Record<IncomeLevel, number>>;
   /**
    * Programmes that cannot be claimed alongside this one for the SAME device.
-   * Polish subsidies do not stack on a single device — getting this wrong is
+   * Polish subsidies do not stack on a single device: getting this wrong is
    * how homeowners end up repaying a grant with interest.
    */
   excludesForSameDevice: string[];
@@ -113,7 +113,7 @@ export interface Applicant {
 
 // --- the programme set ------------------------------------------------------
 // Placeholder amounts. Every one is expected to be wrong until the NFOŚiGW
-// programme document is read. That is fine — see the file header — but the
+// programme document is read. That is fine: see the file header: but the
 // `verified` flag must stay false until it has been, and the UI must say so.
 
 export const DEFAULT_PROGRAMMES: Programme[] = [
@@ -247,12 +247,12 @@ function grantValue(
  *
  * Two passes, and the order is not cosmetic:
  *
- *   Pass 1 — cash grants. Gates, then exclusions resolved by keeping the
+ *   Pass 1: cash grants. Gates, then exclusions resolved by keeping the
  *            larger award.
- *   Pass 2 — tax relief, computed on cost MINUS the grants from pass 1,
+ *   Pass 2: tax relief, computed on cost MINUS the grants from pass 1,
  *            because you cannot deduct money somebody else paid.
  *
- * Nothing is silently dropped — every programme comes back in `detail` with a
+ * Nothing is silently dropped: every programme comes back in `detail` with a
  * reason a person can read.
  */
 export function subsidiesFor(
@@ -448,7 +448,7 @@ export function subsidiesFor(
  * and hardest-to-finance item covered.
  *
  * Tax relief is resolved once at the end over the project's whole own spend,
- * because the deduction cap is per taxpayer per year — not per device.
+ * because the deduction cap is per taxpayer per year: not per device.
  */
 
 export interface ProjectItem {

@@ -25,7 +25,7 @@ const READY: Applicant = {
 };
 
 describe("subsidy engine", () => {
-  it("contains no hardcoded amounts of its own — everything comes from the programme set", () => {
+  it("contains no hardcoded amounts of its own: everything comes from the programme set", () => {
     // If someone inlines a złoty figure in the engine, passing an empty set
     // should still produce a grant, and this test catches it.
     const out = subsidiesFor("heatPump", 45000, READY, []);
@@ -101,7 +101,7 @@ describe("subsidy engine", () => {
   it("survives the amounts being edited live, which is the whole point", () => {
     // The cap has to be edited to something that actually BINDS to prove the
     // edit took effect. At the basic tier the programme pays 40%, so on a
-    // 45 000 zł job the rate alone caps the award at 18 000 — editing the
+    // 45 000 zł job the rate alone caps the award at 18 000: editing the
     // ceiling to anything above that changes nothing, which is correct
     // behaviour and useless as a test. It also has to stay the LARGEST award
     // on offer, or the exclusion pass hands the device to Ciepłe Mieszkanie
@@ -128,7 +128,7 @@ describe("financing", () => {
     // BOŚ representative example: 46 900 zł, 6.76% nominal, 84 instalments,
     // stated total interest 12 097,99 zł, arrangement fee 938 zł separately.
     // Amortising the principal ALONE reproduces their interest figure exactly.
-    // Rolling the 2% fee into the loan does not — which is how we know the fee
+    // Rolling the 2% fee into the loan does not: which is how we know the fee
     // is paid up front rather than financed.
     const pmt = monthlyPayment(46900, 0.0676, 84);
     expect(pmt * 84 - 46900).toBeCloseTo(12097.99, 1);

@@ -44,11 +44,23 @@ export const GRANT_LINE_FOR_OPTION: Record<AlternativeHeatingId, string> = {
   pellet: "H7",
 };
 
-export const INCOME_TIER_LABEL: Record<IncomeTier, string> = {
-  basic: "Basic",
-  increased: "Increased",
-  highest: "Highest",
-};
+/**
+ * Things the household must be told, as data rather than prose.
+ *
+ * The sentence itself lives in the i18n dictionary under `grantWarnings`,
+ * keyed by `code`; everything the sentence needs to interpolate travels with
+ * it here. That keeps this engine free of any one language, and keeps the
+ * numbers it computed attached to the claim they support.
+ */
+export type GrantWarning =
+  | { code: "highestTierUnavailable"; spaceHeatPerM2: number }
+  | {
+      code: "heatSourceNotEligibleAlone";
+      spaceHeatPerM2: number;
+      /** Which scope band's end state applies. */
+      projectType: S.SheetScopeBand["projectType"];
+    }
+  | { code: "solarPvPaused"; capPln: number };
 
 export interface GrantLine {
   /** The subsidies tab row this came from, e.g. "H3". */
@@ -77,8 +89,8 @@ export interface GrantResult {
   heating: GrantLine | null;
   solar: GrantLine | null;
   totalGrantPln: number;
-  /** Things the household must be told. Shown verbatim. */
-  warnings: string[];
+  /** Things the household must be told. Rendered by the dictionary. */
+  warnings: GrantWarning[];
 }
 
 /** The scope band a building's pre-project demand falls in. */
@@ -153,26 +165,26 @@ export function calculateGrant({
   spaceHeatPerM2: number;
 }): GrantResult {
   const band = scopeBandFor(spaceHeatPerM2);
-  const warnings: string[] = [];
+  const warnings: GrantWarning[] = [];
 
   let tier = requestedTier;
   if (tier === "highest" && !band.highestTierAvailable) {
     tier = "increased";
-    warnings.push(
-      `The highest funding level is only open to buildings above 140 kWh/m²/y. ` +
-        `This one is around ${Math.round(spaceHeatPerM2)}, so the increased level applies instead.`,
-    );
+    warnings.push({
+      code: "highestTierUnavailable",
+      spaceHeatPerM2: Math.round(spaceHeatPerM2),
+    });
   }
 
   const heatSourceEligible = band.heatSourceAloneEligible;
   let heating: GrantLine | null = null;
 
   if (!heatSourceEligible) {
-    warnings.push(
-      `At around ${Math.round(spaceHeatPerM2)} kWh/m²/y, Czyste Powietrze will not fund a new heat source on its own. ` +
-        `The building has to be insulated as part of the same project, reaching ${band.requiredEndState}. ` +
-        `HeatFit does not price insulation work yet, so no grant is counted here.`,
-    );
+    warnings.push({
+      code: "heatSourceNotEligibleAlone",
+      spaceHeatPerM2: Math.round(spaceHeatPerM2),
+      projectType: band.projectType,
+    });
   } else {
     const line = S.SHEET_GRANT_LINES[GRANT_LINE_FOR_OPTION[optionId]]!;
     heating = claim(line, heatingCapexPln, tier);
@@ -190,11 +202,10 @@ export function calculateGrant({
       amountPln: solarCapexPln * rate,
       cappedOut: false,
     };
-    warnings.push(
-      `The solar figure follows the sheet's own PV rate. The subsidies tab records PV support running through ` +
-        `przydomowemagazyny.gov.pl, capped at ${S.SHEET_PV_GRANT_PAUSED_CAP_PLN.toLocaleString("pl-PL", { useGrouping: true })} zł, ` +
-        `and marks that programme PAUSED : so treat this line as indicative, not as money you can count on.`,
-    );
+    warnings.push({
+      code: "solarPvPaused",
+      capPln: S.SHEET_PV_GRANT_PAUSED_CAP_PLN,
+    });
   }
 
   return {

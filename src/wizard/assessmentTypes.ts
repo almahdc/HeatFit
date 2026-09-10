@@ -87,7 +87,7 @@ export const initialAssessmentState: AssessmentState = {
  * The four figures the rest of the calculator is priced from.
  *
  * Left null until the real coefficients (climate zone by postal code,
- * insulation/window U-values, appliance loads, …) are finalised — a wizard
+ * insulation/window U-values, appliance loads, …) are finalised: a wizard
  * this size should not ship guessed numbers dressed up as an estimate.
  */
 export interface EnergyProfileEstimate {

@@ -1,8 +1,8 @@
-# Baseline model — extracted from `price_calculator`
+# Baseline model: extracted from `price_calculator`
 
 What this is: every constant and formula taken out of the `price_calculator`
-sheet (all tabs except subsidies) and turned into code, so the baseline — what a
-household is paying today, on coal — can be computed from the wizard's answers.
+sheet (all tabs except subsidies) and turned into code, so the baseline: what a
+household is paying today, on coal: can be computed from the wizard's answers.
 
 Source sheet: [`price_calculator`](https://docs.google.com/spreadsheets/d/1F6GGkd0rCYwusvp986ifhh2VAxyXdX2rHGsk0I04o6E/edit)
 · read 2026-09-09.
@@ -10,13 +10,13 @@ Source sheet: [`price_calculator`](https://docs.google.com/spreadsheets/d/1F6GGk
 | File                                                                  | What it holds                                                            |
 | --------------------------------------------------------------------- | ------------------------------------------------------------------------ |
 | [`src/data/sheet.constants.ts`](../src/data/sheet.constants.ts)       | Every number, transcribed verbatim, each labelled with its sheet section |
-| [`src/engines/baseline.ts`](../src/engines/baseline.ts)               | The formulas, and `calculateUserBaseline` — the only entry point         |
+| [`src/engines/baseline.ts`](../src/engines/baseline.ts)               | The formulas, and `calculateUserBaseline`: the only entry point         |
 | [`src/__tests__/baseline.test.ts`](../src/__tests__/baseline.test.ts) | Reproduces the sheet's own worked scenarios                              |
 | [`src/wizard/BaselineSummary.tsx`](../src/wizard/BaselineSummary.tsx) | The block that renders it on the financials screen                       |
 
 `baseline.ts` is the **single source of truth**. The band-based
 `runningCost.ts`, which computed a second and disagreeing baseline, was deleted
-when this landed — recover it from git history if its pellet and heat-pump
+when this landed: recover it from git history if its pellet and heat-pump
 scenario functions are wanted for the replacement-options step.
 
 Run `npm test` to check the whole thing against the sheet.
@@ -38,7 +38,7 @@ Run `npm test` to check the whole thing against the sheet.
 | Standard | 1.00    | G11           |
 | Dynamic  | 0.70    | G12           |
 
-One blended all-in number per tariff — the sheet does not model peak vs
+One blended all-in number per tariff: the sheet does not model peak vs
 off-peak separately.
 
 ### PV block
@@ -53,7 +53,7 @@ off-peak separately.
 
 | Source                       | SEER | Sheet kWh | Cooling only? |
 | ---------------------------- | ---- | --------- | ------------- |
-| none                         | —    | 0         | no            |
+| none                         |:    | 0         | no            |
 | AC                           | 5.0  | 750       | yes           |
 | air-to-air HP                | 5.0  | 750       | no            |
 | air-to-water HP AC fan coils | 4.0  | 940       | yes           |
@@ -75,7 +75,7 @@ off-peak separately.
 | air-to-air HP water   | 1.0      | kWh  | 2.60       | 0        | 0           | yes       | yes                 |
 | air-to-water HP water | 1.0      | kWh  | 2.30       | 0        | 0           | yes       | yes                 |
 
-**"Miner"** is the _deputat węglowy_ — coal received free or deeply discounted.
+**"Miner"** is the _deputat węglowy_: coal received free or deeply discounted.
 Full energy content, zero price. The wizard collects this as `freeCoalReceived`
 / `freeCoalTonnes`.
 
@@ -83,7 +83,7 @@ Full energy content, zero price. The wizard collects this as `freeCoalReceived`
 2 915 kWh/t, against orzech's 6 445. Less than half the useful heat per tonne.
 This is why asking the grade matters more than almost any other question.
 
-### HOUSE SCENARIOS block — House 1
+### HOUSE SCENARIOS block: House 1
 
 | Field                | Value        |
 | -------------------- | ------------ |
@@ -129,7 +129,7 @@ assumptions shown to the household.
 Two more efficiencies are named alongside these: **electric boiler 0.98**, which
 agrees with the sheet's own row and is what the hot-water branch divides by, and
 **gas boiler 0.95**, which does _not_ agree with the sheet's 0.92 and is unused
-at baseline — it is there for the replacement-scenario step. See the
+at baseline: it is there for the replacement-scenario step. See the
 disagreements table at the end.
 
 ### Hot water
@@ -141,13 +141,13 @@ useful energy     = effective litres × 0.05 kWh/l
 ```
 
 The blend step is new. A shower's 40 l is the whole mixed flow at the tap, not
-neat hot water — a mixing valve tempers it with cold mains to reach a
+neat hot water: a mixing valve tempers it with cold mains to reach a
 comfortable temperature, so part of it never touched the boiler. Without this
 correction the litres figure scales linearly with occupants × showers per week,
 and a large household showering often reads as needing far more hot-water
 energy than a real boiler or immersion tank would show for it (see the Krysia
 gap below). `hotWaterLitresPerYear` in the model's output is still the full,
-unblended draw — a household's own water use should not be reported back to
+unblended draw: a household's own water use should not be reported back to
 them shrunk to match an internal energy correction. Only `waterEnergyKwh`, and
 everything computed from it, reflects the blend.
 
@@ -156,7 +156,7 @@ answer:
 
 | Answer                     | Coal's share                                     |
 | -------------------------- | ------------------------------------------------ |
-| `coalCentralAllYear`       | 1.00 — boiler lit in July just for washing water |
+| `coalCentralAllYear`       | 1.00: boiler lit in July just for washing water |
 | `electricSummerCoalWinter` | 1 − `SUMMER_DHW_SHARE` (0.42)                    |
 | `electricBoilerNew`        | 0                                                |
 | `electricNightTariff`      | 0                                                |
@@ -171,7 +171,7 @@ space heat  = coal heat delivered − hot water made by coal
 condition   = space heat / heated area          (kWh/m²/y)
 ```
 
-That condition figure is the most consequential output here — it is what the
+That condition figure is the most consequential output here: it is what the
 Czyste Powietrze scope gate bands on (below 80 / 80–140 / above 140). It is
 derived from **measured tonnage in this specific house**, not from floor area,
 which is the thing that separates this tool from every other Polish calculator.
@@ -184,7 +184,7 @@ electricity = demand / SEER
 ```
 
 25 kWh/m²/y is **derived, not stated**: House 1's 3 750 kWh over 150 m². It
-checks out both ways against the SEER column — 3750/5 = 750 and 3750/4 = 937.5,
+checks out both ways against the SEER column: 3750/5 = 750 and 3750/4 = 937.5,
 which the sheet shows as 940.
 
 ### Electricity, with PV
@@ -206,7 +206,7 @@ cost          = import − export credit
 
 **The important subtlety:** `share used directly` multiplies **consumption**,
 not generation. The label suggests the opposite. Consumption is the reading that
-reproduces the sheet's outputs exactly — see the verification table below, where
+reproduces the sheet's outputs exactly: see the verification table below, where
 the generation reading misses by 25 zł/month on the very first scenario.
 
 Two consequences worth knowing before this number goes in front of anyone:
@@ -269,7 +269,7 @@ constant is ever mistyped the suite says which.
 
 ---
 
-## 4. Open questions — things to check in the sheet
+## 4. Open questions: things to check in the sheet
 
 These are places where the sheet does not agree with itself. Nothing has been
 silently corrected; each is preserved as-is and flagged.
@@ -279,7 +279,7 @@ silently corrected; each is preserved as-is and flagged.
 A 4% difference. Is 2 600 typed by hand, or is 0.05 the rounded one?
 
 **2. House 1's space heat is 18 050 kWh, but 150 m² × 120 kWh/m²/y = 18 000.**
-A 0.3% difference — small, but it means one of the three numbers is not derived
+A 0.3% difference: small, but it means one of the three numbers is not derived
 from the other two.
 
 **3. The `Miner72`/`Miner73` scenarios miss by 0.8 zł/month.** These are the
@@ -290,7 +290,7 @@ House 1's stated 2 600 kWh. Working backwards, the sheet's chain appears to use
 question as (1). 0.34%, so it does not affect any conclusion, but it means the
 water-heating branch is the one part of the model not pinned exactly.
 
-**4. Boiler efficiency lives in the fuel row, not the boiler.** RESOLVED — the
+**4. Boiler efficiency lives in the fuel row, not the boiler.** RESOLVED: the
 baseline now takes efficiency from the emission class (0.60 / 0.75 / 0.75 / 0.85)
 instead of the sheet's flat 0.80. Every persona's condition figure moved.
 
@@ -299,8 +299,8 @@ set of numbers rather than an adoption of the second:
 
 - **It collapses feed type**, which
   [`constants.pl.ts`](../src/data/constants.pl.ts) treats as moving efficiency
-  about as much as class does. The wizard no longer asks for it — the field was
-  removed as collected-but-unused — so there is nothing left to feed a
+  about as much as class does. The wizard no longer asks for it: the field was
+  removed as collected-but-unused: so there is nothing left to feed a
   feed-type-aware table even if one were wired in. All four personas were
   hand-fed anyway, the worse case, before the field was dropped.
 - **It sits at or above the sourced hand-fed bands.** Against
@@ -308,10 +308,10 @@ set of numbers rather than an adoption of the second:
 
   | Class    | Sourced band       | We use                    |
   | -------- | ------------------ | ------------------------- |
-  | No class | 0.40 / 0.50 / 0.60 | **0.60** — the ceiling    |
-  | Class 3  | 0.60 / 0.66 / 0.72 | **0.75** — above the band |
-  | Class 4  | 0.72 / 0.77 / 0.82 | 0.75 — inside             |
-  | Class 5  | 0.78 / 0.83 / 0.87 | 0.85 — inside             |
+  | No class | 0.40 / 0.50 / 0.60 | **0.60**: the ceiling    |
+  | Class 3  | 0.60 / 0.66 / 0.72 | **0.75**: above the band |
+  | Class 4  | 0.72 / 0.77 / 0.82 | 0.75: inside             |
+  | Class 5  | 0.78 / 0.83 / 0.87 | 0.85: inside             |
 
   Being generous about an old boiler makes the _building_ look worse, since the
   same rooms were heated on more delivered energy. Class 3 in particular reads
@@ -333,7 +333,7 @@ that depends on it is shown to a household.
 
 PARTIALLY ADDRESSED: `HOT_WATER_BLEND_FACTOR` (0.6) now sits on top of it,
 correcting for the fact that a shower's 40 l is the whole mixed flow at the tap,
-not neat hot water — a mixing valve tempers it with cold mains, so part of it
+not neat hot water: a mixing valve tempers it with cold mains, so part of it
 never reached the boiler. This does not make `LITRES_PER_SHOWER` itself any
 better sourced; it corrects a real second-order effect that was making the
 first number's flaws worse for large households (see the Krysia gap above,
@@ -352,8 +352,8 @@ calculateUserBaseline(householdId: string, customInputs?: Partial<HouseholdCaseI
 ```
 
 One door into the model. A household's facts always arrive as **a known
-household plus overrides** — a persona is picked in the wizard, then the user
-edits some fields — so the merge rule is written down once, here:
+household plus overrides**: a persona is picked in the wizard, then the user
+edits some fields: so the merge rule is written down once, here:
 
 - an override wins when it is present
 - otherwise the persona's answer stands
@@ -363,7 +363,7 @@ edits some fields — so the merge rule is written down once, here:
   is what a user who never picked a persona has
 
 `toBaselineInputs` narrows the wizard's answers to what the baseline actually
-reads — the wizard collects radiator notes, coal provider and replacement
+reads: the wizard collects radiator notes, coal provider and replacement
 preference, none of which the baseline uses.
 
 ### Cost, sliced two ways
@@ -375,13 +375,13 @@ The same total, twice over. `coalPlnPerYear + electricityPlnPerYear` and
 Households do not think "coal and electricity", they think "heating, hot water,
 and the rest of the bill", so the second slicing is what the UI shows.
 
-- **Coal** splits by _energy_ share — space heat versus the hot water the boiler
+- **Coal** splits by _energy_ share: space heat versus the hot water the boiler
   made.
 - **Electricity** splits by _modelled kWh_ share. The bill is priced as a whole
   because it is measured, but the meter does not itemise the immersion tank, so
   the split has to come from the model.
 
-### Worked example — Mrs. Teresa, checked by hand
+### Worked example: Mrs. Teresa, checked by hand
 
 | Step        | By hand                                          | Model                         |
 | ----------- | ------------------------------------------------ | ----------------------------- |
@@ -393,8 +393,8 @@ and the rest of the bill", so the second slicing is what the UI shows.
 | **Total**   | 6 300 + 1 800                                    | **8 100 zł/y = 675.00 zł/mo** |
 
 Split by end use: space heating 6 242.16 zł, water heating 57.84 zł, electricity
-and cooling 1 800 zł — summing back to 8 100 zł. Water heating's share fell from
-90 zł (flat 40 l) to 57.84 zł once the blend was applied — the same direction as
+and cooling 1 800 zł: summing back to 8 100 zł. Water heating's share fell from
+90 zł (flat 40 l) to 57.84 zł once the blend was applied: the same direction as
 every other persona below.
 
 ### What the four personas produce
@@ -409,9 +409,9 @@ every other persona below.
 Costs did not move when class-aware efficiency or the hot-water blend landed,
 and should not have: both change how much energy a litre or a tonne implies,
 not what the household paid for it. What moved is the split between the three
-lines — water heating fell for everyone (the blend directly shrinks it), with
+lines: water heating fell for everyone (the blend directly shrinks it), with
 the difference reassigned to whichever fuel was making that water (coal for
-Teresa and Janek, electricity for Krysia and Marek) — and, for Teresa and
+Teresa and Janek, electricity for Krysia and Marek): and, for Teresa and
 Janek specifically, the condition column ticked up slightly (207 and 243),
 because less of their coal is now credited to the taps and more to the rooms.
 Krysia and Marek's condition is untouched, since neither's water comes from
@@ -421,22 +421,22 @@ coal.
 
 1. **Every persona lands above 140 kWh/m²/y.** Under the scope gate on the
    subsidies tab that puts all four in project type 3, where _a heat-source-only
-   project is not eligible_ — the building has to be insulated too. If that is
+   project is not eligible_: the building has to be insulated too. If that is
    right, it is the single most important thing the tool will tell these
    households. Class-aware efficiency (open question 4, now resolved) pulled
-   every figure down without changing that conclusion — Krysia moved 258 → 193
+   every figure down without changing that conclusion: Krysia moved 258 → 193
    and is still 53 above the gate. The hot-water blend nudged Teresa's and
    Janek's condition figures up by a kWh or two (less coal now counted as
    water), which does not move either of them across the gate either.
 2. **The hot-water blend (`HOT_WATER_BLEND_FACTOR`, 0.6) fixed Krysia's
    reconciliation gap and widened Marek's.** Her gap ran from −1 414 kWh/y to
-   **+71 kWh/y** — near enough to call it resolved. The unblended
+   **+71 kWh/y**: near enough to call it resolved. The unblended
    `LITRES_PER_SHOWER` assumption was overstating her hot-water electricity by
    more than her bill could be paying for; 5 people × 7 showers/week × 40 l is
    72 800 l/y before blending, an implausible amount of hot water for the house
    she describes. Marek's gap moved the other way, from +2 316 to
    **+2 996 kWh/y**, because blending shrank his modelled water-heating
-   electricity further below what his bill implies — his gap was never a
+   electricity further below what his bill implies: his gap was never a
    hot-water story, and shrinking that term only made the unexplained part more
    visible. Whatever is really driving it (a workshop, an EV, a heater we
    have not asked about) still needs asking about directly.
@@ -461,11 +461,11 @@ They disagree in places, and the disagreements are real:
 | Coal price             | 1 150–1 200 zł/t                         | 1 200 / **1 500** / 1 800 zł/t   |
 | Orzech energy          | 8 056 kWh/t                              | 28 MJ/kg ≈ **7 778** kWh/t       |
 | Coal boiler efficiency | flat 0.80                                | 0.40–0.89 by class and feed      |
-| — what we actually use | 0.60 / 0.75 / 0.75 / 0.85 by class alone |                                  |
+|: what we actually use | 0.60 / 0.75 / 0.75 / 0.85 by class alone |                                  |
 | Gas boiler efficiency  | 0.92                                     | we use **0.95** (scenarios only) |
 | Electricity G11        | 1.00 zł/kWh                              | 1.04 / **1.07** / 1.10 zł/kWh    |
 
-Do not quietly reconcile these in `sheet.constants.ts` — its whole value is that
+Do not quietly reconcile these in `sheet.constants.ts`: its whole value is that
 it matches the sheet. The reconciliation is a decision to make once, in the
 open, and question 4 above is the one that actually changes an answer.
 
@@ -473,13 +473,13 @@ open, and question 4 above is the one that actually changes an answer.
 
 ## 6. Deliberately not modelled
 
-- **Subsidies** — excluded from this pass by request. The sheet's subsidy tab
+- **Subsidies**: excluded from this pass by request. The sheet's subsidy tab
   holds the Czyste Powietrze cost-line caps, the three funding levels
   (40/70/100%) and the scope gate; `src/engines/subsidy.ts` already exists.
-- **Capex and financing** — the SCENARIOS tab's `Capex /m` column is all zeros
+- **Capex and financing**: the SCENARIOS tab's `Capex /m` column is all zeros
   for the coal options (they carry `Is capex in the past? = TRUE`), so there is
   nothing to extract for the baseline. `financing.ts` covers this.
-- **Replacement options** — RESOLVED for air-to-air HP, air-to-water HP and
+- **Replacement options**: RESOLVED for air-to-air HP, air-to-water HP and
   pellet, at running cost only. See
   [alternative-heating-model.md](alternative-heating-model.md). Gas is still
   transcribed and unpriced; PV, capex, financing and subsidy remain layers on

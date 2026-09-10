@@ -1,5 +1,5 @@
 /**
- * p0.test.ts — the acceptance criteria from tickets T1, T3, T4 and T5.
+ * p0.test.ts: the acceptance criteria from tickets T1, T3, T4 and T5.
  *
  * T2's criterion ("no literal gatesSatisfied array in App.tsx") is a source
  * check rather than a behaviour, so it is asserted by grep in the ticket, not

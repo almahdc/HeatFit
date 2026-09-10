@@ -269,14 +269,16 @@ describe("calculateBaseline", () => {
     expect(b.electricity.modelledKwh).toBeGreaterThanOrEqual(
       S.DEFAULT_BASE_ELECTRICITY_KWH,
     );
-    expect(b.assumptions.some((a) => a.includes("did not give a bill"))).toBe(
+    expect(b.assumptions.some((a) => a.code === "electricityUseModelled")).toBe(
       true,
     );
   });
 
   it("flags the litres-per-shower assumption on every run", () => {
     const b = calculateBaseline(teresa);
-    expect(b.assumptions.some((a) => a.includes("per shower"))).toBe(true);
+    expect(b.assumptions.some((a) => a.code === "hotWaterPerShower")).toBe(
+      true,
+    );
   });
 
   it("adds a cooling load only when there is an AC unit", () => {
@@ -461,22 +463,28 @@ describe("boiler efficiency by emission class", () => {
   it("names the efficiency it used in the assumptions", () => {
     const b = calculateBaseline({ ...base, boilerClass: "class5" });
     expect(
-      b.assumptions.some((a) => /class 5 boiler converts 85%/.test(a)),
+      b.assumptions.some(
+        (a) =>
+          a.code === "boilerEfficiencyKnown" &&
+          a.boilerClass === "class5" &&
+          a.efficiencyPct === 85,
+      ),
     ).toBe(true);
   });
 
   it("says so in the assumptions when the class was not given", () => {
     const b = calculateBaseline(base);
-    expect(b.assumptions.some((a) => /did not tell us its class/.test(a))).toBe(
-      true,
-    );
+    expect(
+      b.assumptions.some((a) => a.code === "boilerEfficiencyUnknown"),
+    ).toBe(true);
   });
 
   it("names the electric water heater efficiency when one is used", () => {
     const b = calculateBaseline(base);
     expect(
-      b.assumptions.some((a) =>
-        /electric water heater is 98% efficient/.test(a),
+      b.assumptions.some(
+        (a) =>
+          a.code === "electricWaterHeaterEfficiency" && a.efficiencyPct === 98,
       ),
     ).toBe(true);
   });
@@ -486,9 +494,9 @@ describe("boiler efficiency by emission class", () => {
       ...base,
       waterHeating: "coalCentralAllYear",
     });
-    expect(b.assumptions.some((a) => /electric water heater/.test(a))).toBe(
-      false,
-    );
+    expect(
+      b.assumptions.some((a) => a.code === "electricWaterHeaterEfficiency"),
+    ).toBe(false);
   });
 
   it("carries the persona's class through calculateUserBaseline", () => {
@@ -538,7 +546,7 @@ describe("hot water blending", () => {
   it("tames the overestimate for a large, frequently-showering household", () => {
     // Grandma Krysia: 5 people x 7 showers/week. Unblended, that is
     // 5x7x40x52 = 72 800 l/y, an implausible amount of hot water for a house
-    // this size — the exact case the blend factor exists to fix.
+    // this size: the exact case the blend factor exists to fix.
     const krysia = {
       heatedAreaM2: 125,
       occupants: 5,
@@ -573,8 +581,10 @@ describe("hot water blending", () => {
       electricityBillPlnPerMonth: 200,
       waterHeating: "electricBoilerNew" as const,
     });
-    expect(b.assumptions.some((a) => /60% needed to be heated/.test(a))).toBe(
-      true,
-    );
+    expect(
+      b.assumptions.some(
+        (a) => a.code === "hotWaterPerShower" && a.heatedSharePct === 60,
+      ),
+    ).toBe(true);
   });
 });

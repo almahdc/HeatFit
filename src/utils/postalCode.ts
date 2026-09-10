@@ -8,7 +8,7 @@ const POLISH_POSTAL_CODE_REGEX = /^\d{2}-\d{3}$/;
 /**
  * Postal code prefix (first two digits) -> voivodeship, per Poczta Polska's
  * routing ranges. The ranges are contiguous across the full 00-99 span, so
- * every correctly formatted postal code resolves to a region — the tool
+ * every correctly formatted postal code resolves to a region: the tool
  * covers all of Poland, not just one voivodeship.
  */
 const PREFIX_REGIONS: { from: number; to: number; region: string }[] = [
@@ -56,13 +56,15 @@ export function isPolishPostalCode(postalCode: string): boolean {
   return getPolishRegion(postalCode) !== null;
 }
 
-export function getPostalCodeWarning(postalCode: string): string | null {
+/** What is wrong with this postal code, or null when nothing is. */
+export type PostalCodeIssue = "invalidFormat";
+
+/**
+ * The problem, not the sentence: the wording lives in the i18n dictionary
+ * under `postalCode`, keyed by the returned issue.
+ */
+export function postalCodeIssue(postalCode: string): PostalCodeIssue | null {
   const trimmed = postalCode.trim();
   if (!trimmed) return null;
-
-  if (!isPolishPostalCode(trimmed)) {
-    return "This tool is designed for Polish addresses. Enter a Polish postal code (format: XX-XXX, e.g., 10-115).";
-  }
-
-  return null;
+  return isPolishPostalCode(trimmed) ? null : "invalidFormat";
 }

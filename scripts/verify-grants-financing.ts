@@ -1,5 +1,5 @@
 /**
- * verify-grants-financing.ts — an independent audit of Block 5 / Block 6.
+ * verify-grants-financing.ts: an independent audit of Block 5 / Block 6.
  *
  *   npm run verify:financing
  *
@@ -88,7 +88,7 @@ function rule(title: string) {
 }
 
 console.log(
-  "\nGRANTS & FINANCING VERIFICATION — model vs. an independent longhand recomputation",
+  "\nGRANTS & FINANCING VERIFICATION: model vs. an independent longhand recomputation",
 );
 console.log(
   "Caps, rates, loan terms and income thresholds re-transcribed inside this script.",
@@ -195,7 +195,7 @@ checkText(
 
 // --- the loan ---------------------------------------------------------------
 
-rule("Solar grant — a share of the array, no cap, its own programme");
+rule("Solar grant: a share of the array, no cap, its own programme");
 
 for (const tier of TIERS) {
   const effective: Tier = tier === "highest" ? "increased" : tier;
@@ -220,7 +220,7 @@ for (const tier of TIERS) {
   );
 }
 
-// The highest tier is unreachable below 140 kWh/m²/y — it gets clamped — so
+// The highest tier is unreachable below 140 kWh/m²/y: it gets clamped: so
 // its PV rate can only be exercised above that line. Solar is a separate
 // programme and survives the scope gate that blocks the heat source there,
 // which is exactly the household this checks.
@@ -243,18 +243,18 @@ for (const tier of TIERS) {
 }
 
 rule(
-  "Monthly capex = (net + net x interest) / (years x 12) — the sheet's formula",
+  "Monthly capex = (net + net x interest) / (years x 12): the sheet's formula",
 );
 
 // The engine's own loan table has to be checked against this script's
 // transcription of it. Passing the script's rate straight into the engine
-// would leave SHEET_LOAN_OPTIONS unexercised — the engine could hold any rate
+// would leave SHEET_LOAN_OPTIONS unexercised: the engine could hold any rate
 // at all and every figure below would still agree.
 check("loan terms offered", LOANS.length, LOAN_OPTIONS.length);
 for (const [i, { years, interest }] of LOANS.entries()) {
-  check(`loan option ${i} — years`, years, LOAN_OPTIONS[i]!.years);
+  check(`loan option ${i}: years`, years, LOAN_OPTIONS[i]!.years);
   check(
-    `loan option ${i} — interest`,
+    `loan option ${i}: interest`,
     interest,
     LOAN_OPTIONS[i]!.annualInterest,
   );
@@ -275,7 +275,7 @@ for (const { years, interest } of LOANS) {
 // --- the anchor: the sheet's own final-tab row ------------------------------
 
 rule(
-  "End to end against the sheet's own numbers — price_calculator row 371 (gas194)",
+  "End to end against the sheet's own numbers: price_calculator row 371 (gas194)",
 );
 
 // Straight off the sheet: total capex 54 000 (24 000 heat source + 30 000
@@ -292,7 +292,7 @@ const SHEET_ROW = {
   trueMonthly: 1524.441046,
 };
 
-// The sheet's grant on this row is PV only — gas is not in its GRANT block —
+// The sheet's grant on this row is PV only: gas is not in its GRANT block —
 // and it applies the highest column's rate, 0.32.
 check(
   "PV grant, 0.32 x 30 000",
@@ -308,7 +308,7 @@ check(
 const loan = calculateLoan({
   grossCapexPln: SHEET_ROW.totalCapex,
   grantPln: SHEET_ROW.grant,
-  // The engine's own default, not a term re-stated here — the sheet's live
+  // The engine's own default, not a term re-stated here: the sheet's live
   // formula points at its 5-year row, so this pins that too.
   terms: DEFAULT_LOAN_TERMS,
 });

@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 
 /**
- * StepShell — one question in the all-at-once layout.
+ * StepShell: one question in the all-at-once layout.
  *
  * Every step renders in full (title, helper text, input) and stays that way;
  * there is no collapsed/completed state and no Next/Back navigation. The

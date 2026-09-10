@@ -23,17 +23,8 @@ import {
 } from "./HouseholdCaseStudy";
 import { HouseholdCaseInputs, initialHouseholdCase } from "./householdCases";
 import { useScrollToTopOnChange } from "../hooks/useScrollToTopOnChange";
-import {
-  formatPolishPostalCode,
-  getPostalCodeWarning,
-} from "../utils/postalCode";
-
-const STEP_LABELS = [
-  "Welcome & Location",
-  "Home Profile & Comfort",
-  "Current Heating & Fuel",
-  "Electricity & Water",
-];
+import { formatPolishPostalCode, postalCodeIssue } from "../utils/postalCode";
+import { LanguageToggle, useT } from "../i18n";
 
 export function EnergyAssessmentForm({
   onComplete,
@@ -46,6 +37,14 @@ export function EnergyAssessmentForm({
   initialHousehold?: HouseholdCaseInputs;
   initialStep?: number;
 }) {
+  const t = useT();
+  const stepLabels = [
+    t.wizard.steps.welcomeLocation,
+    t.wizard.steps.homeProfile,
+    t.wizard.steps.currentHeating,
+    t.wizard.steps.electricityWater,
+  ];
+
   const [step, setStep] = useState(initialStep);
   const [state, setState] = useState<AssessmentState>(initialState);
   const [household, setHousehold] =
@@ -54,10 +53,10 @@ export function EnergyAssessmentForm({
 
   useScrollToTopOnChange(step);
 
-  const isLastStep = step === STEP_LABELS.length - 1;
+  const isLastStep = step === stepLabels.length - 1;
 
   // Every field elsewhere has a sensible default from a persona or the
-  // initial state, so it can never be "empty" — postal code, boiler year and
+  // initial state, so it can never be "empty": postal code, boiler year and
   // coal provider are the only fields a user must actually type themselves,
   // which makes them the only ones worth gating on.
   const postalCodeValid = state.location.postalCode.trim() !== "";
@@ -91,46 +90,44 @@ export function EnergyAssessmentForm({
 
   return (
     <div className="mx-auto w-full lg:w-1/2 lg:min-w-[600px] xl:max-w-[820px] px-4 py-8">
-      <StepProgress steps={STEP_LABELS} current={step} />
+      <div className="mb-4 flex justify-end">
+        <LanguageToggle />
+      </div>
+
+      <StepProgress steps={stepLabels} current={step} />
 
       <div className="flex flex-col gap-6">
         {step === 0 && (
           <>
             <Block
-              title="Welcome"
-              subtitle="A few minutes of questions, in exchange for a clear answer on what replacing your boiler would actually cost and save."
+              title={t.wizard.welcome.title}
+              subtitle={t.wizard.welcome.subtitle}
             >
               <p className="text-base text-ink-soft">
-                This tool is built{" "}
+                {t.wizard.welcome.bodyBefore}
                 <strong className="text-ink">
-                  exclusively for households currently heating with a coal
-                  boiler
+                  {t.wizard.welcome.bodyEmphasis}
                 </strong>
-                . Over the next few steps we'll ask about your home, your
-                current coal use, and your electricity and water setup, then use
-                that to estimate the running costs, subsidies, and financing for
-                switching to pellet or a heat pump. If your home doesn't burn
-                coal for heat, this calculator isn't the right fit yet.
+                {t.wizard.welcome.bodyAfter}
               </p>
               <p className="mt-3 text-sm text-ink-soft/80 italic">
-                Gas heating is not yet included. If you'd like to see gas
-                options or other heating solutions, let us know: we're expanding
-                this tool based on feedback.
+                {t.wizard.welcome.gasNote}
               </p>
             </Block>
 
             <Block
-              title="Location"
-              subtitle="Your location determines climate zones and local anti-smog ordinances."
+              title={t.wizard.location.title}
+              subtitle={t.wizard.location.subtitle}
             >
               <div>
                 <FieldLabel icon={MapPin}>
-                  Postal Code <span className="text-accent">*</span>
+                  {t.wizard.location.postalCode}{" "}
+                  <span className="text-accent">*</span>
                 </FieldLabel>
                 <TextInputWithIcon
                   icon={MapPin}
                   inputMode="numeric"
-                  placeholder="e.g., 10-115"
+                  placeholder={t.wizard.location.postalCodePlaceholder}
                   value={state.location.postalCode}
                   onChange={(v) =>
                     setState((s) => ({
@@ -141,28 +138,23 @@ export function EnergyAssessmentForm({
                 />
                 {attemptedNext && !postalCodeValid && (
                   <p className="mt-2 text-sm font-medium text-red-600">
-                    Enter a postal code to continue.
+                    {t.wizard.location.postalCodeRequired}
                   </p>
                 )}
                 {state.location.postalCode.length === 6 &&
-                  getPostalCodeWarning(state.location.postalCode) && (
+                  postalCodeIssue(state.location.postalCode) && (
                     <div className="mt-3 flex items-start gap-2 rounded-lg bg-yellow-50 p-3 border border-yellow-200">
                       <AlertCircle
                         className="h-4 w-4 mt-0.5 text-yellow-600 flex-shrink-0"
                         aria-hidden
                       />
                       <p className="text-sm text-yellow-700">
-                        {getPostalCodeWarning(state.location.postalCode)}
+                        {t.postalCode.invalidFormat}
                       </p>
                     </div>
                   )}
               </div>
-              <InfoBox icon={Info}>
-                We use your postal code to check which regional subsidies apply
-                to your area, what your municipality's deadline for replacing
-                coal boilers is, and whether a local clean-air programme covers
-                part of the cost.
-              </InfoBox>
+              <InfoBox icon={Info}>{t.wizard.location.info}</InfoBox>
             </Block>
           </>
         )}
@@ -180,8 +172,7 @@ export function EnergyAssessmentForm({
             {attemptedNext && !stepValid && (
               <p className="flex items-center gap-2 text-sm font-medium text-red-600">
                 <Flame className="h-4 w-4" aria-hidden />
-                Boiler installation year and coal provider are required to
-                continue.
+                {t.wizard.heatingStepRequired}
               </p>
             )}
           </>
@@ -200,7 +191,7 @@ export function EnergyAssessmentForm({
           className="flex items-center gap-2 rounded-xl border border-line bg-white px-5 py-3 text-[14.5px] font-semibold text-ink-soft transition-colors hover:bg-chip disabled:cursor-not-allowed disabled:opacity-0"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden />
-          Back
+          {t.nav.back}
         </button>
         <button
           type="button"
@@ -211,7 +202,7 @@ export function EnergyAssessmentForm({
               : "bg-accent/50 hover:bg-accent/50"
           }`}
         >
-          {isLastStep ? "Continue to Financials" : "Continue"}
+          {isLastStep ? t.nav.seeResults : t.nav.next}
           <ArrowRight className="h-4 w-4" aria-hidden />
         </button>
       </div>

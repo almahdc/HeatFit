@@ -3,8 +3,8 @@
    18px minimum, 7:1 contrast, no grey-on-grey, no hover-only information,
    money always written out.
 
-   The look is borrowed from the municipal notice and the energy bill — documents
-   this reader already trusts — rather than from a fintech dashboard. Heavy rules,
+   The look is borrowed from the municipal notice and the energy bill: documents
+   this reader already trusts: rather than from a fintech dashboard. Heavy rules,
    flat blocks, ink on paper. The one bold move is the scale of the monthly figure:
    it is the only thing on the page anyone truly needs, so it is enormous. */
 
@@ -210,7 +210,7 @@ footer {
   position: relative;
 }
 
-/* Marks, not colour alone — colour is not the only signal for anyone. */
+/* Marks, not colour alone: colour is not the only signal for anyone. */
 .programme-list li.applied::before {
   content: "✓";
   position: absolute;

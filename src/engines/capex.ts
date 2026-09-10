@@ -1,5 +1,5 @@
 /**
- * capex.ts — what a replacement heating system costs to buy and install,
+ * capex.ts: what a replacement heating system costs to buy and install,
  * split into hardware and installation, for the three options
  * `alternativeHeating.ts` already prices to run.
  *
@@ -11,7 +11,7 @@
  * a capex table (transcribed as `SHEET_CAPEX`; an earlier version of this
  * comment wrongly said it did not, having only seen the scenario columns,
  * which are zeroed for coal because those options are "capex in the past").
- * It is not used here, and the two disagree — the sheet puts air-to-air at
+ * It is not used here, and the two disagree: the sheet puts air-to-air at
  * 19 000 zł against 12 600 mid below. Both are defensible and neither is
  * quietly reconciled. These are independently sourced Polish market prices, held
  * as low/mid/high bands rather than sheet point values, because capex is
@@ -25,10 +25,10 @@
  * separately-sourced installation-share assumption, so the split can be
  * uncertain without disturbing the total. Air-to-water and air-to-air are
  * different jobs (hydronic plumbing vs. a multisplit with no radiator work)
- * priced from different sources — see `AIR_TO_AIR_HP_HARDWARE_COST`'s own
+ * priced from different sources: see `AIR_TO_AIR_HP_HARDWARE_COST`'s own
  * comment in constants.pl.ts.
  *
- * PV is deliberately NOT part of this breakdown — see `calculateSolarAddOn`
+ * PV is deliberately NOT part of this breakdown: see `calculateSolarAddOn`
  * at the bottom. A household that already has panels is describing a sunk
  * cost that has nothing to do with replacing the heating system, so it does
  * not belong in "what this replacement costs". A household with no panels
@@ -52,7 +52,7 @@ export interface CapexBreakdown {
   hardware: CapexBand;
   /** Labour only. */
   installation: CapexBand;
-  /** hardware + installation, band for band — always exact, never rounded independently. */
+  /** hardware + installation, band for band: always exact, never rounded independently. */
   totalGross: CapexBand;
   /** Where these numbers come from, for a "why this figure" disclosure in the UI. */
   source: string;
@@ -148,7 +148,7 @@ export interface SolarAddOn {
  * What adding solar WOULD cost, for a household that does not have it yet.
  *
  * Deliberately has no household parameter: this only makes sense to call at
- * all when `hasPvPanels` is false, and the UI is what decides that — a
+ * all when `hasPvPanels` is false, and the UI is what decides that: a
  * household already describing panels should never see this, since for them
  * there is nothing new to add.
  */
@@ -159,6 +159,6 @@ export function calculateSolarAddOn(): SolarAddOn {
   };
 }
 
-/** The official Polish "green devices and materials" database — Lista ZUM. */
+/** The official Polish "green devices and materials" database: Lista ZUM. */
 export const ZUM_DATABASE_URL =
   "https://lista-zum.ios.edu.pl/bepub/ben001.aspx";

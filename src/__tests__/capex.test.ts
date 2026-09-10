@@ -4,14 +4,14 @@ import {
   calculateSolarAddOn,
   ZUM_DATABASE_URL,
 } from "../engines/capex";
-import { ALTERNATIVE_HEATING_OPTIONS } from "../engines/alternativeHeating";
+import { ALTERNATIVE_HEATING_IDS } from "../engines/alternativeHeating";
 import * as C from "../data/constants.pl";
 import * as S from "../data/sheet.constants";
 
 describe("calculateCapexBreakdown", () => {
   it("sums hardware and installation to the total, band for band, for every option", () => {
-    for (const option of ALTERNATIVE_HEATING_OPTIONS) {
-      const b = calculateCapexBreakdown(option.id);
+    for (const id of ALTERNATIVE_HEATING_IDS) {
+      const b = calculateCapexBreakdown(id);
       expect(b.hardware.lowPln + b.installation.lowPln).toBeCloseTo(
         b.totalGross.lowPln,
         6,
@@ -28,8 +28,8 @@ describe("calculateCapexBreakdown", () => {
   });
 
   it("keeps low <= mid <= high on every line, for every option", () => {
-    for (const option of ALTERNATIVE_HEATING_OPTIONS) {
-      const b = calculateCapexBreakdown(option.id);
+    for (const id of ALTERNATIVE_HEATING_IDS) {
+      const b = calculateCapexBreakdown(id);
       for (const line of [b.hardware, b.installation, b.totalGross]) {
         expect(line.lowPln).toBeLessThanOrEqual(line.midPln);
         expect(line.midPln).toBeLessThanOrEqual(line.highPln);
@@ -74,7 +74,7 @@ describe("calculateCapexBreakdown", () => {
 
   it("pellet installation is a smaller share of its total than the heat pumps", () => {
     // A boiler swap is plumbing and a flue, not refrigerant lines and an
-    // outdoor unit — the sourced shares should reflect that, not just happen
+    // outdoor unit: the sourced shares should reflect that, not just happen
     // to.
     const pellet = calculateCapexBreakdown("pellet");
     const airToWater = calculateCapexBreakdown("airToWaterHp");
@@ -93,21 +93,21 @@ describe("calculateCapexBreakdown", () => {
   });
 
   it("names a source string for every option", () => {
-    for (const option of ALTERNATIVE_HEATING_OPTIONS) {
-      const b = calculateCapexBreakdown(option.id);
+    for (const id of ALTERNATIVE_HEATING_IDS) {
+      const b = calculateCapexBreakdown(id);
       expect(b.source.length).toBeGreaterThan(0);
     }
   });
 });
 
 describe("calculateCapexBreakdown never involves PV", () => {
-  // PV is not part of the heating system's own cost — see calculateSolarAddOn
+  // PV is not part of the heating system's own cost: see calculateSolarAddOn
   // below for the separate, opt-in add-on. calculateCapexBreakdown takes no
   // PV-related input at all, so this is really just re-confirming the
   // heating-only invariant holds regardless of anyone's PV status.
   it("totals exactly hardware plus installation, for every option", () => {
-    for (const option of ALTERNATIVE_HEATING_OPTIONS) {
-      const b = calculateCapexBreakdown(option.id);
+    for (const id of ALTERNATIVE_HEATING_IDS) {
+      const b = calculateCapexBreakdown(id);
       expect(b.hardware.midPln + b.installation.midPln).toBeCloseTo(
         b.totalGross.midPln,
         6,

@@ -2,7 +2,7 @@
  * Polish market constants.
  *
  * Every constant carries its source and the date it was read. This is not
- * documentation — it is data the UI renders and the test suite asserts on.
+ * documentation: it is data the UI renders and the test suite asserts on.
  * A constant without a source is a bug, and there is a test that says so.
  *
  * Last verified: 19.08.2026
@@ -148,7 +148,7 @@ export const PELLET_CALORIFIC_VALUE: SourcedBand = {
 /**
  * Boiler efficiency by emission class and feed type.
  *
- * Feed type moves this as much as class does — a hand-fed boiler is stoked by a
+ * Feed type moves this as much as class does: a hand-fed boiler is stoked by a
  * person, and people are worse at it than an auger. "unknown" is the expensive
  * answer: it roughly triples this factor's contribution to the band, which is
  * why the tool pushes the nameplate photo instead of accepting it.
@@ -420,7 +420,7 @@ export const AIR_TO_AIR_HP_INSTALLATION_COST: SourcedBand = {
 /**
  * Share of the AIR-TO-WATER heat pump's turnkey price that is installation
  * labour, not equipment. Used only to split `HEAT_PUMP_INSTALLED_COST`
- * into a hardware line and an installation line for display — it changes
+ * into a hardware line and an installation line for display: it changes
  * nothing about the total, which stays whatever that constant already says.
  */
 export const HEAT_PUMP_INSTALL_SHARE_OF_TOTAL: Sourced<number> = {
@@ -468,14 +468,14 @@ export const PV_INSTALLED_COST_PER_KWP: SourcedBand = {
 
 /**
  * Flat capex for a NEW PV array sized to the sheet's own flat production
- * assumption (`SHEET_PV.productionKwhPerYear`, 5 000 kWh/y — see
+ * assumption (`SHEET_PV.productionKwhPerYear`, 5 000 kWh/y: see
  * sheet.constants.ts).
  *
  * This is a point figure, not a band, given directly for this feature rather
  * than independently re-derived. Cross-check against the per-kWp band above:
  * 5 000 kWh/y at a typical Polish yield of ~1 000 kWh/kWp/y is roughly a
  * 5 kWp system, and 5 kWp x PV_INSTALLED_COST_PER_KWP.mid (4 200 zł/kWp) is
- * 21 000 zł — noticeably below this figure. The two are not reconciled here;
+ * 21 000 zł: noticeably below this figure. The two are not reconciled here;
  * that gap is real and should be looked at before this number is quoted
  * anywhere that matters.
  */

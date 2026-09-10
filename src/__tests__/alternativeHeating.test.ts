@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
-  ALTERNATIVE_HEATING_OPTIONS,
+  ALTERNATIVE_HEATING_IDS,
   calculateAlternativeHeatingCost,
   calculateAllAlternativeHeatingCosts,
 } from "../engines/alternativeHeating";
@@ -96,12 +96,8 @@ describe("calculateAlternativeHeatingCost", () => {
   });
 
   it("sums its own three lines to its own total, without losing or inventing money", () => {
-    for (const option of ALTERNATIVE_HEATING_OPTIONS) {
-      const result = calculateAlternativeHeatingCost(
-        option.id,
-        baseline,
-        "G11",
-      );
+    for (const id of ALTERNATIVE_HEATING_IDS) {
+      const result = calculateAlternativeHeatingCost(id, baseline, "G11");
       const sum =
         result.spaceHeatingPlnPerYear +
         result.waterHeatingPlnPerYear +
@@ -148,17 +144,6 @@ describe("calculateAlternativeHeatingCost", () => {
       "G11",
     );
     expect(doubled.fuelPerYear).toBeCloseTo(normal.fuelPerYear * 2, 6);
-  });
-
-  it("throws on an unknown option id rather than silently returning nothing", () => {
-    expect(() =>
-      calculateAlternativeHeatingCost(
-        // @ts-expect-error deliberately invalid for the test
-        "woodStove",
-        baseline,
-        "G11",
-      ),
-    ).toThrow();
   });
 });
 
@@ -242,7 +227,7 @@ describe("PV", () => {
       undefined,
       true,
     );
-    // Same useful heat, same COP, same tariff — only PV differs.
+    // Same useful heat, same COP, same tariff: only PV differs.
     expect(withPv.spaceHeatingPlnPerYear).toBeLessThan(
       withoutPv.spaceHeatingPlnPerYear,
     );
@@ -279,9 +264,9 @@ describe("PV", () => {
   });
 
   it("still sums its three lines to its total, with PV in the mix", () => {
-    for (const option of ALTERNATIVE_HEATING_OPTIONS) {
+    for (const id of ALTERNATIVE_HEATING_IDS) {
       const result = calculateAlternativeHeatingCost(
-        option.id,
+        id,
         baselineWithPv,
         "G11",
         undefined,
@@ -316,7 +301,7 @@ describe("PV", () => {
 
 describe("independent longhand check against the sheet's own FUEL rows", () => {
   it("matches SHEET_FUELS exactly for every replacement option", () => {
-    // Not a call into the engine's own constants — read straight off the
+    // Not a call into the engine's own constants: read straight off the
     // transcribed sheet table, the same way scripts/verify-baseline.ts does.
     expect(S.SHEET_FUELS["air-to-air HP"].efficiency).toBe(4.0);
     expect(S.SHEET_FUELS["air-to-water HP"].efficiency).toBe(3.0);

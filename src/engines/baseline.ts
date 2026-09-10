@@ -1,5 +1,5 @@
 /**
- * baseline.ts — what the household is paying TODAY, on coal.
+ * baseline.ts: what the household is paying TODAY, on coal.
  *
  * The baseline is the counterfactual every other scenario is measured against,
  * so it is worth getting right before any replacement option is priced. Nothing
@@ -75,7 +75,7 @@ export interface BaselineEnergy {
   /** Useful heat the coal boiler actually delivered, kWh/y. */
   coalHeatDeliveredKwh: number;
   /**
-   * Hot water drawn off, litres/y — the full tap volume, not blended down.
+   * Hot water drawn off, litres/y: the full tap volume, not blended down.
    * `waterEnergyKwh` is the one that reflects `HOT_WATER_BLEND_FACTOR`.
    */
   hotWaterLitresPerYear: number;
@@ -93,7 +93,7 @@ export interface BaselineEnergy {
   /** Coal heat left once hot water is taken out, kWh/y. */
   spaceHeatKwh: number;
   /**
-   * Space heat per m², kWh/m²/y — the building-condition figure.
+   * Space heat per m², kWh/m²/y: the building-condition figure.
    * This is the number the Czyste Powietrze scope gate bands on, so it is the
    * single most consequential output here.
    */
@@ -145,12 +145,34 @@ export interface ElectricityReconciliation {
   gapKwh: number | null;
 }
 
+/**
+ * An assumption the model had to make, as data rather than prose.
+ *
+ * The sentence lives in the i18n dictionary under `assumptions`, keyed by
+ * `code`, with everything it interpolates travelling alongside. Percentages
+ * arrive already rounded, so the number a household reads is the number the
+ * model used, in every language.
+ */
+export type BaselineAssumption =
+  | { code: "coalGradeAssumed"; fuel: S.SheetFuel }
+  | {
+      code: "boilerEfficiencyKnown";
+      boilerClass: BoilerClass;
+      efficiencyPct: number;
+    }
+  | { code: "boilerEfficiencyUnknown"; efficiencyPct: number }
+  | { code: "coalPriceAssumed"; pricePerTonnePln: number }
+  | { code: "hotWaterPerShower"; litres: number; heatedSharePct: number }
+  | { code: "summerElectricWater"; sharePct: number }
+  | { code: "electricWaterHeaterEfficiency"; efficiencyPct: number }
+  | { code: "electricityUseModelled"; kwhPerYear: number };
+
 export interface Baseline {
   energy: BaselineEnergy;
   cost: BaselineCost;
   electricity: ElectricityReconciliation;
   /** Every assumption that was used because an answer was missing or soft. */
-  assumptions: string[];
+  assumptions: BaselineAssumption[];
 }
 
 // --- step 1: coal in, useful heat out ---------------------------------------
@@ -208,7 +230,7 @@ export function hotWaterLitres(
  * Litres -> useful energy, kWh/y, at the sheet's 45 °C lift.
  *
  * Sheet-verbatim: no blending here. `calculateBaseline` runs the litres through
- * `effectiveHotWaterLitres` first — see that function for why — which keeps
+ * `effectiveHotWaterLitres` first: see that function for why: which keeps
  * this one reproducing the sheet's own formula exactly and testable against it
  * on its own.
  */
@@ -222,7 +244,7 @@ export function waterEnergyKwh(litres: number): number {
  * A shower or bath is not neat hot water: a mixing valve tempers water from
  * the tank or boiler coil with cold mains to reach a comfortable temperature,
  * so part of every litre counted by `hotWaterLitres` never touched the heat
- * source. `HOT_WATER_BLEND_FACTOR` is the correction — see its docs for why it
+ * source. `HOT_WATER_BLEND_FACTOR` is the correction: see its docs for why it
  * exists and what it deliberately does not change.
  */
 export function effectiveHotWaterLitres(litres: number): number {
@@ -311,27 +333,28 @@ export function electricityCost(
 // --- the whole baseline in one call -----------------------------------------
 
 export function calculateBaseline(input: BaselineInputs): Baseline {
-  const assumptions: string[] = [];
+  const assumptions: BaselineAssumption[] = [];
 
   // --- coal -----------------------------------------------------------------
   const fuel = S.FUEL_FROM_COAL_TYPE[input.coalType];
   if (input.coalType === "other") {
-    assumptions.push(
-      `We assumed ${fuel.toLowerCase()} coal, since you did not tell us the grade.`,
-    );
+    assumptions.push({ code: "coalGradeAssumed", fuel });
   }
 
   // The boiler, not the fuel, sets how much of that energy reaches the rooms.
   // Free coal burns in the same boiler, so it gets the same efficiency.
   const efficiency = boilerEfficiency(input.boilerClass);
   if (input.boilerClass) {
-    assumptions.push(
-      `We assumed your ${S.BOILER_CLASS_LABEL[input.boilerClass]} boiler converts ${Math.round(S.BOILER_EFFICIENCY[input.boilerClass] * 100)}% of the coal's energy into heat.`,
-    );
+    assumptions.push({
+      code: "boilerEfficiencyKnown",
+      boilerClass: input.boilerClass,
+      efficiencyPct: Math.round(S.BOILER_EFFICIENCY[input.boilerClass] * 100),
+    });
   } else {
-    assumptions.push(
-      `We assumed your boiler converts ${Math.round(S.SHEET_FUELS[fuel].efficiency * 100)}% of the coal's energy into heat, since you did not tell us its class.`,
-    );
+    assumptions.push({
+      code: "boilerEfficiencyUnknown",
+      efficiencyPct: Math.round(S.SHEET_FUELS[fuel].efficiency * 100),
+    });
   }
 
   const freeTonnes = input.freeCoalTonnes ?? 0;
@@ -348,9 +371,10 @@ export function calculateBaseline(input: BaselineInputs): Baseline {
   const pricePerTonne =
     input.coalPricePerTonnePln ?? S.SHEET_FUELS[fuel].plnPerUnit;
   if (input.coalPricePerTonnePln === undefined) {
-    assumptions.push(
-      `We assumed a coal price of ${pricePerTonne} zł per tonne, since you did not give one.`,
-    );
+    assumptions.push({
+      code: "coalPriceAssumed",
+      pricePerTonnePln: pricePerTonne,
+    });
   }
   const coalPlnPerYear =
     input.coalTonnesPerSeason * pricePerTonne +
@@ -360,15 +384,18 @@ export function calculateBaseline(input: BaselineInputs): Baseline {
   const litres = hotWaterLitres(input.occupants, input.showersBathsPerWeek);
   const effectiveLitres = effectiveHotWaterLitres(litres);
   const waterEnergy = waterEnergyKwh(effectiveLitres);
-  assumptions.push(
-    `We assumed ${S.LITRES_PER_SHOWER} litres of water per shower or bath, of which ${Math.round(S.HOT_WATER_BLEND_FACTOR * 100)}% needed to be heated. The rest mixes in as cold water at the tap.`,
-  );
+  assumptions.push({
+    code: "hotWaterPerShower",
+    litres: S.LITRES_PER_SHOWER,
+    heatedSharePct: Math.round(S.HOT_WATER_BLEND_FACTOR * 100),
+  });
 
   const coalShare = coalShareOfHotWater(input.waterHeating);
   if (input.waterHeating === "electricSummerCoalWinter") {
-    assumptions.push(
-      `We assumed ${Math.round(SUMMER_DHW_SHARE.mid * 100)}% of your hot water is heated electrically over summer, since your boiler is shut down for the season.`,
-    );
+    assumptions.push({
+      code: "summerElectricWater",
+      sharePct: Math.round(SUMMER_DHW_SHARE.mid * 100),
+    });
   }
 
   const waterEnergyFromCoalKwh = waterEnergy * coalShare;
@@ -376,9 +403,10 @@ export function calculateBaseline(input: BaselineInputs): Baseline {
   const waterElectricityKwh =
     waterEnergyFromElectricityKwh / S.ELECTRIC_BOILER_EFFICIENCY;
   if (waterEnergyFromElectricityKwh > 0) {
-    assumptions.push(
-      `We assumed your electric water heater is ${Math.round(S.ELECTRIC_BOILER_EFFICIENCY * 100)}% efficient.`,
-    );
+    assumptions.push({
+      code: "electricWaterHeaterEfficiency",
+      efficiencyPct: Math.round(S.ELECTRIC_BOILER_EFFICIENCY * 100),
+    });
   }
 
   // --- space heat -----------------------------------------------------------
@@ -411,9 +439,10 @@ export function calculateBaseline(input: BaselineInputs): Baseline {
   // every time, so it is what gets priced; the model is kept only to reconcile.
   const consumptionKwh = measuredKwh ?? modelledKwh;
   if (measuredKwh === null) {
-    assumptions.push(
-      `We assumed your yearly electricity use is about ${Math.round(modelledKwh)} kWh, based on a typical household's usage plus your hot water and cooling, since you did not give a bill.`,
-    );
+    assumptions.push({
+      code: "electricityUseModelled",
+      kwhPerYear: Math.round(modelledKwh),
+    });
   }
 
   const electricityPlnPerYear = electricityCost(
@@ -433,7 +462,7 @@ export function calculateBaseline(input: BaselineInputs): Baseline {
       : 0;
 
   // Electricity by modelled kWh share. The bill is priced as a whole (it is
-  // measured, so it wins), but the split has to come from the model — the meter
+  // measured, so it wins), but the split has to come from the model: the meter
   // does not itemise the immersion tank.
   const elecWaterShare =
     modelledKwh > 0 ? waterElectricityKwh / modelledKwh : 0;
@@ -504,7 +533,7 @@ export function calculateUserBaseline(
   // Object spread is the merge rule: every key the caller supplied wins, every
   // key it omitted keeps the household's answer. `undefined` values are
   // stripped first, so `{ coalTonnesPerSeason: undefined }` does not blank a
-  // real answer — that is the bug this guard exists to prevent.
+  // real answer: that is the bug this guard exists to prevent.
   const overrides = Object.fromEntries(
     Object.entries(customInputs ?? {}).filter(([, v]) => v !== undefined),
   ) as Partial<HouseholdCaseInputs>;

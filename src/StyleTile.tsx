@@ -1,5 +1,5 @@
 /**
- * StyleTile — Visual reference for the redesigned HeatFit.
+ * StyleTile: Visual reference for the redesigned HeatFit.
  *
  * This page showcases:
  * - Token file (colors, typography, spacing)

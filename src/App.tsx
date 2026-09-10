@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AlertCircle, ArrowLeft, ClipboardList } from "lucide-react";
-import { getPostalCodeWarning } from "./utils/postalCode";
+import { postalCodeIssue } from "./utils/postalCode";
 import { EnergyAssessmentForm } from "./wizard/EnergyAssessmentForm";
 import { AssessmentState } from "./wizard/assessmentTypes";
 import { HouseholdCaseInputs } from "./wizard/householdCases";
@@ -9,76 +9,7 @@ import { AlternativeHeatingOptions } from "./wizard/AlternativeHeatingOptions";
 import { calculateUserBaseline } from "./engines/baseline";
 import { StyleTile } from "./StyleTile";
 import { useScrollToTopOnChange } from "./hooks/useScrollToTopOnChange";
-
-const LABEL_MAPS: Record<string, Record<string, string>> = {
-  houseKind: {
-    detached: "Detached",
-    semiDetached: "Semi-detached / terraced",
-    apartment: "Apartment",
-  },
-  insulation: {
-    none: "No insulation",
-    standard: "10 cm Styrofoam (Standard)",
-    veryGood: "15–20 cm Styrofoam (Very good)",
-  },
-  windowFrame: {
-    woodenOld: "Wooden (Old)",
-    doublePanePvc: "Double-pane PVC",
-    triplePanePvc: "3-pane PVC (New)",
-  },
-  radiatorType: {
-    standard: "Radiators",
-    floorHeating: "Floor heating",
-    mixed: "Mixed",
-  },
-  coalType: {
-    orzech: "Orzech",
-    groszek: "Groszek",
-    kostka: "Kostka",
-    mul: "Muł",
-    other: "Other",
-  },
-  boilerClass: {
-    bezklasowy: "Off-class (Bezklasowy)",
-    class3: "Class 3",
-    class4: "Class 4",
-    class5: "Class 5",
-  },
-  cityDeadlineNotice: {
-    none: "No contact",
-    pressOrMediaOnly: "Press / media only",
-    officialLetter: "Official letter",
-  },
-  replacementPreference: {
-    gas: "Gas",
-    pelletBoiler: "Pellet boiler",
-    heatPump: "Heat pump",
-    pelletOrHeatPump: "Pellet or heat pump",
-    undecided: "Undecided",
-  },
-  electricityTariff: {
-    G11: "G11 (Flat, all day)",
-    G12: "G12 (Cheaper nights)",
-  },
-  waterHeating: {
-    electricBoilerNew: "New electric boiler",
-    electricSummerCoalWinter: "Electric summer, coal winter",
-    coalCentralAllYear: "Coal boiler, all year",
-    electricNightTariff: "Electric, night tariff",
-  },
-  unheatedRooms: {
-    none: "None",
-    oneRoom: "1 room",
-    twoRooms: "2 rooms",
-    threeOrMore: "3 or more",
-  },
-};
-
-const formatValue = (key: string, value: string): string => {
-  const labels = LABEL_MAPS[key];
-  if (labels && labels[value]) return labels[value]!;
-  return value;
-};
+import { I18nProvider, LanguageToggle, useT } from "./i18n";
 
 type Phase = "form" | "financials";
 
@@ -90,6 +21,14 @@ export default function App() {
     return <StyleTile />;
   }
 
+  return (
+    <I18nProvider>
+      <Calculator />
+    </I18nProvider>
+  );
+}
+
+function Calculator() {
   const [phase, setPhase] = useState<Phase>("form");
   const [assessment, setAssessment] = useState<AssessmentState | null>(null);
   const [household, setHousehold] = useState<HouseholdCaseInputs | null>(null);
@@ -125,7 +64,7 @@ export default function App() {
 /**
  * Stands in for the capex / running-cost / financing view until the energy
  * model behind it (climate zone by postal code, insulation and window
- * U-values, appliance loads) is finalised — see estimateEnergyProfile.
+ * U-values, appliance loads) is finalised: see estimateEnergyProfile.
  */
 function FinancialsPlaceholder({
   assessment,
@@ -136,16 +75,22 @@ function FinancialsPlaceholder({
   household: HouseholdCaseInputs;
   onBack: () => void;
 }) {
+  const t = useT();
+  const s = t.summary;
+
   return (
     <div className="mx-auto w-full lg:w-1/2 lg:min-w-[600px] xl:max-w-[820px] px-4 py-8">
-      <button
-        type="button"
-        onClick={onBack}
-        className="mb-6 flex items-center gap-2 text-sm font-semibold text-ink-soft hover:text-ink"
-      >
-        <ArrowLeft className="h-4 w-4" aria-hidden />
-        Back to your answers
-      </button>
+      <div className="mb-6 flex items-center justify-between gap-3">
+        <button
+          type="button"
+          onClick={onBack}
+          className="flex items-center gap-2 text-sm font-semibold text-ink-soft hover:text-ink"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden />
+          {t.nav.backToAnswers}
+        </button>
+        <LanguageToggle />
+      </div>
 
       {/*
         The baseline leads. Every number that follows it is a change measured
@@ -170,155 +115,159 @@ function FinancialsPlaceholder({
                 <ClipboardList className="h-5 w-5" aria-hidden />
               </div>
               <h2 className="text-[23px] font-bold tracking-tight text-ink">
-                The answers behind these numbers
+                {s.title}
               </h2>
-              <p className="mt-2 text-base text-ink-soft">
-                Every figure above is built from what you told us. Here it is
-                back, so you can check anything that looks wrong.
-              </p>
+              <p className="mt-2 text-base text-ink-soft">{s.subtitle}</p>
 
-              {getPostalCodeWarning(assessment.location.postalCode) && (
+              {postalCodeIssue(assessment.location.postalCode) && (
                 <div className="mt-4 flex items-start gap-2 rounded-lg bg-yellow-50 p-3 border border-yellow-200">
                   <AlertCircle
                     className="h-4 w-4 mt-0.5 text-yellow-600 flex-shrink-0"
                     aria-hidden
                   />
                   <p className="text-sm text-yellow-700">
-                    {getPostalCodeWarning(assessment.location.postalCode)}
+                    {t.postalCode.invalidFormat}
                   </p>
                 </div>
               )}
 
               <dl className="mt-6 grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
                 <Fact
-                  label="Postal code"
-                  value={assessment.location.postalCode || "—"}
+                  label={s.postalCode}
+                  value={assessment.location.postalCode || s.empty}
                 />
               </dl>
 
               <h3 className="mt-8 text-xs font-semibold uppercase tracking-wider text-ink-soft/70">
-                Home & comfort
+                {s.homeSection}
               </h3>
               <dl className="mt-3 grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
                 <Fact
-                  label="House type"
-                  value={formatValue("houseKind", household.houseKind)}
+                  label={s.houseType}
+                  value={t.options.houseKind[household.houseKind].label}
                 />
                 <Fact
-                  label="Insulation"
-                  value={formatValue("insulation", household.insulation)}
+                  label={s.insulation}
+                  value={t.options.insulation[household.insulation].label}
                 />
                 <Fact
-                  label="Window frames"
-                  value={formatValue("windowFrame", household.windowFrame)}
+                  label={s.windowFrames}
+                  value={t.options.windowFrame[household.windowFrame].label}
                 />
                 <Fact
-                  label="Heated area"
-                  value={`${household.heatedAreaM2} m²`}
+                  label={s.heatedArea}
+                  value={s.heatedAreaValue(household.heatedAreaM2)}
                 />
                 <Fact
-                  label="Radiators"
-                  value={formatValue("radiatorType", household.radiatorType)}
+                  label={s.radiators}
+                  value={t.options.radiatorType[household.radiatorType].label}
                 />
-                <Fact label="Occupants" value={String(household.occupants)} />
+                <Fact label={s.occupants} value={String(household.occupants)} />
                 <Fact
-                  label="AC available"
-                  value={household.acAvailable ? "Yes" : "No"}
+                  label={s.acAvailable}
+                  value={household.acAvailable ? s.yes : s.no}
                 />
                 <Fact
-                  label="Unheated rooms"
-                  value={
-                    household.unheatedRooms
-                      ? formatValue("unheatedRooms", household.unheatedRooms)
-                      : "—"
-                  }
+                  label={s.unheatedRooms}
+                  value={household.unheatedRooms || s.empty}
                 />
               </dl>
 
               <h3 className="mt-8 text-xs font-semibold uppercase tracking-wider text-ink-soft/70">
-                Current heating & fuel
+                {s.heatingSection}
               </h3>
               <dl className="mt-3 grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
                 <Fact
-                  label="Coal type"
-                  value={formatValue("coalType", household.coalType)}
+                  label={s.coalType}
+                  value={t.options.coalType[household.coalType].label}
                 />
                 <Fact
-                  label="Also burns wood"
-                  value={household.usesWoodToo ? "Yes" : "No"}
+                  label={s.alsoBurnsWood}
+                  value={household.usesWoodToo ? s.yes : s.no}
                 />
                 <Fact
-                  label="Coal bought"
-                  value={`${household.coalTonnesPerSeason} t/season @ ${household.coalPricePerTonnePln} zł/t`}
+                  label={s.coalBought}
+                  value={s.coalBoughtValue(
+                    household.coalTonnesPerSeason,
+                    household.coalPricePerTonnePln,
+                  )}
                 />
                 <Fact
-                  label="Boiler"
-                  value={`${formatValue("boilerClass", household.boilerClass)}${household.boilerYear ? ", " + household.boilerYear : ""}`}
+                  label={s.boiler}
+                  value={s.boilerValue(
+                    t.options.boilerClass[household.boilerClass].label,
+                    household.boilerYear,
+                  )}
                 />
                 <Fact
-                  label="Free/discounted coal"
+                  label={s.freeCoal}
                   value={
                     household.freeCoalReceived
-                      ? `Yes (${household.freeCoalTonnes} t)`
-                      : "No"
+                      ? s.freeCoalValue(household.freeCoalTonnes)
+                      : s.no
                   }
                 />
                 <Fact
-                  label="City deadline notice"
-                  value={formatValue(
-                    "cityDeadlineNotice",
-                    household.cityDeadlineNotice,
-                  )}
+                  label={s.cityDeadline}
+                  value={
+                    t.options.cityDeadlineNotice[household.cityDeadlineNotice]
+                      .label
+                  }
                 />
                 <Fact
-                  label="Replacement preference"
-                  value={formatValue(
-                    "replacementPreference",
-                    household.replacementPreference,
-                  )}
+                  label={s.replacementPreference}
+                  value={
+                    t.options.replacementPreference[
+                      household.replacementPreference
+                    ].label
+                  }
                 />
                 <Fact
-                  label="Coal provider"
-                  value={household.coalProvider || "—"}
+                  label={s.coalProvider}
+                  value={household.coalProvider || s.empty}
                 />
               </dl>
 
               <h3 className="mt-8 text-xs font-semibold uppercase tracking-wider text-ink-soft/70">
-                Electricity & water
+                {s.electricitySection}
               </h3>
               <dl className="mt-3 grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
                 <Fact
-                  label="Electricity"
-                  value={`${formatValue("electricityTariff", household.electricityTariff)}, ${household.electricityBillPlnPerMonth} zł/mo`}
+                  label={s.electricity}
+                  value={s.electricityValue(
+                    t.options.electricityTariff[household.electricityTariff]
+                      .label,
+                    household.electricityBillPlnPerMonth,
+                  )}
                 />
                 <Fact
-                  label="Water heating"
-                  value={formatValue("waterHeating", household.waterHeating)}
+                  label={s.waterHeating}
+                  value={t.options.waterHeating[household.waterHeating].label}
                 />
                 <Fact
-                  label="Showers/baths per week, per person"
+                  label={s.showers}
                   value={String(household.showersBathsPerWeek)}
                 />
                 <Fact
-                  label="Gas connection"
-                  value={household.gasConnectionAvailable ? "Yes" : "No"}
+                  label={s.gasConnection}
+                  value={household.gasConnectionAvailable ? s.yes : s.no}
                 />
                 {/*
             Battery and heat storage are still on HouseholdCaseInputs (the
             wizard just does not collect them right now), so if either is ever
-            true — a persona edited by hand, say — it still shows up here
+            true: a persona edited by hand, say: it still shows up here
             rather than silently vanishing.
           */}
                 <Fact
-                  label="PV / battery / storage"
+                  label={s.pvBatteryStorage}
                   value={
                     [
-                      household.hasPvPanels && "PV",
-                      household.hasBattery && "Battery",
-                      household.hasHeatStorage && "Heat storage",
+                      household.hasPvPanels && s.pv,
+                      household.hasBattery && s.battery,
+                      household.hasHeatStorage && s.heatStorage,
                     ]
                       .filter(Boolean)
-                      .join(", ") || "None"
+                      .join(", ") || s.none
                   }
                 />
               </dl>

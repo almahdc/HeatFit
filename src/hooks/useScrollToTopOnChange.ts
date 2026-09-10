@@ -29,7 +29,7 @@ function scrollToTop(): void {
   });
 
   // window.scrollTo with the options object silently does nothing on old
-  // WebKit rather than falling back on its own — jump straight there if the
+  // WebKit rather than falling back on its own: jump straight there if the
   // browser did not tell us it understands the smooth-scroll options object.
   if (!supportsSmoothBehavior && typeof document !== "undefined") {
     document.documentElement.scrollTop = 0;
@@ -38,21 +38,21 @@ function scrollToTop(): void {
 }
 
 /**
- * Point this at state that changes on a Continue/Back-style navigation — a
- * wizard's step index, the top-level form/financials phase — so that
+ * Point this at state that changes on a Continue/Back-style navigation: a
+ * wizard's step index, the top-level form/financials phase: so that
  * transition always lands the user at the top of the new screen instead of
  * wherever they happened to be scrolled to on the old one. One hook, reused
  * at every such transition, rather than a scrollTo call hand-copied into
  * each navigation handler.
  *
  * Deliberately NOT used for in-place choices on an already-visible screen
- * (an option card, a toggle, a picker) — jumping the whole page for those
+ * (an option card, a toggle, a picker): jumping the whole page for those
  * fights the user right as they are looking at what they just clicked.
  */
 export function useScrollToTopOnChange(value: unknown): void {
   useEffect(() => {
     scrollToTop();
-    // `value` stands in for "the thing that just changed" — the effect body
+    // `value` stands in for "the thing that just changed": the effect body
     // never reads it, only reacts to it changing.
   }, [value]);
 }

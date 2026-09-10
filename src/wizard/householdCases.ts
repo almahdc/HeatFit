@@ -2,9 +2,9 @@
 //
 // These exist so the form below can be quick-filled with a known-good
 // dataset while testing or demoing, rather than retyping each interview by
-// hand. The fields here are deliberately Poland/coal-specific — a different,
+// hand. The fields here are deliberately Poland/coal-specific: a different,
 // narrower domain than the generic AssessmentState used by the rest of the
-// wizard — so this stays its own module rather than folding into
+// wizard: so this stays its own module rather than folding into
 // assessmentTypes.ts.
 
 export type CoalType = "orzech" | "groszek" | "kostka" | "mul" | "other";
@@ -100,21 +100,18 @@ export const initialHouseholdCase: HouseholdCaseInputs = {
   additionalNotes: "",
 };
 
+/** Ids double as i18n keys: see `personas.cases` in the dictionaries. */
+export type HouseholdCaseId =
+  "grandmaKrysia" | "grandpaJanek" | "mrsTeresa" | "mrMarek";
+
 export interface HouseholdCasePreset {
-  id: string;
-  name: string;
-  tagline: string;
-  description: string;
+  id: HouseholdCaseId;
   data: HouseholdCaseInputs;
 }
 
 export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
   {
     id: "grandmaKrysia",
-    name: "Grandma Krysia",
-    tagline: "Why touch it? Why change it?",
-    description:
-      "Uses an old off-class manual coal boiler and relies on local media updates.",
     data: {
       houseKind: "detached",
       insulation: "none",
@@ -124,13 +121,13 @@ export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
       radiatorNote: "",
       occupants: 5,
       acAvailable: false,
-      unheatedRooms: "None — whole house heated",
+      unheatedRooms: "None: whole house heated",
 
       coalType: "orzech",
       usesWoodToo: false,
       coalTonnesPerSeason: 5,
       coalPricePerTonnePln: 1300,
-      coalPriceNote: "300 zł/t is transport — 1,000 zł/t ex-works",
+      coalPriceNote: "300 zł/t is transport: 1,000 zł/t ex-works",
       freeCoalReceived: false,
       freeCoalTonnes: "",
       freeCoalNote: "Not asked",
@@ -155,10 +152,6 @@ export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
   },
   {
     id: "grandpaJanek",
-    name: "Grandpa Janek",
-    tagline: "Everything at the last minute",
-    description:
-      "Has a gas connection at the fence and an aging Class 4 boiler from 2017.",
     data: {
       houseKind: "detached",
       insulation: "none",
@@ -198,17 +191,13 @@ export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
   },
   {
     id: "mrsTeresa",
-    name: "Mrs. Teresa",
-    tagline: "In the big house",
-    description:
-      "Living alone in a large legacy home with massive radiators and unheated upper rooms.",
     data: {
       houseKind: "detached",
       insulation: "none",
       windowFrame: "woodenOld",
       heatedAreaM2: 130,
       radiatorType: "standard",
-      radiatorNote: "Old, massive cast-iron radiators — extremely hot to touch",
+      radiatorNote: "Old, massive cast-iron radiators: extremely hot to touch",
       occupants: 1,
       acAvailable: false,
       unheatedRooms:
@@ -242,17 +231,13 @@ export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
   },
   {
     id: "mrMarek",
-    name: "Mr. Marek",
-    tagline: "On the night tariff",
-    description:
-      "A pragmatic optimizer using the G12 night tariff, Orzech coal, and night-active water heating.",
     data: {
       houseKind: "detached",
       insulation: "standard",
       windowFrame: "doublePanePvc",
       heatedAreaM2: 150,
       radiatorType: "standard",
-      radiatorNote: "Old, large cast-iron radiators — extremely hot to touch",
+      radiatorNote: "Old, large cast-iron radiators: extremely hot to touch",
       occupants: 4,
       acAvailable: false,
       unheatedRooms: "Uninsulated attic space (~15 m²)",

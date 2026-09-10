@@ -1,10 +1,10 @@
 /**
- * financing.ts — what the homeowner actually pays each month.
+ * financing.ts: what the homeowner actually pays each month.
  *
  * Two things make this more than an annuity formula:
  *
- * 1. WHICH ROUTE. The Czyste Powietrze bank route — where the grant is paid
- *    directly onto the loan capital — is suspended as of 19.08.2026. The routes
+ * 1. WHICH ROUTE. The Czyste Powietrze bank route: where the grant is paid
+ *    directly onto the loan capital: is suspended as of 19.08.2026. The routes
  *    that are open are more expensive and pay the grant to the homeowner after
  *    settlement. Modelling the suspended route as if it were available would
  *    understate every monthly figure by a meaningful margin.
@@ -19,16 +19,16 @@
  *
  * A grant reaches the homeowner by one of two paths, never both:
  *
- *   grantAppliedToCapital — it went to the bank and shrank the balance. The
+ *   grantAppliedToCapital: it went to the bank and shrank the balance. The
  *     homeowner never touched it. It already shows up as smaller instalments,
  *     so it must NOT be subtracted again from net cost.
  *
- *   grantReimbursed — it landed in the homeowner's account after settlement.
+ *   grantReimbursed: it landed in the homeowner's account after settlement.
  *     Instalments were unaffected, so this IS subtracted from net cost.
  *
  * An earlier version subtracted the grant from net cost on both paths. On the
- * bank route a 42 000 zł grant came back as minus 39 389 zł of net cost — the
- * tool claimed a heat pump pays you to install it — and interest carried the
+ * bank route a 42 000 zł grant came back as minus 39 389 zł of net cost: the
+ * tool claimed a heat pump pays you to install it: and interest carried the
  * mirror-image error and went negative. The two fields below exist so this
  * cannot recur: every złoty of grant is assigned to exactly one of them, and a
  * test asserts they sum back to the grant.
@@ -49,8 +49,8 @@ export interface FinancingRoute {
   maxTermMonths: number;
   maxPrincipal: number;
   /**
-   * true  — grant is paid onto the loan capital, payment steps down (bank route)
-   * false — homeowner borrows the full cost and is reimbursed later
+   * true : grant is paid onto the loan capital, payment steps down (bank route)
+   * false: homeowner borrows the full cost and is reimbursed later
    */
   grantPaysDownCapital: boolean;
   source: string;
@@ -164,13 +164,13 @@ export interface FinancingPlan {
   monthlyBeforeGrant: Range;
   /** Payment after the grant is credited. Equals the above on open routes. */
   monthlyAfterGrant: Range;
-  /** Zero once the loan is repaid — the "after the loan ends" number. */
+  /** Zero once the loan is repaid: the "after the loan ends" number. */
   monthlyAfterLoan: Range;
   /** Every złoty of instalment the homeowner hands over across the term. */
   paidByHomeowner: Range;
   /**
    * Grant that went straight to the bank and shrank the balance. Already
-   * reflected in the instalments — never subtract this from net cost again.
+   * reflected in the instalments: never subtract this from net cost again.
    */
   grantAppliedToCapital: Range;
   /**
@@ -195,7 +195,7 @@ export function financingPlan(input: FinancingInput): FinancingPlan {
 
   if (route.status === "suspended") {
     warnings.push(
-      `${route.label} is not available today — applications are suspended. Shown for comparison only.`,
+      `${route.label} is not available today: applications are suspended. Shown for comparison only.`,
     );
   }
   if (route.note?.includes("EXPIRES")) {
@@ -231,7 +231,7 @@ export function financingPlan(input: FinancingInput): FinancingPlan {
   }
 
   // Both routes borrow the full turnkey cost. What differs is where the grant
-  // goes afterwards, which is handled below — not here.
+  // goes afterwards, which is handled below: not here.
   const borrowed = input.capitalCost;
 
   if (borrowed.high > route.maxPrincipal) {
@@ -348,12 +348,12 @@ export function financingPlan(input: FinancingInput): FinancingPlan {
 
 /**
  * The headline the homeowner reads: loan repayment plus running cost.
- * Two numbers, both visible — during the loan, and after it is repaid.
+ * Two numbers, both visible: during the loan, and after it is repaid.
  *
  * Note on the open routes: the homeowner pays the full instalment for the whole
  * term and receives the grant as cash partway through. This function shows that
- * literally. If they use the grant to overpay the loan — which most people
- * would — the real monthly figure steps down. That is a product decision, not a
+ * literally. If they use the grant to overpay the loan: which most people
+ * would: the real monthly figure steps down. That is a product decision, not a
  * modelling one, and it is deliberately not assumed here.
  */
 export function headlineMonthly(
@@ -391,7 +391,7 @@ export interface ScheduleYear {
   /**
    * Months of this calendar year that fall inside the horizon. The first and
    * last years are usually partial. Exposed so a caller comparing against a
-   * baseline can scale it to the same number of months — comparing a five-month
+   * baseline can scale it to the same number of months: comparing a five-month
    * first year against a twelve-month baseline invents a saving.
    */
   monthsInYear: number;

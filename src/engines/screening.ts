@@ -1,5 +1,5 @@
 /**
- * screening.ts — household facts that are not about heat demand at all, but
+ * screening.ts: household facts that are not about heat demand at all, but
  * gate or route every downstream path (gas, pellet, heat pump, solar,
  * insulation) before any kWh math runs.
  *

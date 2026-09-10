@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   formatPolishPostalCode,
   getPolishRegion,
-  getPostalCodeWarning,
+  postalCodeIssue,
   isPolishPostalCode,
 } from "../utils/postalCode";
 
@@ -48,18 +48,18 @@ describe("region lookup", () => {
   });
 });
 
-describe("postal code warning", () => {
+describe("postal code issue", () => {
   it("stays quiet for an empty field", () => {
-    expect(getPostalCodeWarning("")).toBeNull();
+    expect(postalCodeIssue("")).toBeNull();
   });
 
-  it("warns on a malformed postcode", () => {
-    expect(getPostalCodeWarning("abc")).not.toBeNull();
+  it("reports a malformed postcode as a code, not a sentence", () => {
+    expect(postalCodeIssue("abc")).toBe("invalidFormat");
   });
 
   it("stays quiet for any valid Polish postcode, nationwide", () => {
-    expect(getPostalCodeWarning("00-001")).toBeNull();
-    expect(getPostalCodeWarning("40-001")).toBeNull();
-    expect(getPostalCodeWarning("90-001")).toBeNull();
+    expect(postalCodeIssue("00-001")).toBeNull();
+    expect(postalCodeIssue("40-001")).toBeNull();
+    expect(postalCodeIssue("90-001")).toBeNull();
   });
 });

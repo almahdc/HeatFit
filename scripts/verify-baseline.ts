@@ -1,5 +1,5 @@
 /**
- * verify-baseline.ts — an independent audit of the baseline model.
+ * verify-baseline.ts: an independent audit of the baseline model.
  *
  *   npm run verify:baseline
  *
@@ -13,7 +13,7 @@
  * that called `coalHeatDelivered()` to verify `coalHeatDelivered()` would agree
  * with itself no matter how wrong both were.
  *
- * The printed breakdown is meant to be read, not just scanned for PASS — each
+ * The printed breakdown is meant to be read, not just scanned for PASS: each
  * line shows the arithmetic so the numbers can be checked by hand.
  */
 
@@ -37,7 +37,7 @@ const COAL = {
 const FREE_COAL = { kwhPerTonne: 7800, efficiency: 0.8 }; // the "Miner" row
 
 // Boiler efficiency by emission class. Overrides the flat 0.80 the sheet folds
-// into every coal fuel row — the whole point of collecting the class.
+// into every coal fuel row: the whole point of collecting the class.
 const BOILER_EFF = {
   bezklasowy: 0.6,
   class3: 0.75,
@@ -47,7 +47,7 @@ const BOILER_EFF = {
 
 const ELECTRIC_BOILER_EFFICIENCY = 0.98;
 const WATER_KWH_PER_LITRE = 0.05;
-// Not every litre a shower draws needed the full 45°C lift — a mixing valve
+// Not every litre a shower draws needed the full 45°C lift: a mixing valve
 // tempers tank/boiler-heated water with cold mains at the tap.
 const HOT_WATER_BLEND_FACTOR = 0.6;
 const LITRES_PER_SHOWER = 40; // not in the sheet; our assumption
@@ -96,7 +96,7 @@ function audit(presetId: string, alias: string) {
   const d = preset.data;
   const model = calculateUserBaseline(presetId);
 
-  rule(`${preset.name} — "${alias}"`);
+  rule(`${preset.name}: "${alias}"`);
 
   console.log(`\n  INPUTS`);
   console.log(
@@ -312,7 +312,7 @@ function audit(presetId: string, alias: string) {
 // ---------------------------------------------------------------------------
 
 function sheetScenarios() {
-  rule("SHEET REGRESSION — price_calculator SCENARIOS tab, House 1, free coal");
+  rule("SHEET REGRESSION: price_calculator SCENARIOS tab, House 1, free coal");
 
   const cases: Array<[string, number, keyof typeof PRICE, boolean, number]> = [
     ["Miner60 AC/Std/PV+bat", 750, "G11", true, 98.44],
@@ -345,7 +345,7 @@ function sheetScenarios() {
 // ---------------------------------------------------------------------------
 
 console.log(
-  "\nBASELINE VERIFICATION — model vs. an independent longhand recomputation",
+  "\nBASELINE VERIFICATION: model vs. an independent longhand recomputation",
 );
 console.log(
   "Constants re-transcribed from the price_calculator sheet inside this script.",
@@ -354,7 +354,7 @@ console.log(
 // The two the review asked for, first.
 audit("mrMarek", "The Night-Shift G12 Retrofitter");
 audit("mrsTeresa", "The Single Occupant in a Legacy");
-// The other two, for completeness — they exercise free coal and a summer split.
+// The other two, for completeness: they exercise free coal and a summer split.
 audit("grandpaJanek", "The Last-Minute Holdout");
 audit("grandmaKrysia", "The Media-Only Holdout");
 

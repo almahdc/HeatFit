@@ -1,5 +1,5 @@
 /**
- * money.test.ts — regression tests for the two accounting bugs.
+ * money.test.ts: regression tests for the two accounting bugs.
  *
  * Both bugs were invisible in the UI, because the wizard only renders the
  * monthly figure. They would have surfaced the first time anyone showed total

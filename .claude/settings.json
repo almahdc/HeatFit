@@ -6,7 +6,16 @@
       "Bash(npx --yes playwright --version)",
       "Bash(npx prettier *)",
       "Bash(curl -s \"https://docs.google.com/spreadsheets/d/1NtWAubbQdrkw4wuPU6isPSipSjX1Am9IlrXGquMJQCg/export?format=csv&gid=396550938\")",
-      "Bash(npx vitest *)"
+      "Bash(npx vitest *)",
+      "Bash(python3 -)",
+      "Bash(git -C /Users/alma/Desktop/HeatFit diff --stat src/App.tsx)",
+      "Bash(git -C /Users/alma/Desktop/HeatFit diff src/App.tsx)",
+      "Read(//Users/alma/Library/Caches/ms-playwright/**)",
+      "Read(//Applications/**)",
+      "Read(//Users/alma/.cache/**)",
+      "Bash(npm run *)",
+      "Bash(lsof -ti:5173 -sTCP:LISTEN)",
+      "Bash(xargs -r kill)"
     ]
   }
 }

@@ -1,5 +1,5 @@
 /**
- * verdict.ts — the sentence the homeowner actually acts on.
+ * verdict.ts: the sentence the homeowner actually acts on.
  *
  * Rules are evaluated in order and the first match wins. The order matters:
  * "too close to call" comes first, because a ranking produced from overlapping
@@ -115,7 +115,7 @@ function vsToday(option: number, today: number): string {
  *
  * This is not a tie between two heating systems. It is one heating system and
  * an optional roof. So the verdict settles heating and reframes solar as a
- * second, separate decision — which is what a neighbour would actually say.
+ * second, separate decision: which is what a neighbour would actually say.
  *
  * The honesty constraint here is severe, because the PV saving is the least
  * trustworthy number this model produces:
@@ -127,7 +127,7 @@ function vsToday(option: number, today: number): string {
  *     optimistic. Until pv.ts exists, the saving quoted here is a ceiling.
  *
  *   SEASONAL MISMATCH. Polish PV yields a few percent of its annual output in
- *     December and January — exactly when a heat pump draws hardest. Without a
+ *     December and January: exactly when a heat pump draws hardest. Without a
  *     battery, panels do not cover winter heating. Any claim of independence
  *     from the grid would be false.
  *
@@ -221,7 +221,7 @@ export function verdict(input: VerdictInput): Verdict {
   if (tooCloseToCall(cheapest.duringLoan, runnerUp.duringLoan)) {
     // Special case: the two tied options are the same machine. A tie between
     // "heat pump" and "heat pump plus PV" is not a choice between two heating
-    // systems — same unit, same install, same radiators, only panels differ.
+    // systems: same unit, same install, same radiators, only panels differ.
     // Refusing to rank them leaves the household believing the heating decision
     // is unresolved when it is not. Settle heating, hand them solar separately.
     const ids = [cheapest.id, runnerUp.id];
@@ -232,7 +232,7 @@ export function verdict(input: VerdictInput): Verdict {
     // Do NOT union the two bands into one range. min(low)..max(high) across two
     // scenarios spans far more than either option actually does, and reads as
     // "we know nothing". State each band, then name which one is the vague one
-    // and why — that is the sentence the household can act on.
+    // and why: that is the sentence the household can act on.
     const wider =
       width(cheapest.duringLoan) >= width(runnerUp.duringLoan)
         ? cheapest

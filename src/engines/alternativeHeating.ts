@@ -1,11 +1,11 @@
 /**
- * alternativeHeating.ts — what the SAME household would pay if only the space
+ * alternativeHeating.ts: what the SAME household would pay if only the space
  * heating source changed, everything else held fixed.
  *
  * This is Block 2 and Block 3 of the financials screen: for each replacement
  * option, the running cost on today's numbers (Block 2), and the plain
  * subtraction against the baseline (Block 3). Nothing here proposes what to
- * actually install — that is `verdict.ts`'s job, once it has more than running
+ * actually install: that is `verdict.ts`'s job, once it has more than running
  * cost to weigh. This module only answers "what would the meter say".
  *
  * Deliberately narrow, the same way `baseline.ts` is narrow:
@@ -18,33 +18,33 @@
  *     which number moved. See docs/alternative-heating-model.md.
  *   - No capex, no financing, no subsidy. Those layer on top of this number
  *     later; they do not change it. PV running-cost netting is the one
- *     exception — see below.
+ *     exception: see below.
  *   - The useful heat a replacement has to deliver is taken from the coal
- *     system's own `spaceHeatKwh` — the building needs the same warmth
+ *     system's own `spaceHeatKwh`: the building needs the same warmth
  *     regardless of what makes it, so anchoring on the coal system's own
  *     delivered heat is what keeps this comparable to the baseline it is
  *     measured against, rather than a second, independent guess at heat
  *     demand.
  *   - Efficiencies and COPs come from `sheet.constants.ts`'s own FUEL rows —
- *     the same point-value source `baseline.ts` reproduces — so the two sides
+ *     the same point-value source `baseline.ts` reproduces: so the two sides
  *     of the comparison come from one consistent model rather than mixing
  *     sheet point values here with the low/mid/high bands `constants.pl.ts`
  *     uses elsewhere in this codebase.
  *
  * PV: a heat pump's new electricity draw joins the SAME household meter that
- * `baseline.ts` already nets PV self-consumption and export against — it is
+ * `baseline.ts` already nets PV self-consumption and export against: it is
  * not a separate pool. So a heat pump's space heating cost here is priced as
  * the MARGINAL cost of adding its kWh on top of the household's existing
  * consumption, run back through `baseline.ts`'s own `electricityCost()`:
  *
  *   marginal cost = electricityCost(existing + new, ...) - electricityCost(existing, ...)
  *
- * With no PV this collapses to exactly `new kWh x price` — the same figure
+ * With no PV this collapses to exactly `new kWh x price`: the same figure
  * this file always computed, so nothing changes for a household without
  * panels. With PV, the extra consumption raises the self-consumed share
  * (a fixed 25% of whatever the meter draws), so the marginal cost of the new
  * kWh comes out lower than the flat rate would suggest. Water heating and
- * "electricity & cooling" are untouched either way — they are still whatever
+ * "electricity & cooling" are untouched either way: they are still whatever
  * `baseline.ts` already priced for the household's existing consumption, PV
  * included.
  */
@@ -56,57 +56,33 @@ import type { ElectricityTariffCase } from "../wizard/householdCases";
 
 export type AlternativeHeatingId = "airToAirHp" | "airToWaterHp" | "pellet";
 
-export interface AlternativeHeatingOption {
-  id: AlternativeHeatingId;
-  name: string;
-  /** Plain-language description of the appliance, no jargon. */
-  description: string;
-  /** How to say its conversion efficiency to a household, not an engineer. */
-  efficiencyLabel: string;
-}
-
-export const ALTERNATIVE_HEATING_OPTIONS: AlternativeHeatingOption[] = [
-  {
-    id: "airToAirHp",
-    name: "Air-to-air heat pump",
-    description:
-      "Wall or ceiling units that heat air directly, the way a reverse-cycle air conditioner does.",
-    efficiencyLabel:
-      "delivers about 4 kWh of heat for every 1 kWh of electricity it uses",
-  },
-  {
-    id: "airToWaterHp",
-    name: "Air-to-water heat pump",
-    description:
-      "Connects to your existing radiators, heating the water that runs through them the way your coal boiler does now.",
-    efficiencyLabel:
-      "delivers about 3 kWh of heat for every 1 kWh of electricity it uses",
-  },
-  {
-    id: "pellet",
-    name: "Pellet boiler",
-    description:
-      "Burns compressed wood pellets automatically in place of coal, through a similar boiler and the same radiators.",
-    efficiencyLabel: "turns about 85% of the pellets' energy into heat",
-  },
+/**
+ * The options, in the order they should be offered.
+ *
+ * Ids only. Every word a household reads about these appliances (name,
+ * description, how to say their efficiency) lives in the i18n dictionary
+ * under `alternatives.options`, keyed by these same ids, so there is one
+ * source of display text per language and no English to leak through.
+ */
+export const ALTERNATIVE_HEATING_IDS: AlternativeHeatingId[] = [
+  "airToAirHp",
+  "airToWaterHp",
+  "pellet",
 ];
 
 export interface AlternativeHeatingCost {
   id: AlternativeHeatingId;
-  name: string;
-  description: string;
-  efficiencyLabel: string;
 
   /** What the replacement itself burns or draws, space heating only. */
   fuelPerYear: number;
   fuelUnit: "kWh" | "t";
-  /** What that fuel costs, space heating only — the one line that changed. */
+  /** What that fuel costs, space heating only: the one line that changed. */
   spaceHeatingPlnPerYear: number;
   /**
    * How much of `spaceHeatingPlnPerYear`'s absence PV is responsible for:
    * the flat, un-netted cost of the same kWh minus what was actually
    * charged. Zero for a household with no PV, and always zero for pellet
-   * (combustion, not electricity — PV cannot touch its fuel cost).
+   * (combustion, not electricity: PV cannot touch its fuel cost).
    */
   pvSavingsOnSpaceHeatingPlnPerYear: number;
 
@@ -130,11 +106,11 @@ function electricityPricePerKwh(tariff: ElectricityTariffCase): number {
  * Running cost of one replacement option, on the household's baseline.
  *
  * `usefulHeatKwh` is the coal system's own `spaceHeatKwh` unless a caller has
- * a better figure — there usually is not one, since a building's heat demand
+ * a better figure: there usually is not one, since a building's heat demand
  * does not depend on what currently meets it.
  *
  * `hasPvPanels` should be the same value `baseline` itself was computed with
- * — this only prices the NEW electricity a heat pump adds; it does not
+ *: this only prices the NEW electricity a heat pump adds; it does not
  * re-derive whether the household has panels at all.
  */
 export function calculateAlternativeHeatingCost(
@@ -144,11 +120,6 @@ export function calculateAlternativeHeatingCost(
   usefulHeatKwh: number = baseline.energy.spaceHeatKwh,
   hasPvPanels: boolean = false,
 ): AlternativeHeatingCost {
-  const option = ALTERNATIVE_HEATING_OPTIONS.find((o) => o.id === id);
-  if (!option) {
-    throw new Error(`Unknown alternative heating option: ${id}`);
-  }
-
   let fuelPerYear: number;
   let fuelUnit: "kWh" | "t";
   let spaceHeatingPlnPerYear: number;
@@ -177,7 +148,7 @@ export function calculateAlternativeHeatingCost(
 
     // This new draw shares the household's one meter with everything else,
     // so it is priced as what adding it changes the household's total
-    // electricity bill by — not as if it were its own separate, unpaneled
+    // electricity bill by: not as if it were its own separate, unpaneled
     // connection.
     const existingKwh =
       baseline.electricity.measuredKwh ?? baseline.electricity.modelledKwh;
@@ -202,9 +173,6 @@ export function calculateAlternativeHeatingCost(
 
   return {
     id,
-    name: option.name,
-    description: option.description,
-    efficiencyLabel: option.efficiencyLabel,
     fuelPerYear,
     fuelUnit,
     spaceHeatingPlnPerYear,
@@ -224,9 +192,9 @@ export function calculateAllAlternativeHeatingCosts(
   electricityTariff: ElectricityTariffCase,
   hasPvPanels: boolean = false,
 ): AlternativeHeatingCost[] {
-  return ALTERNATIVE_HEATING_OPTIONS.map((option) =>
+  return ALTERNATIVE_HEATING_IDS.map((id) =>
     calculateAlternativeHeatingCost(
-      option.id,
+      id,
       baseline,
       electricityTariff,
       undefined,

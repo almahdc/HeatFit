@@ -1,4 +1,4 @@
-/* HeatFit Design Tokens — Semantic Color & Type System
+/* HeatFit Design Tokens: Semantic Color & Type System
    
    All colors and sizes defined here. Components never use raw hex or pixel values.
    This file is the source of truth for the entire visual system.
@@ -66,33 +66,33 @@
 
   /* --- SCENARIO COLORS (5 scenarios, light-to-dark blue ramp) -------------- */
 
-  /* Coal baseline — always charcoal, not blue */
+  /* Coal baseline: always charcoal, not blue */
   --scenario-coal: var(--color-charcoal);
 
-  /* Ecodesign coal boiler — lightest blue */
+  /* Ecodesign coal boiler: lightest blue */
   --scenario-ecodesign: #a5bdd6;
 
-  /* Pellet boiler — medium-light blue */
+  /* Pellet boiler: medium-light blue */
   --scenario-pellet: #7a9dc9;
 
-  /* Heat pump alone — medium-dark blue */
+  /* Heat pump alone: medium-dark blue */
   --scenario-heatpump: #5c80bc;
 
-  /* Heat pump + PV — darkest blue */
+  /* Heat pump + PV: darkest blue */
   --scenario-heatpump-pv: #3d5e96;
 
   /* --- TYPE SCALE (modular 1.25x scale, base 17px floor) -------------------- */
 
-  --type-xs: 0.84rem; /* 13.44px — small labels, hints */
-  --type-sm: 1.05rem; /* 16.8px — secondary text */
-  --type-base: 1.31rem; /* 20.96px — body text floor (meets 17px requirement + 1.5x multiplier) */
-  --type-lg: 1.64rem; /* 26.24px — section subheadings */
-  --type-xl: 2.05rem; /* 32.8px — step titles */
-  --type-2xl: 2.56rem; /* 40.96px — section headings */
-  --type-3xl: 3.2rem; /* 51.2px — page title */
+  --type-xs: 0.84rem; /* 13.44px: small labels, hints */
+  --type-sm: 1.05rem; /* 16.8px: secondary text */
+  --type-base: 1.31rem; /* 20.96px: body text floor (meets 17px requirement + 1.5x multiplier) */
+  --type-lg: 1.64rem; /* 26.24px: section subheadings */
+  --type-xl: 2.05rem; /* 32.8px: step titles */
+  --type-2xl: 2.56rem; /* 40.96px: section headings */
+  --type-3xl: 3.2rem; /* 51.2px: page title */
 
-  /* Signature figure — enormous, impossible to miss */
-  --type-figure: 4rem; /* 64px — monthly cost/savings */
+  /* Signature figure: enormous, impossible to miss */
+  --type-figure: 4rem; /* 64px: monthly cost/savings */
 
   /* --- TYPE WEIGHTS (no thin or light weights) ------ */
 

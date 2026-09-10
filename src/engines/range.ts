@@ -1,5 +1,5 @@
 /**
- * Range — the return type of every engine function.
+ * Range: the return type of every engine function.
  *
  * No engine returns a bare number. Every value in this product is uncertain,
  * so the uncertainty travels with it. That is what makes an honest
@@ -15,7 +15,7 @@
  *
  * Worst-case intervals assume every independent error hits its maximum in the
  * same direction at the same time. With six uncertain inputs that is
- * statistically absurd, and it is not merely conservative — it is wrong in a
+ * statistically absurd, and it is not merely conservative: it is wrong in a
  * way that destroys the product. Measured on this model: a demand estimate
  * carrying coal type, boiler class, weather, comfort and secondary-fuel
  * uncertainty came out at ±86% under worst-case corners and ±38% under RSS.
@@ -24,8 +24,8 @@
  * tell you."
  *
  * RSS is the standard treatment for independent error sources and it is what
- * an energy auditor would recognise. Where errors are NOT independent — the
- * same coal price feeding two scenarios, say — pass the same Range object
+ * an energy auditor would recognise. Where errors are NOT independent: the
+ * same coal price feeding two scenarios, say: pass the same Range object
  * through rather than two separately-derived ones, and the correlation is
  * preserved by construction.
  *
@@ -97,7 +97,7 @@ export function add(a: Range, b: Range): Range {
 }
 
 /**
- * Subtraction. Same absolute treatment — subtracting a grant from a cost does
+ * Subtraction. Same absolute treatment: subtracting a grant from a cost does
  * not cancel their uncertainties, it combines them.
  */
 export function subtract(a: Range, b: Range): Range {
@@ -153,7 +153,7 @@ export function worstCase(a: Range, b: Range): Range {
  * winner and the tool says so rather than inventing one.
  */
 export function tooCloseToCall(a: Range, b: Range, threshold = 0.2): boolean {
-  // Two values known exactly and equal are not "rankable" — there is no winner.
+  // Two values known exactly and equal are not "rankable": there is no winner.
   // Degenerate in practice (nothing in this model is exact) but the alternative
   // is claiming one of two identical numbers beats the other.
   if (a.mid === b.mid && halfWidth(a) === 0 && halfWidth(b) === 0) return true;

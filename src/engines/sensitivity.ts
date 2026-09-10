@@ -1,5 +1,5 @@
 /**
- * sensitivity.ts — which numbers actually decide this, and by how much.
+ * sensitivity.ts: which numbers actually decide this, and by how much.
  *
  * The finding that motivates the whole file: a Silesian household's answer is
  * driven far more by the pellet price and the electricity price than by

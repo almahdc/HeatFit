@@ -6,7 +6,7 @@ import {
   GRANT_LINE_FOR_OPTION,
 } from "../engines/grants";
 import * as S from "../data/sheet.constants";
-import { ALTERNATIVE_HEATING_OPTIONS } from "../engines/alternativeHeating";
+import { ALTERNATIVE_HEATING_IDS } from "../engines/alternativeHeating";
 
 /** Comfortably inside the 80-140 band, where a heat-source-only job is fine. */
 const OK_DEMAND = 120;
@@ -32,7 +32,9 @@ describe("scope gate", () => {
     expect(out.heatSourceEligible).toBe(false);
     expect(out.heating).toBeNull();
     expect(out.totalGrantPln).toBe(0);
-    expect(out.warnings.join(" ")).toContain("will not fund a new heat source");
+    expect(
+      out.warnings.some((w) => w.code === "heatSourceNotEligibleAlone"),
+    ).toBe(true);
   });
 
   it("clamps the highest tier down below 140, where it does not exist", () => {
@@ -44,7 +46,9 @@ describe("scope gate", () => {
     });
     expect(out.requestedTier).toBe("highest");
     expect(out.tier).toBe("increased");
-    expect(out.warnings.join(" ")).toContain("highest funding level");
+    expect(out.warnings.some((w) => w.code === "highestTierUnavailable")).toBe(
+      true,
+    );
   });
 
   it("leaves the highest tier alone above 140, where it is the only band offering it", () => {
@@ -84,11 +88,11 @@ describe("grant amount", () => {
   });
 
   it("never pays out more than the job costs, at any tier or price", () => {
-    for (const option of ALTERNATIVE_HEATING_OPTIONS) {
+    for (const id of ALTERNATIVE_HEATING_IDS) {
       for (const tier of S.INCOME_TIERS) {
         for (const cost of [1000, 12600, 40000, 200000]) {
           const out = calculateGrant({
-            optionId: option.id,
+            optionId: id,
             heatingCapexPln: cost,
             tier,
             spaceHeatPerM2: OK_DEMAND,
@@ -100,14 +104,14 @@ describe("grant amount", () => {
   });
 
   it("cites the subsidies tab line it claimed against", () => {
-    for (const option of ALTERNATIVE_HEATING_OPTIONS) {
+    for (const id of ALTERNATIVE_HEATING_IDS) {
       const out = calculateGrant({
-        optionId: option.id,
+        optionId: id,
         heatingCapexPln: 30000,
         tier: "basic",
         spaceHeatPerM2: OK_DEMAND,
       });
-      expect(out.heating!.sheetLineId).toBe(GRANT_LINE_FOR_OPTION[option.id]);
+      expect(out.heating!.sheetLineId).toBe(GRANT_LINE_FOR_OPTION[id]);
       expect(S.SHEET_GRANT_LINES[out.heating!.sheetLineId]).toBeDefined();
     }
   });
@@ -179,10 +183,10 @@ describe("solar line", () => {
       30000 * S.SHEET_PV_GRANT_RATE.basic,
       6,
     );
-    expect(out.warnings.join(" ")).toContain("PAUSED");
+    expect(out.warnings.some((w) => w.code === "solarPvPaused")).toBe(true);
   });
 
-  it("survives the heat source being ineligible — it is a different programme", () => {
+  it("survives the heat source being ineligible: it is a different programme", () => {
     const out = calculateGrant({
       optionId: "airToAirHp",
       heatingCapexPln: 19000,
@@ -197,7 +201,7 @@ describe("solar line", () => {
 
 describe("incomeTierFor", () => {
   it("reads the sheet's thresholds, highest first so the poorest are not misfiled", () => {
-    // Four-person household, 1 300 zł each per month — exactly the highest ceiling.
+    // Four-person household, 1 300 zł each per month: exactly the highest ceiling.
     expect(incomeTierFor(1300 * 4, 4)).toBe("highest");
     expect(incomeTierFor(2250 * 4, 4)).toBe("increased");
     // 11 000 across four is 2 750 each, over the increased ceiling, but the

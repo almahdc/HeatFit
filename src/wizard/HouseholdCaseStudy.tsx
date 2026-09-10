@@ -26,6 +26,7 @@ import {
   User,
   Users,
   Zap,
+  type LucideIcon,
 } from "lucide-react";
 import {
   Block,
@@ -44,6 +45,7 @@ import {
   CoalType,
   ElectricityTariffCase,
   HOUSEHOLD_CASE_PRESETS,
+  HouseholdCaseId,
   HouseholdCaseInputs,
   HouseKind,
   InsulationLevel,
@@ -52,6 +54,8 @@ import {
   WaterHeatingCase,
   WindowFrame,
 } from "./householdCases";
+import { useT } from "../i18n";
+import type { Dictionary } from "../i18n";
 
 type Props = {
   value: HouseholdCaseInputs;
@@ -66,104 +70,171 @@ function update<K extends keyof HouseholdCaseInputs>(
   return { ...state, [key]: value };
 }
 
-const HOUSE_KIND_OPTIONS: IconCardOption<HouseKind>[] = [
-  { value: "detached", label: "Detached", icon: Home },
-  { value: "semiDetached", label: "Semi-detached / terraced", icon: Building },
-  { value: "apartment", label: "Apartment", icon: Building },
-];
+/**
+ * Cards for one option group.
+ *
+ * The order and the icons live here, because they are layout; every word on
+ * the card comes from the dictionary, keyed by the same union member the
+ * data model uses. A new option is a compile error in every language file
+ * until it is translated.
+ */
+function cards<T extends string>(
+  group: Record<T, { label: string; sublabel?: string }>,
+  icons: Record<T, LucideIcon>,
+  order: T[],
+): IconCardOption<T>[] {
+  return order.map((value) => ({
+    value,
+    label: group[value].label,
+    sublabel: group[value].sublabel,
+    icon: icons[value],
+  }));
+}
 
-const INSULATION_OPTIONS: IconCardOption<InsulationLevel>[] = [
-  { value: "none", label: "No insulation", icon: Shield },
-  {
-    value: "standard",
-    label: "10 cm Styrofoam",
-    sublabel: "Standard",
-    icon: Shield,
-  },
-  {
-    value: "veryGood",
-    label: "15–20 cm Styrofoam",
-    sublabel: "Very good",
-    icon: Shield,
-  },
-];
+const HOUSE_KIND_ICONS: Record<HouseKind, LucideIcon> = {
+  detached: Home,
+  semiDetached: Building,
+  apartment: Building,
+};
 
-const WINDOW_OPTIONS: IconCardOption<WindowFrame>[] = [
-  { value: "woodenOld", label: "Wooden", sublabel: "Old", icon: Columns3 },
-  { value: "doublePanePvc", label: "Double-pane PVC", icon: Columns3 },
-  {
-    value: "triplePanePvc",
-    label: "3-pane PVC",
-    sublabel: "New",
-    icon: Columns3,
-  },
-];
+const INSULATION_ICONS: Record<InsulationLevel, LucideIcon> = {
+  none: Shield,
+  standard: Shield,
+  veryGood: Shield,
+};
 
-const RADIATOR_OPTIONS: IconCardOption<RadiatorKind>[] = [
-  { value: "standard", label: "Radiators", icon: Flame },
-  { value: "floorHeating", label: "Floor heating", icon: Gauge },
-  { value: "mixed", label: "Mixed", icon: Gauge },
-];
+const WINDOW_ICONS: Record<WindowFrame, LucideIcon> = {
+  woodenOld: Columns3,
+  doublePanePvc: Columns3,
+  triplePanePvc: Columns3,
+};
 
-const COAL_TYPE_OPTIONS: IconCardOption<CoalType>[] = [
-  { value: "orzech", label: "Orzech", icon: Mountain },
-  { value: "groszek", label: "Groszek", icon: Mountain },
-  { value: "kostka", label: "Kostka", icon: Mountain },
-  { value: "mul", label: "Muł", icon: Mountain },
-  { value: "other", label: "Other", icon: Mountain },
-];
+const RADIATOR_ICONS: Record<RadiatorKind, LucideIcon> = {
+  standard: Flame,
+  floorHeating: Gauge,
+  mixed: Gauge,
+};
 
-const BOILER_CLASS_OPTIONS: IconCardOption<BoilerClass>[] = [
-  {
-    value: "bezklasowy",
-    label: "Off-class",
-    sublabel: "Bezklasowy",
-    icon: Gauge,
-  },
-  { value: "class3", label: "Class 3", icon: Gauge },
-  { value: "class4", label: "Class 4", icon: Gauge },
-  { value: "class5", label: "Class 5", icon: Gauge },
-];
+const COAL_TYPE_ICONS: Record<CoalType, LucideIcon> = {
+  orzech: Mountain,
+  groszek: Mountain,
+  kostka: Mountain,
+  mul: Mountain,
+  other: Mountain,
+};
 
-const CITY_DEADLINE_OPTIONS: IconCardOption<CityDeadlineNotice>[] = [
-  { value: "none", label: "No contact", icon: Megaphone },
-  { value: "pressOrMediaOnly", label: "Press / media only", icon: Newspaper },
-  { value: "officialLetter", label: "Official letter", icon: Mail },
-];
+const BOILER_CLASS_ICONS: Record<BoilerClass, LucideIcon> = {
+  bezklasowy: Gauge,
+  class3: Gauge,
+  class4: Gauge,
+  class5: Gauge,
+};
 
-const REPLACEMENT_OPTIONS: IconCardOption<ReplacementPreference>[] = [
-  { value: "gas", label: "Gas", icon: Flame },
-  { value: "pelletBoiler", label: "Pellet boiler", icon: Package },
-  { value: "heatPump", label: "Heat pump", icon: Snowflake },
-  { value: "pelletOrHeatPump", label: "Pellet or heat pump", icon: ListChecks },
-  { value: "undecided", label: "Undecided", icon: Clock },
-];
+const CITY_DEADLINE_ICONS: Record<CityDeadlineNotice, LucideIcon> = {
+  none: Megaphone,
+  pressOrMediaOnly: Newspaper,
+  officialLetter: Mail,
+};
 
-const ELECTRICITY_TARIFF_OPTIONS: IconCardOption<ElectricityTariffCase>[] = [
-  { value: "G11", label: "G11", sublabel: "Flat, all day", icon: Zap },
-  { value: "G12", label: "G12", sublabel: "Cheaper nights", icon: Zap },
-];
+const REPLACEMENT_ICONS: Record<ReplacementPreference, LucideIcon> = {
+  gas: Flame,
+  pelletBoiler: Package,
+  heatPump: Snowflake,
+  pelletOrHeatPump: ListChecks,
+  undecided: Clock,
+};
 
-const WATER_HEATING_OPTIONS: IconCardOption<WaterHeatingCase>[] = [
-  { value: "electricBoilerNew", label: "New electric boiler", icon: Flame },
-  {
-    value: "electricSummerCoalWinter",
-    label: "Electric summer, coal winter",
-    icon: Flame,
-  },
-  { value: "coalCentralAllYear", label: "Coal boiler, all year", icon: Flame },
-  {
-    value: "electricNightTariff",
-    label: "Electric, night tariff",
-    icon: Flame,
-  },
-];
+const TARIFF_ICONS: Record<ElectricityTariffCase, LucideIcon> = {
+  G11: Zap,
+  G12: Zap,
+};
+
+const WATER_HEATING_ICONS: Record<WaterHeatingCase, LucideIcon> = {
+  electricBoilerNew: Flame,
+  electricSummerCoalWinter: Flame,
+  coalCentralAllYear: Flame,
+  electricNightTariff: Flame,
+};
+
+const houseKindOptions = (t: Dictionary) =>
+  cards(t.options.houseKind, HOUSE_KIND_ICONS, [
+    "detached",
+    "semiDetached",
+    "apartment",
+  ]);
+
+const insulationOptions = (t: Dictionary) =>
+  cards(t.options.insulation, INSULATION_ICONS, [
+    "none",
+    "standard",
+    "veryGood",
+  ]);
+
+const windowOptions = (t: Dictionary) =>
+  cards(t.options.windowFrame, WINDOW_ICONS, [
+    "woodenOld",
+    "doublePanePvc",
+    "triplePanePvc",
+  ]);
+
+const radiatorOptions = (t: Dictionary) =>
+  cards(t.options.radiatorType, RADIATOR_ICONS, [
+    "standard",
+    "floorHeating",
+    "mixed",
+  ]);
+
+const coalTypeOptions = (t: Dictionary) =>
+  cards(t.options.coalType, COAL_TYPE_ICONS, [
+    "orzech",
+    "groszek",
+    "kostka",
+    "mul",
+    "other",
+  ]);
+
+const boilerClassOptions = (t: Dictionary) =>
+  cards(t.options.boilerClass, BOILER_CLASS_ICONS, [
+    "bezklasowy",
+    "class3",
+    "class4",
+    "class5",
+  ]);
+
+const cityDeadlineOptions = (t: Dictionary) =>
+  cards(t.options.cityDeadlineNotice, CITY_DEADLINE_ICONS, [
+    "none",
+    "pressOrMediaOnly",
+    "officialLetter",
+  ]);
+
+const replacementOptions = (t: Dictionary) =>
+  cards(t.options.replacementPreference, REPLACEMENT_ICONS, [
+    "gas",
+    "pelletBoiler",
+    "heatPump",
+    "pelletOrHeatPump",
+    "undecided",
+  ]);
+
+const tariffOptions = (t: Dictionary) =>
+  cards(t.options.electricityTariff, TARIFF_ICONS, ["G11", "G12"]);
+
+const waterHeatingOptions = (t: Dictionary) =>
+  cards(t.options.waterHeating, WATER_HEATING_ICONS, [
+    "electricBoilerNew",
+    "electricSummerCoalWinter",
+    "coalCentralAllYear",
+    "electricNightTariff",
+  ]);
 
 /** The 4 persona buttons that quick-fill the whole household case. */
 export function PersonaPicker({ value, onChange }: Props) {
-  const [selectedPresetId, setSelectedPresetId] = useState("grandmaKrysia");
+  const t = useT();
+  const [selectedPresetId, setSelectedPresetId] =
+    useState<HouseholdCaseId>("grandmaKrysia");
 
-  const loadPreset = (id: string) => {
+  const loadPreset = (id: HouseholdCaseId) => {
     const preset = HOUSEHOLD_CASE_PRESETS.find((p) => p.id === id);
     if (!preset) return;
     setSelectedPresetId(id);
@@ -180,18 +251,16 @@ export function PersonaPicker({ value, onChange }: Props) {
   }, []); // Load Grandma Krysia on mount
 
   return (
-    <Block
-      title="Load a household case study"
-      subtitle="Quick-fill every step below from a real interview, or fill it in by hand."
-    >
+    <Block title={t.personas.title} subtitle={t.personas.subtitle}>
       <div>
-        <FieldLabel icon={Users}>Household case study</FieldLabel>
+        <FieldLabel icon={Users}>{t.personas.fieldLabel}</FieldLabel>
         <div
           className="grid grid-cols-1 gap-2.5 sm:grid-cols-2 lg:grid-cols-4"
           role="radiogroup"
         >
           {HOUSEHOLD_CASE_PRESETS.map((preset) => {
             const selected = selectedPresetId === preset.id;
+            const persona = t.personas.cases[preset.id];
             return (
               <button
                 key={preset.id}
@@ -222,13 +291,13 @@ export function PersonaPicker({ value, onChange }: Props) {
                   <User className="h-[18px] w-[18px]" aria-hidden />
                 </div>
                 <p className="text-[15px] font-semibold text-ink">
-                  {preset.name}
+                  {persona.name}
                 </p>
                 <p className="text-[13px] italic text-ink-soft">
-                  “{preset.tagline}”
+                  “{persona.tagline}”
                 </p>
                 <p className="text-[13px] text-ink-soft/80">
-                  {preset.description}
+                  {persona.description}
                 </p>
               </button>
             );
@@ -239,80 +308,81 @@ export function PersonaPicker({ value, onChange }: Props) {
   );
 }
 
-/** Step 2, Block 2 — house type, insulation, windows, area, radiators, AC. */
+/** Step 2, Block 2: house type, insulation, windows, area, radiators, AC. */
 export function HomeComfortSection({ value, onChange }: Props) {
+  const t = useT();
   return (
-    <Block title="Home & comfort">
+    <Block title={t.home.title}>
       <div>
-        <FieldLabel icon={Home}>House type</FieldLabel>
+        <FieldLabel icon={Home}>{t.home.houseKind}</FieldLabel>
         <IconCardGroup
           columns={3}
           value={value.houseKind}
           onChange={(v) => onChange(update(value, "houseKind", v))}
-          options={HOUSE_KIND_OPTIONS}
+          options={houseKindOptions(t)}
         />
       </div>
 
       <div>
-        <FieldLabel icon={Shield}>Level of insulation</FieldLabel>
+        <FieldLabel icon={Shield}>{t.home.insulation}</FieldLabel>
         <IconCardGroup
           columns={3}
           value={value.insulation}
           onChange={(v) => onChange(update(value, "insulation", v))}
-          options={INSULATION_OPTIONS}
+          options={insulationOptions(t)}
         />
       </div>
 
       <div>
-        <FieldLabel icon={Columns3}>Condition of window frames</FieldLabel>
+        <FieldLabel icon={Columns3}>{t.home.windowFrame}</FieldLabel>
         <IconCardGroup
           columns={3}
           value={value.windowFrame}
           onChange={(v) => onChange(update(value, "windowFrame", v))}
-          options={WINDOW_OPTIONS}
+          options={windowOptions(t)}
         />
       </div>
 
       <div>
-        <FieldLabel>Heated area</FieldLabel>
+        <FieldLabel>{t.home.heatedArea}</FieldLabel>
         <IconSlider
           icon={Scale}
           min={50}
           max={300}
           step={5}
-          unit="m²"
+          unit={t.home.heatedAreaUnit}
           value={value.heatedAreaM2}
           onChange={(v) => onChange(update(value, "heatedAreaM2", v))}
         />
       </div>
 
       <div>
-        <FieldLabel icon={Flame}>Radiators / underfloor</FieldLabel>
+        <FieldLabel icon={Flame}>{t.home.radiatorType}</FieldLabel>
         <IconCardGroup
           columns={3}
           value={value.radiatorType}
           onChange={(v) => onChange(update(value, "radiatorType", v))}
-          options={RADIATOR_OPTIONS}
+          options={radiatorOptions(t)}
         />
       </div>
 
       <div>
-        <FieldLabel icon={FileText}>Radiator note</FieldLabel>
+        <FieldLabel icon={FileText}>{t.home.radiatorNote}</FieldLabel>
         <TextInputWithIcon
           icon={FileText}
-          placeholder="e.g., old cast-iron, extremely hot to touch"
+          placeholder={t.home.radiatorNotePlaceholder}
           value={value.radiatorNote}
           onChange={(v) => onChange(update(value, "radiatorNote", v))}
         />
       </div>
 
       <div>
-        <FieldLabel icon={Users}>People in house</FieldLabel>
+        <FieldLabel icon={Users}>{t.home.occupants}</FieldLabel>
         <IconStepper
           icon={Users}
           min={1}
           max={10}
-          unit="people"
+          unit={t.home.occupantsUnit}
           value={value.occupants}
           onChange={(v) => onChange(update(value, "occupants", v))}
         />
@@ -320,17 +390,17 @@ export function HomeComfortSection({ value, onChange }: Props) {
 
       <ToggleCard
         icon={Snowflake}
-        label="Air conditioning"
-        sublabel="Working AC unit available"
+        label={t.home.acLabel}
+        sublabel={t.home.acSublabel}
         checked={value.acAvailable}
         onChange={(v) => onChange(update(value, "acAvailable", v))}
       />
 
       <div>
-        <FieldLabel icon={FileText}>Unheated rooms</FieldLabel>
+        <FieldLabel icon={FileText}>{t.home.unheatedRooms}</FieldLabel>
         <TextAreaWithIcon
           icon={FileText}
-          placeholder="e.g., none — whole house heated"
+          placeholder={t.home.unheatedRoomsPlaceholder}
           value={value.unheatedRooms}
           onChange={(v) => onChange(update(value, "unheatedRooms", v))}
         />
@@ -339,39 +409,37 @@ export function HomeComfortSection({ value, onChange }: Props) {
   );
 }
 
-/** Step 3 — coal, boiler, replacement preference, coal provider. */
+/** Step 3: coal, boiler, replacement preference, coal provider. */
 export function CurrentHeatingSection({ value, onChange }: Props) {
+  const t = useT();
   return (
-    <Block
-      title="Current heating"
-      subtitle="Tell us about the coal boiler and how it's fed today."
-    >
+    <Block title={t.heating.title} subtitle={t.heating.subtitle}>
       <div>
-        <FieldLabel icon={Mountain}>Type of coal</FieldLabel>
+        <FieldLabel icon={Mountain}>{t.heating.coalType}</FieldLabel>
         <IconCardGroup
           columns={4}
           value={value.coalType}
           onChange={(v) => onChange(update(value, "coalType", v))}
-          options={COAL_TYPE_OPTIONS}
+          options={coalTypeOptions(t)}
         />
       </div>
 
       <ToggleCard
         icon={TreePine}
-        label="Also burns wood"
-        sublabel="Wood or offcuts alongside the coal"
+        label={t.heating.usesWoodLabel}
+        sublabel={t.heating.usesWoodSublabel}
         checked={value.usesWoodToo}
         onChange={(v) => onChange(update(value, "usesWoodToo", v))}
       />
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
-          <FieldLabel icon={Scale}>Average amount per season</FieldLabel>
+          <FieldLabel icon={Scale}>{t.heating.tonnesPerSeason}</FieldLabel>
           <TextInputWithIcon
             icon={Scale}
             inputMode="decimal"
-            placeholder="e.g., 5"
-            suffix="t / season"
+            placeholder={t.heating.tonnesPerSeasonPlaceholder}
+            suffix={t.heating.tonnesPerSeasonSuffix}
             value={String(value.coalTonnesPerSeason)}
             onChange={(v) =>
               onChange(
@@ -385,12 +453,12 @@ export function CurrentHeatingSection({ value, onChange }: Props) {
           />
         </div>
         <div>
-          <FieldLabel icon={Tag}>Price per tonne</FieldLabel>
+          <FieldLabel icon={Tag}>{t.heating.pricePerTonne}</FieldLabel>
           <TextInputWithIcon
             icon={Tag}
             inputMode="decimal"
-            placeholder="e.g., 1300"
-            suffix="zł / t"
+            placeholder={t.heating.pricePerTonnePlaceholder}
+            suffix={t.heating.pricePerTonneSuffix}
             value={String(value.coalPricePerTonnePln)}
             onChange={(v) =>
               onChange(
@@ -406,10 +474,10 @@ export function CurrentHeatingSection({ value, onChange }: Props) {
       </div>
 
       <div>
-        <FieldLabel icon={FileText}>Price note</FieldLabel>
+        <FieldLabel icon={FileText}>{t.heating.priceNote}</FieldLabel>
         <TextInputWithIcon
           icon={FileText}
-          placeholder="e.g., includes transport, ex-works price..."
+          placeholder={t.heating.priceNotePlaceholder}
           value={value.coalPriceNote}
           onChange={(v) => onChange(update(value, "coalPriceNote", v))}
         />
@@ -417,8 +485,8 @@ export function CurrentHeatingSection({ value, onChange }: Props) {
 
       <ToggleCard
         icon={Truck}
-        label="Free or discounted coal"
-        sublabel="Received coal outside a normal purchase"
+        label={t.heating.freeCoalLabel}
+        sublabel={t.heating.freeCoalSublabel}
         checked={value.freeCoalReceived}
         onChange={(v) => onChange(update(value, "freeCoalReceived", v))}
       />
@@ -426,12 +494,12 @@ export function CurrentHeatingSection({ value, onChange }: Props) {
       {value.freeCoalReceived && (
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <div>
-            <FieldLabel icon={Scale}>Free coal amount</FieldLabel>
+            <FieldLabel icon={Scale}>{t.heating.freeCoalAmount}</FieldLabel>
             <TextInputWithIcon
               icon={Scale}
               inputMode="decimal"
-              placeholder="e.g., 1"
-              suffix="t"
+              placeholder={t.heating.freeCoalAmountPlaceholder}
+              suffix={t.heating.freeCoalAmountSuffix}
               value={String(value.freeCoalTonnes)}
               onChange={(v) =>
                 onChange(
@@ -445,10 +513,10 @@ export function CurrentHeatingSection({ value, onChange }: Props) {
             />
           </div>
           <div>
-            <FieldLabel icon={FileText}>Free coal note</FieldLabel>
+            <FieldLabel icon={FileText}>{t.heating.freeCoalNote}</FieldLabel>
             <TextInputWithIcon
               icon={FileText}
-              placeholder="e.g., from a relative's farm"
+              placeholder={t.heating.freeCoalNotePlaceholder}
               value={value.freeCoalNote}
               onChange={(v) => onChange(update(value, "freeCoalNote", v))}
             />
@@ -458,12 +526,12 @@ export function CurrentHeatingSection({ value, onChange }: Props) {
 
       <div>
         <FieldLabel icon={Calendar}>
-          Boiler installation year <span className="text-accent">*</span>
+          {t.heating.boilerYear} <span className="text-accent">*</span>
         </FieldLabel>
         <TextInputWithIcon
           icon={Calendar}
           inputMode="numeric"
-          placeholder="e.g., 2013"
+          placeholder={t.heating.boilerYearPlaceholder}
           value={String(value.boilerYear)}
           onChange={(v) =>
             onChange(
@@ -478,44 +546,44 @@ export function CurrentHeatingSection({ value, onChange }: Props) {
       </div>
 
       <div>
-        <FieldLabel icon={Gauge}>Boiler class</FieldLabel>
+        <FieldLabel icon={Gauge}>{t.heating.boilerClass}</FieldLabel>
         <IconCardGroup
           columns={4}
           value={value.boilerClass}
           onChange={(v) => onChange(update(value, "boilerClass", v))}
-          options={BOILER_CLASS_OPTIONS}
+          options={boilerClassOptions(t)}
         />
       </div>
 
       <div>
-        <FieldLabel icon={Megaphone}>Deadline info from city</FieldLabel>
+        <FieldLabel icon={Megaphone}>{t.heating.cityDeadline}</FieldLabel>
         <IconCardGroup
           columns={3}
           value={value.cityDeadlineNotice}
           onChange={(v) => onChange(update(value, "cityDeadlineNotice", v))}
-          options={CITY_DEADLINE_OPTIONS}
+          options={cityDeadlineOptions(t)}
         />
       </div>
 
       <div>
         <FieldLabel icon={ListChecks}>
-          If your boiler had to be replaced tomorrow, what would you put in?
+          {t.heating.replacementPreference}
         </FieldLabel>
         <IconCardGroup
           columns={3}
           value={value.replacementPreference}
           onChange={(v) => onChange(update(value, "replacementPreference", v))}
-          options={REPLACEMENT_OPTIONS}
+          options={replacementOptions(t)}
         />
       </div>
 
       <div>
         <FieldLabel icon={Truck}>
-          Coal provider <span className="text-accent">*</span>
+          {t.heating.coalProvider} <span className="text-accent">*</span>
         </FieldLabel>
         <TextAreaWithIcon
           icon={Truck}
-          placeholder="Merchant name, website, delivery notes..."
+          placeholder={t.heating.coalProviderPlaceholder}
           value={value.coalProvider}
           onChange={(v) => onChange(update(value, "coalProvider", v))}
         />
@@ -524,30 +592,28 @@ export function CurrentHeatingSection({ value, onChange }: Props) {
   );
 }
 
-/** Step 4 — electricity, water heating, PV/battery/storage, notes. */
+/** Step 4: electricity, water heating, PV/battery/storage, notes. */
 export function ElectricityWaterSection({ value, onChange }: Props) {
+  const t = useT();
   return (
-    <Block
-      title="Electricity & water"
-      subtitle="Tell us about electricity use and how hot water is made."
-    >
+    <Block title={t.electricity.title} subtitle={t.electricity.subtitle}>
       <div>
-        <FieldLabel icon={Zap}>Electricity tariff</FieldLabel>
+        <FieldLabel icon={Zap}>{t.electricity.tariff}</FieldLabel>
         <IconCardGroup
           value={value.electricityTariff}
           onChange={(v) => onChange(update(value, "electricityTariff", v))}
-          options={ELECTRICITY_TARIFF_OPTIONS}
+          options={tariffOptions(t)}
         />
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <div>
-          <FieldLabel icon={Receipt}>Electricity bill</FieldLabel>
+          <FieldLabel icon={Receipt}>{t.electricity.bill}</FieldLabel>
           <TextInputWithIcon
             icon={Receipt}
             inputMode="decimal"
-            placeholder="e.g., 200"
-            suffix="zł / month"
+            placeholder={t.electricity.billPlaceholder}
+            suffix={t.electricity.billSuffix}
             value={String(value.electricityBillPlnPerMonth)}
             onChange={(v) =>
               onChange(
@@ -561,10 +627,10 @@ export function ElectricityWaterSection({ value, onChange }: Props) {
           />
         </div>
         <div>
-          <FieldLabel icon={FileText}>Bill note</FieldLabel>
+          <FieldLabel icon={FileText}>{t.electricity.billNote}</FieldLabel>
           <TextInputWithIcon
             icon={FileText}
-            placeholder="e.g., prognoza, flat, 6-month settlement"
+            placeholder={t.electricity.billNotePlaceholder}
             value={value.electricityBillNote}
             onChange={(v) => onChange(update(value, "electricityBillNote", v))}
           />
@@ -573,49 +639,47 @@ export function ElectricityWaterSection({ value, onChange }: Props) {
 
       <ToggleCard
         icon={Flame}
-        label="Gas connection available"
-        sublabel="A gas line already reaches the property"
+        label={t.electricity.gasLabel}
+        sublabel={t.electricity.gasSublabel}
         checked={value.gasConnectionAvailable}
         onChange={(v) => onChange(update(value, "gasConnectionAvailable", v))}
       />
 
       <div>
-        <FieldLabel icon={Flame}>Water heater</FieldLabel>
+        <FieldLabel icon={Flame}>{t.electricity.waterHeater}</FieldLabel>
         <IconCardGroup
           columns={4}
           value={value.waterHeating}
           onChange={(v) => onChange(update(value, "waterHeating", v))}
-          options={WATER_HEATING_OPTIONS}
+          options={waterHeatingOptions(t)}
         />
       </div>
 
       <div>
-        <FieldLabel icon={Flame}>
-          Showers / baths per week, per person
-        </FieldLabel>
+        <FieldLabel icon={Flame}>{t.electricity.showers}</FieldLabel>
         <IconStepper
           icon={Flame}
           min={0}
           max={21}
-          unit="per week, per person"
+          unit={t.electricity.showersUnit}
           value={value.showersBathsPerWeek}
           onChange={(v) => onChange(update(value, "showersBathsPerWeek", v))}
         />
       </div>
 
       <div>
-        <FieldLabel>PV setup</FieldLabel>
+        <FieldLabel>{t.electricity.pvSetup}</FieldLabel>
         {/*
           Battery and heat storage are collected on HouseholdCaseInputs and
           still shown on the financials summary once set, but hidden here for
-          now — coming back to this UI later. Do not delete hasBattery /
+          now: coming back to this UI later. Do not delete hasBattery /
           hasHeatStorage from the data model for this.
         */}
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
           <ToggleCard
             icon={Sun}
-            label="PV panels"
-            sublabel="Solar electricity"
+            label={t.electricity.pvLabel}
+            sublabel={t.electricity.pvSublabel}
             checked={value.hasPvPanels}
             onChange={(v) => onChange(update(value, "hasPvPanels", v))}
           />
@@ -623,11 +687,11 @@ export function ElectricityWaterSection({ value, onChange }: Props) {
       </div>
 
       <div>
-        <FieldLabel icon={FileText}>Additional notes</FieldLabel>
+        <FieldLabel icon={FileText}>{t.electricity.additionalNotes}</FieldLabel>
         <TextAreaWithIcon
           icon={FileText}
           rows={3}
-          placeholder="Anything else worth knowing about the household..."
+          placeholder={t.electricity.additionalNotesPlaceholder}
           value={value.additionalNotes}
           onChange={(v) => onChange(update(value, "additionalNotes", v))}
         />

@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import { Check, type LucideIcon } from "lucide-react";
+import { useT } from "../i18n";
 
 /** Every major section: a distinct rounded block with its own header. */
 export function Block({
@@ -191,11 +192,12 @@ export function IconStepper({
   unit?: string;
   onChange: (v: number) => void;
 }) {
+  const t = useT();
   return (
     <div className="flex items-center justify-between rounded-[14px] border border-line bg-[#fbfaf8] p-4">
       <div className="flex items-center gap-2 text-ink-soft">
         <Icon className="h-3.5 w-3.5" aria-hidden />
-        <span className="text-[13px]">{unit ?? "count"}</span>
+        <span className="text-[13px]">{unit ?? t.a11y.count}</span>
       </div>
       <div className="flex items-center gap-4">
         <button
@@ -203,7 +205,7 @@ export function IconStepper({
           disabled={value <= min}
           onClick={() => onChange(Math.max(min, value - 1))}
           className="flex h-8 w-8 items-center justify-center rounded-full border border-line bg-white text-lg font-semibold text-ink-soft shadow-sm transition-colors hover:bg-chip disabled:cursor-not-allowed disabled:opacity-40"
-          aria-label="Decrease"
+          aria-label={t.a11y.decrease}
         >
           −
         </button>
@@ -215,7 +217,7 @@ export function IconStepper({
           disabled={value >= max}
           onClick={() => onChange(Math.min(max, value + 1))}
           className="flex h-8 w-8 items-center justify-center rounded-full border border-line bg-white text-lg font-semibold text-ink-soft shadow-sm transition-colors hover:bg-chip disabled:cursor-not-allowed disabled:opacity-40"
-          aria-label="Increase"
+          aria-label={t.a11y.increase}
         >
           +
         </button>
@@ -361,6 +363,7 @@ export function StepProgress({
   steps: string[];
   current: number;
 }) {
+  const t = useT();
   return (
     <div className="mb-6">
       <div className="mb-2 flex items-center gap-2">
@@ -374,7 +377,7 @@ export function StepProgress({
         ))}
       </div>
       <p className="text-xs font-semibold uppercase tracking-wider text-ink-soft/70">
-        Step {current + 1} of {steps.length} · {steps[current]}
+        {t.wizard.stepProgress(current + 1, steps.length, steps[current] ?? "")}
       </p>
     </div>
   );

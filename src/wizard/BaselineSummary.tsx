@@ -1,8 +1,38 @@
 import { AlertTriangle, Droplets, Flame, Plug, Wallet } from "lucide-react";
-import type { Baseline } from "../engines/baseline";
+import type { Baseline, BaselineAssumption } from "../engines/baseline";
+import { useT } from "../i18n";
+import type { Dictionary } from "../i18n";
 
 const zl = (n: number) =>
-  `${Math.round(n).toLocaleString("pl-PL").replace(/ /g, " ")} zł`;
+  `${Math.round(n).toLocaleString("pl-PL").replace(/ /g, " ")} zł`;
+
+const num = (n: number) =>
+  Math.round(n).toLocaleString("pl-PL").replace(/ /g, " ");
+
+/** A typed descriptor from baseline.ts, said in the language on screen. */
+function assumptionText(t: Dictionary, a: BaselineAssumption): string {
+  switch (a.code) {
+    case "coalGradeAssumed":
+      return t.assumptions.coalGradeAssumed(a.fuel);
+    case "boilerEfficiencyKnown":
+      return t.assumptions.boilerEfficiencyKnown(
+        t.options.boilerClassInline[a.boilerClass],
+        a.efficiencyPct,
+      );
+    case "boilerEfficiencyUnknown":
+      return t.assumptions.boilerEfficiencyUnknown(a.efficiencyPct);
+    case "coalPriceAssumed":
+      return t.assumptions.coalPriceAssumed(a.pricePerTonnePln);
+    case "hotWaterPerShower":
+      return t.assumptions.hotWaterPerShower(a.litres, a.heatedSharePct);
+    case "summerElectricWater":
+      return t.assumptions.summerElectricWater(a.sharePct);
+    case "electricWaterHeaterEfficiency":
+      return t.assumptions.electricWaterHeaterEfficiency(a.efficiencyPct);
+    case "electricityUseModelled":
+      return t.assumptions.electricityUseModelled(a.kwhPerYear);
+  }
+}
 
 /**
  * The baseline block: what this household is paying today, on coal.
@@ -12,25 +42,26 @@ const zl = (n: number) =>
  * number, so it has to be on screen and believable before any of it lands.
  */
 export function BaselineSummary({ baseline }: { baseline: Baseline }) {
+  const t = useT();
   const { cost, energy, electricity } = baseline;
 
   const lines = [
     {
       icon: Flame,
-      label: "Space heating",
-      sub: "Coal burned to keep the house warm",
+      label: t.baseline.spaceHeating,
+      sub: t.baseline.spaceHeatingSub,
       value: cost.spaceHeatingPlnPerYear,
     },
     {
       icon: Droplets,
-      label: "Water heating",
-      sub: "Hot water, however it is made",
+      label: t.baseline.waterHeating,
+      sub: t.baseline.waterHeatingSub,
       value: cost.waterHeatingPlnPerYear,
     },
     {
       icon: Plug,
-      label: "Electricity & cooling",
-      sub: "Everything else on the meter",
+      label: t.baseline.electricityAndCooling,
+      sub: t.baseline.electricityAndCoolingSub,
       value: cost.electricityAndCoolingPlnPerYear,
     },
   ];
@@ -41,28 +72,25 @@ export function BaselineSummary({ baseline }: { baseline: Baseline }) {
         <Wallet className="h-5 w-5" aria-hidden />
       </div>
       <h2 className="text-[23px] font-bold tracking-tight text-ink">
-        What you're paying now
+        {t.baseline.title}
       </h2>
-      <p className="mt-2 text-base text-ink-soft">
-        Your current year on coal, reconstructed from your answers. This is the
-        figure every option below will be compared against.
-      </p>
+      <p className="mt-2 text-base text-ink-soft">{t.baseline.subtitle}</p>
 
       {/* The headline. A household thinks in months, so lead with the month. */}
       <div className="mt-6 rounded-[16px] border border-accent-tint2 bg-accent-tint p-5">
         <p className="text-[12px] font-semibold uppercase tracking-wider text-accent-600">
-          Total outflow
+          {t.baseline.totalOutflow}
         </p>
         <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
           <span className="text-[34px] font-bold leading-none tracking-tight text-accent-600">
             {zl(cost.totalPlnPerMonth)}
           </span>
           <span className="text-[15px] font-medium text-accent-600/80">
-            per month
+            {t.baseline.perMonth}
           </span>
         </div>
         <p className="mt-1.5 text-[14px] text-accent-600/80">
-          {zl(cost.totalPlnPerYear)} per year
+          {t.baseline.perYearTotal(zl(cost.totalPlnPerYear))}
         </p>
       </div>
 
@@ -86,7 +114,9 @@ export function BaselineSummary({ baseline }: { baseline: Baseline }) {
               <span className="text-[16px] font-bold tabular-nums text-ink">
                 {zl(value)}
               </span>
-              <span className="block text-[12px] text-ink-soft">per year</span>
+              <span className="block text-[12px] text-ink-soft">
+                {t.baseline.perYear}
+              </span>
             </dd>
           </div>
         ))}
@@ -95,12 +125,12 @@ export function BaselineSummary({ baseline }: { baseline: Baseline }) {
       {/* Facts that decide eligibility later, so worth surfacing now. */}
       <div className="mt-5 grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
         <Fact
-          label="Heat delivered by your boiler"
-          value={`${Math.round(energy.coalHeatDeliveredKwh).toLocaleString("pl-PL").replace(/ /g, " ")} kWh/year`}
+          label={t.baseline.heatDelivered}
+          value={t.baseline.kwhPerYear(num(energy.coalHeatDeliveredKwh))}
         />
         <Fact
-          label="Building condition"
-          value={`${energy.spaceHeatPerM2.toFixed(0)} kWh/m²/year`}
+          label={t.baseline.buildingCondition}
+          value={t.baseline.kwhPerM2PerYear(energy.spaceHeatPerM2.toFixed(0))}
         />
       </div>
 
@@ -127,20 +157,20 @@ export function BaselineSummary({ baseline }: { baseline: Baseline }) {
                 aria-hidden
               />
               <p>
-                Your bill implies{" "}
+                {t.baseline.gapBefore}
                 <strong className="text-ink">
-                  {Math.abs(Math.round(electricity.gapKwh!))
-                    .toLocaleString("pl-PL")
-                    .replace(/ /g, " ")}{" "}
-                  kWh/year {over ? "more" : "less"}
-                </strong>{" "}
-                than we would expect from your answers.{" "}
+                  {t.baseline.gapAmount(
+                    num(Math.abs(electricity.gapKwh!)),
+                    over,
+                  )}
+                </strong>
+                {t.baseline.gapAfter}
                 {over
-                  ? "That usually means an electric heater, an immersion tank, or a workshop we have not asked about yet."
+                  ? t.baseline.gapReasonOver
                   : modelIncludedWaterOrCooling
-                    ? "That usually means our hot water or cooling estimate is too generous for your household."
-                    : "That usually means the typical household we compare everyday electricity use against (lighting, fridge, and similar) uses more than your household does."}{" "}
-                We priced the bill you gave us, not our estimate.
+                    ? t.baseline.gapReasonUnderWaterOrCooling
+                    : t.baseline.gapReasonUnderBaseline}
+                {t.baseline.gapClosing}
               </p>
             </div>
           );
@@ -149,11 +179,11 @@ export function BaselineSummary({ baseline }: { baseline: Baseline }) {
       {baseline.assumptions.length > 0 && (
         <details className="mt-5 rounded-[14px] border border-line bg-[#fbfaf8] p-4">
           <summary className="cursor-pointer text-[13px] font-semibold text-ink-soft">
-            What we assumed ({baseline.assumptions.length})
+            {t.baseline.assumptionsSummary(baseline.assumptions.length)}
           </summary>
           <ul className="mt-3 flex list-disc flex-col gap-2 pl-4 text-[13px] text-ink-soft">
             {baseline.assumptions.map((a) => (
-              <li key={a}>{a}</li>
+              <li key={a.code}>{assumptionText(t, a)}</li>
             ))}
           </ul>
         </details>

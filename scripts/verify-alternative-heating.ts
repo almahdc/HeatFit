@@ -1,5 +1,5 @@
 /**
- * verify-alternative-heating.ts — an independent audit of Block 2 / Block 3.
+ * verify-alternative-heating.ts: an independent audit of Block 2 / Block 3.
  *
  *   npm run verify:alternatives
  *
@@ -61,7 +61,7 @@ function audit(presetId: string) {
   const usefulHeat = baseline.energy.spaceHeatKwh;
 
   rule(
-    `${preset.name} — useful heat to replace: ${usefulHeat.toFixed(0)} kWh/y, baseline ${zl(baseline.cost.totalPlnPerYear)}/y`,
+    `${preset.name}: useful heat to replace: ${usefulHeat.toFixed(0)} kWh/y, baseline ${zl(baseline.cost.totalPlnPerYear)}/y`,
   );
 
   for (const result of results) {
@@ -106,7 +106,7 @@ function audit(presetId: string) {
 }
 
 console.log(
-  "\nALTERNATIVE HEATING VERIFICATION — model vs. an independent longhand recomputation",
+  "\nALTERNATIVE HEATING VERIFICATION: model vs. an independent longhand recomputation",
 );
 console.log(
   "Constants re-transcribed from the sheet's FUEL rows inside this script.",
@@ -117,13 +117,13 @@ for (const id of ["grandmaKrysia", "grandpaJanek", "mrsTeresa", "mrMarek"]) {
 }
 
 // ---------------------------------------------------------------------------
-// PV — synthetic, since none of the four personas has panels. Same household
+// PV: synthetic, since none of the four personas has panels. Same household
 // as Mrs. Teresa, once without PV and once with, so the only thing that can
 // move between the two runs is PV itself.
 // ---------------------------------------------------------------------------
 
 function auditPv() {
-  rule("PV — synthetic household (Mrs. Teresa's numbers, PV toggled)");
+  rule("PV: synthetic household (Mrs. Teresa's numbers, PV toggled)");
 
   const inputs = {
     heatedAreaM2: 130,
@@ -149,7 +149,7 @@ function auditPv() {
 
   // Longhand: price the household's existing meter reading with and without
   // the heat pump's new draw, PV self-consumption and export applied to the
-  // WHOLE pool both times — the same electricityCost() formula baseline.ts
+  // WHOLE pool both times: the same electricityCost() formula baseline.ts
   // uses, re-typed here rather than called.
   function longhandElectricityCost(consumptionKwh: number): number {
     const selfConsumed = consumptionKwh * PV.shareUsedDirectly;
@@ -210,7 +210,7 @@ function auditPv() {
     `    >>> PV cuts the heat pump's own electricity cost from ${zl(flatCost)} to ${zl(marginalCost)}/year`,
   );
 
-  console.log(`\n  Pellet boiler, with PV — should be untouched`);
+  console.log(`\n  Pellet boiler, with PV: should be untouched`);
   const pelletWithPv = calculateAlternativeHeatingCost(
     "pellet",
     baselineWithPv,
@@ -221,7 +221,7 @@ function auditPv() {
   check("PV saving", 0, pelletWithPv.pvSavingsOnSpaceHeatingPlnPerYear);
 
   // --- Solar add-on -----------------------------------------------------------
-  // Solar is deliberately NOT part of calculateCapexBreakdown at all — a
+  // Solar is deliberately NOT part of calculateCapexBreakdown at all: a
   // household with existing panels has nothing new to cost out, and one
   // without them gets a separate, opt-in add-on rather than a silently
   // inflated heating total. See capex.ts's own header comment.
