@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { ArrowLeft, ClipboardList } from "lucide-react";
+import { AlertCircle, ArrowLeft, ClipboardList } from "lucide-react";
+import { getPostalCodeWarning } from "./utils/postalCode";
 import { EnergyAssessmentForm } from "./wizard/EnergyAssessmentForm";
 import { AssessmentState } from "./wizard/assessmentTypes";
 import { HouseholdCaseInputs } from "./wizard/householdCases";
@@ -8,6 +9,76 @@ import { AlternativeHeatingOptions } from "./wizard/AlternativeHeatingOptions";
 import { calculateUserBaseline } from "./engines/baseline";
 import { StyleTile } from "./StyleTile";
 import { useScrollToTopOnChange } from "./hooks/useScrollToTopOnChange";
+
+const LABEL_MAPS: Record<string, Record<string, string>> = {
+  houseKind: {
+    detached: "Detached",
+    semiDetached: "Semi-detached / terraced",
+    apartment: "Apartment",
+  },
+  insulation: {
+    none: "No insulation",
+    standard: "10 cm Styrofoam (Standard)",
+    veryGood: "15–20 cm Styrofoam (Very good)",
+  },
+  windowFrame: {
+    woodenOld: "Wooden (Old)",
+    doublePanePvc: "Double-pane PVC",
+    triplePanePvc: "3-pane PVC (New)",
+  },
+  radiatorType: {
+    standard: "Radiators",
+    floorHeating: "Floor heating",
+    mixed: "Mixed",
+  },
+  coalType: {
+    orzech: "Orzech",
+    groszek: "Groszek",
+    kostka: "Kostka",
+    mul: "Muł",
+    other: "Other",
+  },
+  boilerClass: {
+    bezklasowy: "Off-class (Bezklasowy)",
+    class3: "Class 3",
+    class4: "Class 4",
+    class5: "Class 5",
+  },
+  cityDeadlineNotice: {
+    none: "No contact",
+    pressOrMediaOnly: "Press / media only",
+    officialLetter: "Official letter",
+  },
+  replacementPreference: {
+    gas: "Gas",
+    pelletBoiler: "Pellet boiler",
+    heatPump: "Heat pump",
+    pelletOrHeatPump: "Pellet or heat pump",
+    undecided: "Undecided",
+  },
+  electricityTariff: {
+    G11: "G11 (Flat, all day)",
+    G12: "G12 (Cheaper nights)",
+  },
+  waterHeating: {
+    electricBoilerNew: "New electric boiler",
+    electricSummerCoalWinter: "Electric summer, coal winter",
+    coalCentralAllYear: "Coal boiler, all year",
+    electricNightTariff: "Electric, night tariff",
+  },
+  unheatedRooms: {
+    none: "None",
+    oneRoom: "1 room",
+    twoRooms: "2 rooms",
+    threeOrMore: "3 or more",
+  },
+};
+
+const formatValue = (key: string, value: string): string => {
+  const labels = LABEL_MAPS[key];
+  if (labels && labels[value]) return labels[value]!;
+  return value;
+};
 
 type Phase = "form" | "financials";
 
@@ -27,16 +98,6 @@ export default function App() {
 
   return (
     <main className="min-h-screen bg-paper">
-      <div className="mx-auto w-full lg:w-1/2 lg:min-w-[600px] xl:max-w-[820px] px-4 pt-8">
-        <p className="text-lg font-bold text-ink">
-          What's your home actually costing you?
-        </p>
-        <p className="mt-1 text-sm text-ink-soft">
-          Answer a few questions about your home and current heating, then see
-          the numbers behind switching.
-        </p>
-      </div>
-
       {phase === "form" && (
         <EnergyAssessmentForm
           initialState={assessment ?? undefined}
@@ -116,6 +177,18 @@ function FinancialsPlaceholder({
                 back, so you can check anything that looks wrong.
               </p>
 
+              {getPostalCodeWarning(assessment.location.postalCode) && (
+                <div className="mt-4 flex items-start gap-2 rounded-lg bg-yellow-50 p-3 border border-yellow-200">
+                  <AlertCircle
+                    className="h-4 w-4 mt-0.5 text-yellow-600 flex-shrink-0"
+                    aria-hidden
+                  />
+                  <p className="text-sm text-yellow-700">
+                    {getPostalCodeWarning(assessment.location.postalCode)}
+                  </p>
+                </div>
+              )}
+
               <dl className="mt-6 grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
                 <Fact
                   label="Postal code"
@@ -127,14 +200,26 @@ function FinancialsPlaceholder({
                 Home & comfort
               </h3>
               <dl className="mt-3 grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
-                <Fact label="House type" value={household.houseKind} />
-                <Fact label="Insulation" value={household.insulation} />
-                <Fact label="Window frames" value={household.windowFrame} />
+                <Fact
+                  label="House type"
+                  value={formatValue("houseKind", household.houseKind)}
+                />
+                <Fact
+                  label="Insulation"
+                  value={formatValue("insulation", household.insulation)}
+                />
+                <Fact
+                  label="Window frames"
+                  value={formatValue("windowFrame", household.windowFrame)}
+                />
                 <Fact
                   label="Heated area"
                   value={`${household.heatedAreaM2} m²`}
                 />
-                <Fact label="Radiators" value={household.radiatorType} />
+                <Fact
+                  label="Radiators"
+                  value={formatValue("radiatorType", household.radiatorType)}
+                />
                 <Fact label="Occupants" value={String(household.occupants)} />
                 <Fact
                   label="AC available"
@@ -142,7 +227,11 @@ function FinancialsPlaceholder({
                 />
                 <Fact
                   label="Unheated rooms"
-                  value={household.unheatedRooms || "—"}
+                  value={
+                    household.unheatedRooms
+                      ? formatValue("unheatedRooms", household.unheatedRooms)
+                      : "—"
+                  }
                 />
               </dl>
 
@@ -150,7 +239,10 @@ function FinancialsPlaceholder({
                 Current heating & fuel
               </h3>
               <dl className="mt-3 grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
-                <Fact label="Coal type" value={household.coalType} />
+                <Fact
+                  label="Coal type"
+                  value={formatValue("coalType", household.coalType)}
+                />
                 <Fact
                   label="Also burns wood"
                   value={household.usesWoodToo ? "Yes" : "No"}
@@ -161,7 +253,7 @@ function FinancialsPlaceholder({
                 />
                 <Fact
                   label="Boiler"
-                  value={`${household.boilerClass}, ${household.boilerYear || "—"}`}
+                  value={`${formatValue("boilerClass", household.boilerClass)}${household.boilerYear ? ", " + household.boilerYear : ""}`}
                 />
                 <Fact
                   label="Free/discounted coal"
@@ -173,11 +265,17 @@ function FinancialsPlaceholder({
                 />
                 <Fact
                   label="City deadline notice"
-                  value={household.cityDeadlineNotice}
+                  value={formatValue(
+                    "cityDeadlineNotice",
+                    household.cityDeadlineNotice,
+                  )}
                 />
                 <Fact
                   label="Replacement preference"
-                  value={household.replacementPreference}
+                  value={formatValue(
+                    "replacementPreference",
+                    household.replacementPreference,
+                  )}
                 />
                 <Fact
                   label="Coal provider"
@@ -191,9 +289,12 @@ function FinancialsPlaceholder({
               <dl className="mt-3 grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
                 <Fact
                   label="Electricity"
-                  value={`${household.electricityTariff}, ${household.electricityBillPlnPerMonth} zł/mo`}
+                  value={`${formatValue("electricityTariff", household.electricityTariff)}, ${household.electricityBillPlnPerMonth} zł/mo`}
                 />
-                <Fact label="Water heating" value={household.waterHeating} />
+                <Fact
+                  label="Water heating"
+                  value={formatValue("waterHeating", household.waterHeating)}
+                />
                 <Fact
                   label="Showers/baths per week, per person"
                   value={String(household.showersBathsPerWeek)}

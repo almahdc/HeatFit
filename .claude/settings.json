@@ -3,7 +3,10 @@
     "allow": [
       "Bash(find / -iname \"chromium-cli*\" -maxdepth 6)",
       "Bash(npm ls *)",
-      "Bash(npx --yes playwright --version)"
+      "Bash(npx --yes playwright --version)",
+      "Bash(npx prettier *)",
+      "Bash(curl -s \"https://docs.google.com/spreadsheets/d/1NtWAubbQdrkw4wuPU6isPSipSjX1Am9IlrXGquMJQCg/export?format=csv&gid=396550938\")",
+      "Bash(npx vitest *)"
     ]
   }
 }

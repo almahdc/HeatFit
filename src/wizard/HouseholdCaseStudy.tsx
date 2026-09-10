@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Building,
   Calendar,
@@ -161,7 +161,7 @@ const WATER_HEATING_OPTIONS: IconCardOption<WaterHeatingCase>[] = [
 
 /** The 4 persona buttons that quick-fill the whole household case. */
 export function PersonaPicker({ value, onChange }: Props) {
-  const [selectedPresetId, setSelectedPresetId] = useState("");
+  const [selectedPresetId, setSelectedPresetId] = useState("grandmaKrysia");
 
   const loadPreset = (id: string) => {
     const preset = HOUSEHOLD_CASE_PRESETS.find((p) => p.id === id);
@@ -169,6 +169,15 @@ export function PersonaPicker({ value, onChange }: Props) {
     setSelectedPresetId(id);
     onChange(preset.data);
   };
+
+  useEffect(() => {
+    const grandmaPreset = HOUSEHOLD_CASE_PRESETS.find(
+      (p) => p.id === "grandmaKrysia",
+    );
+    if (grandmaPreset) {
+      onChange(grandmaPreset.data);
+    }
+  }, []); // Load Grandma Krysia on mount
 
   return (
     <Block

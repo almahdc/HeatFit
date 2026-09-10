@@ -22,8 +22,8 @@ tabs `subsidies` (grant caps, funding rates, the scope gate) and
 
 ## The chain, end to end
 
-The sheet's `final` tab states the whole thing in three columns —
-`Running /m`, `Capex /m`, `True /m` — and this is how they are reached:
+The sheet's `final` tab states the whole thing in three columns :
+`Running /m`, `Capex /m`, `True /m` : and this is how they are reached:
 
 ```
 gross capex          hardware + installation (+ solar, if added)   Block 4
@@ -42,14 +42,14 @@ changing a figure is a one-line edit in one file:
 
 | To change                          | Edit                                                                            |
 | ---------------------------------- | ------------------------------------------------------------------------------- |
-| Grant caps per device              | `SHEET_GRANT_LINES` — keyed by the subsidies tab's own row ids (H2, H3, H4, H7) |
+| Grant caps per device              | `SHEET_GRANT_LINES` : keyed by the subsidies tab's own row ids (H2, H3, H4, H7) |
 | Which device claims which line     | `GRANT_LINE_FOR_OPTION` in `grants.ts`                                          |
 | Funding rate per tier (40/70/100%) | `SHEET_FUNDING_RATE`                                                            |
 | PV grant rate                      | `SHEET_PV_GRANT_RATE`                                                           |
 | Income thresholds                  | `SHEET_INCOME_TIERS`                                                            |
 | The scope gate bands               | `SHEET_SCOPE_BANDS`                                                             |
 | Loan terms and interest            | `SHEET_LOAN_OPTIONS`, `SHEET_DEFAULT_LOAN_YEARS`                                |
-| Simple interest vs. a real annuity | `REPAYMENT_METHOD` in `loan.ts` — one line                                      |
+| Simple interest vs. a real annuity | `REPAYMENT_METHOD` in `loan.ts` : one line                                      |
 
 Every result also carries the sheet row it came from (`sheetLineId`), and the
 UI prints it, so a figure on screen can be traced to a row in the sheet
@@ -81,7 +81,7 @@ Set by income, not chosen. From `price_calculator` rows 417-419, per month:
 | Highest   | 100% | 1 300 zł per person (1 800 living alone)           |
 | Increased | 70%  | 2 250 zł per person (3 150 living alone)           |
 | Basic     | 40%  | 11 250 zł for the whole household (= 135 000 zł/y) |
-| —         | none | above that, no grant                               |
+| :         | none | above that, no grant                               |
 
 These nest, so `incomeTierFor()` tests them highest-first: the other order
 would file the poorest households into the least generous tier.
@@ -91,7 +91,7 @@ The UI shows the three bands with their thresholds and the household picks
 one. It defaults to **basic**, the least generous, so a household that never
 touches the control is never shown a number that overstates what they get.
 
-## The scope gate — the rule that pays nothing
+## The scope gate : the rule that pays nothing
 
 The most consequential rule in the programme is not an amount:
 
@@ -115,8 +115,8 @@ the single most consequential output here".
 > Grandpa Janek 243, Mrs. Teresa 207, Mr. Marek 222 kWh/m²/y. So on today's
 > baseline model, none of them can claim anything for a heat pump alone, and
 > Block 5 correctly shows zero with an explanation for all four. That is not a
-> bug in this engine — it is the honest consequence of modelling badly
-> insulated coal houses — but it does mean the grant path is never exercised
+> bug in this engine : it is the honest consequence of modelling badly
+> insulated coal houses : but it does mean the grant path is never exercised
 > by a demo, and it makes "insulate first" the real answer for these
 > households. Worth deciding what the product should do about that.
 
@@ -128,7 +128,7 @@ warning rather than being paid at a rate they cannot get.
 
 The solar grant is claimed as its own line at the sheet's PV rate
 (12% / 20% / 32% of the array's cost), and it is **not** subject to the Czyste
-Powietrze scope gate — a household above 140 kWh/m²/y still gets it while
+Powietrze scope gate : a household above 140 kWh/m²/y still gets it while
 their heat pump gets nothing.
 
 It carries a standing warning. The `subsidies` tab records PV support running
@@ -158,7 +158,7 @@ and not amortised. A five-year loan at 7% pays 7% in total; so does a
 fifteen-year one at 10%.
 
 A real amortising loan on the same headline terms costs considerably more, and
-the gap widens with the term — which is backwards from how the sheet behaves:
+the gap widens with the term : which is backwards from how the sheet behaves:
 
 | Term            | Sheet formula | True annuity | Annuity is     |
 | --------------- | ------------- | ------------ | -------------- |
@@ -169,7 +169,7 @@ the gap widens with the term — which is backwards from how the sheet behaves:
 _(40 000 zł net, no grant. `npm run verify:financing` prints this table.)_
 
 `loan.ts` implements the sheet's formula **as the default**, because
-reproducing the sheet is what makes these numbers checkable against it — the
+reproducing the sheet is what makes these numbers checkable against it : the
 same rule `baseline.ts` follows. But it computes the annuity on every result
 too, so the gap is measured rather than assumed away, and
 `REPAYMENT_METHOD` switches which one the UI shows in one line.
@@ -195,15 +195,15 @@ option.
   partway through the term.** All modelled in `financing.ts`, which stays
   dormant. `loan.ts` borrows only its annuity function.
 - **Whether the household would qualify at all.** Ownership, the ZUM listing,
-  the chimney sweep report, the mandatory energy audit — all real gates, none
+  the chimney sweep report, the mandatory energy audit : all real gates, none
   checked here.
 
 ## Verified
 
 `npm run verify:financing` recomputes every figure longhand from constants
 re-transcribed independently inside the script, and finishes by reproducing
-the sheet's own `final` tab row for gas194 end to end — 54 000 gross, 9 600
-grant, 44 400 net, 791.80 zł/m capex, 1 524.44 zł/m true monthly — so the loan
+the sheet's own `final` tab row for gas194 end to end : 54 000 gross, 9 600
+grant, 44 400 net, 791.80 zł/m capex, 1 524.44 zł/m true monthly : so the loan
 formula is pinned against a number the spreadsheet computed itself.
 
 The audit was confirmed to actually fail by perturbing ten constants in turn
@@ -212,7 +212,7 @@ default term, the scope-gate threshold, and the income ceiling) and checking
 each was caught. Two blind spots were found and closed that way: the script
 was originally comparing the PV rate against its own copy of it without ever
 calling the engine, and was passing loan terms into the engine rather than
-checking the engine's own table — so both constants could have held any value
+checking the engine's own table : so both constants could have held any value
 at all and every check would still have passed.
 
 ## Open questions
@@ -235,7 +235,7 @@ at all and every check would still have passed.
    bands; the sheet's own CAPEX table is higher (air-to-air 19 000 zł against
    12 600 mid). The grant is deliberately claimed against whatever gross
    figure is on screen, so "gross minus grant is net" always holds for the
-   reader — but it means net capex here will not match the sheet's. The
+   reader : but it means net capex here will not match the sheet's. The
    sheet's table is transcribed as `SHEET_CAPEX` so the disagreement is
    visible and switching is easy.
 6. **The tier is self-declared.** No income is collected and nothing is

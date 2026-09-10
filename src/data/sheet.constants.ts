@@ -1,7 +1,7 @@
 /**
  * Constants transcribed from the `price_calculator` Google Sheet.
  *
- * Scope: all four tabs — `price_calculator`, `final`, `subsidies` and
+ * Scope: all four tabs : `price_calculator`, `final`, `subsidies` and
  * `homeowners_real_numbers`. Each block below names the tab section it came
  * from so any number here can be checked against the sheet in a few seconds.
  *
@@ -63,7 +63,7 @@ export const SHEET_PV = {
    *
    * Note this is a share of consumption, not of generation. That reading is not
    * obvious from the label but it is what reproduces the sheet's scenario
-   * outputs exactly — see the verification table in docs/baseline-model.md.
+   * outputs exactly : see the verification table in docs/baseline-model.md.
    */
   shareUsedDirectly: 0.25,
   /** What the grid pays for exported kWh, PLN/kWh. */
@@ -99,7 +99,7 @@ export const SHEET_COOLING: Record<SheetCoolingSource, SheetCooling> = {
  * Cooling demand per square metre, kWh/m²/y.
  *
  * DERIVED, not stated in the sheet: House 1 carries 3 750 kWh of cooling demand
- * over 150 m². The SEER column then checks out both ways — 3750/5 = 750 and
+ * over 150 m². The SEER column then checks out both ways : 3750/5 = 750 and
  * 3750/4 = 937.5, which the sheet rounds to 940.
  */
 export const COOLING_DEMAND_KWH_PER_M2 = 25;
@@ -144,7 +144,7 @@ export interface SheetFuelSpec {
 /**
  * The sheet's FUEL table, verbatim.
  *
- * "Miner" is the deputat węglowy — coal received free or at a deep discount,
+ * "Miner" is the deputat węglowy : coal received free or at a deep discount,
  * which is why its price is zero while it still carries full energy content.
  * The wizard collects this as `freeCoalReceived` / `freeCoalTonnes`.
  */
@@ -313,7 +313,7 @@ export const DEFAULT_BASE_ELECTRICITY_KWH = SHEET_HOUSE_1.baseElectricityKwh;
  *
  * The sheet types this per house. 120 is House 1's value and sits in the middle
  * band of the subsidy scope gate (80-140), so it is a neutral default. Prefer
- * the figure derived from actual coal tonnage whenever there is one — that is
+ * the figure derived from actual coal tonnage whenever there is one : that is
  * measured energy for this specific house, and it is the whole point of asking.
  */
 export const DEFAULT_CONDITION_KWH_PER_M2 = SHEET_HOUSE_1.conditionKwhPerM2Year;
@@ -340,7 +340,7 @@ export const LITRES_PER_SHOWER = 40;
  * Share of a shower or bath's drawn volume that actually needed the full
  * 45 °C lift.
  *
- * NOT IN THE SHEET, and not a sourced figure — an engineering-judgment
+ * NOT IN THE SHEET, and not a sourced figure : an engineering-judgment
  * correction, softer than `LITRES_PER_SHOWER` itself and equally reviewable.
  *
  * A shower is not neat hot water at the tap: a mixing valve tempers water
@@ -352,7 +352,7 @@ export const LITRES_PER_SHOWER = 40;
  * energy than a real coal boiler or immersion tank would show for it.
  *
  * Applying 0.6 here changes only the ENERGY side of the calculation
- * (`waterEnergyKwh`, and everything downstream of it — the coal/electric split,
+ * (`waterEnergyKwh`, and everything downstream of it : the coal/electric split,
  * the electricity reconciliation gap, the water-heating cost line). It does
  * NOT change `hotWaterLitresPerYear`, which stays the full drawn volume: that
  * number describes water a household actually used, and shrinking it to match
@@ -412,7 +412,7 @@ export const ELECTRIC_BOILER_EFFICIENCY = 0.98;
  *
  * DISAGREES WITH THE SHEET, which carries 0.92 in its gas FUEL row. 0.95 is the
  * agreed working figure for a modern condensing unit. The sheet row is left
- * untouched — this file does not quietly reconcile the two — so anything
+ * untouched : this file does not quietly reconcile the two : so anything
  * pricing gas must choose deliberately which one it means.
  *
  * Unused at baseline: a household still on coal has no gas boiler. Here for the
@@ -427,7 +427,7 @@ export const GAS_BOILER_EFFICIENCY = 0.95;
  *
  * NOTE FOR ANYONE READING capex.ts: that engine prices hardware and
  * installation from `constants.pl.ts`'s independently sourced low/mid/high
- * bands, NOT from this table, and the two disagree — air-to-air is 12 600 zł
+ * bands, NOT from this table, and the two disagree : air-to-air is 12 600 zł
  * mid there against 19 000 zł here. Both are defensible (the sheet quotes a
  * fuller multisplit job) and neither is quietly corrected, per this file's
  * header rule. Transcribed here so the disagreement is visible and so the
@@ -508,7 +508,7 @@ export interface SheetGrantLine {
  * The three tier columns are not independent: every line's basic and increased
  * caps are exactly its highest cap times the funding rate above
  * (35 200 x 0.4 = 14 080, x 0.7 = 24 640). So the cap is already tier-scaled,
- * and `grants.ts` still applies the rate to the household's actual cost — the
+ * and `grants.ts` still applies the rate to the household's actual cost : the
  * two bind independently and the smaller wins.
  *
  * Only the lines HeatFit's three replacement options can claim are transcribed.
@@ -548,7 +548,7 @@ export const SHEET_GRANT_LINES: Record<string, SheetGrantLine> = {
 
 /**
  * PV grant as a SHARE of the array's cost, by tier.
- * price_calculator GRANT block row 407 — the one row there that holds rates
+ * price_calculator GRANT block row 407 : the one row there that holds rates
  * rather than złoty caps.
  *
  * The subsidies tab disagrees with this and says PV support runs through
@@ -568,7 +568,7 @@ export const SHEET_PV_GRANT_PAUSED_CAP_PLN = 7000;
 /**
  * Income thresholds that set the tier. price_calculator rows 417-419.
  *
- * Read in this order — highest, then increased, then basic — because they
+ * Read in this order : highest, then increased, then basic : because they
  * nest: everyone under the highest threshold is also under the increased one.
  * "single" and "multi" are one-person and multi-person households.
  */
@@ -597,7 +597,7 @@ export interface SheetScopeBand {
  * The scope gate, subsidies tab rows 33-37.
  *
  * The consequential row is the last one. Above 140 kWh/m²/y a heat-source-only
- * project is NOT eligible — the building must be insulated too, to at least a
+ * project is NOT eligible : the building must be insulated too, to at least a
  * 40% cut and a maximum of 140. HeatFit only models heat-source swaps, so for
  * those households the honest answer is that the grant is zero until they add
  * insulation, and `grants.ts` says exactly that rather than quietly paying out.
@@ -627,11 +627,11 @@ export const SHEET_SCOPE_BANDS: SheetScopeBand[] = [
   },
 ];
 
-/** Mandatory paperwork, subsidies tab rows 2-3. Grant, not cost — see grants.ts. */
+/** Mandatory paperwork, subsidies tab rows 2-3. Grant, not cost : see grants.ts. */
 export const SHEET_AUDIT_GRANT = {
-  /** A1 — energy audit and its summary document. */
+  /** A1 : energy audit and its summary document. */
   auditCapByTier: { basic: 480, increased: 840, highest: 1200 },
-  /** A2 — energy performance certificate, issued after the works. */
+  /** A2 : energy performance certificate, issued after the works. */
   certificateCapByTier: { basic: 160, increased: 280, highest: 400 },
   /** Both together are capped at this, whatever the two lines add up to. */
   combinedCapPln: 1600,
@@ -655,6 +655,6 @@ export const SHEET_LOAN_OPTIONS: SheetLoanOption[] = [
 /**
  * The row the sheet's live `monthly capex` formula actually points at (B413).
  * Every worked figure on the `final` tab is this term, so it is the default
- * here too — changing it changes which numbers reconcile against the sheet.
+ * here too : changing it changes which numbers reconcile against the sheet.
  */
 export const SHEET_DEFAULT_LOAN_YEARS = 5;

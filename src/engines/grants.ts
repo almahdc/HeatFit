@@ -1,8 +1,8 @@
 /**
- * grants.ts — how much of the capex Czyste Powietrze actually pays for.
+ * grants.ts : how much of the capex Czyste Powietrze actually pays for.
  *
  * Source: the sheet's `subsidies` tab, transcribed into `sheet.constants.ts`.
- * Read that tab's own row ids (H3, H4, H7) in the results below — every złoty
+ * Read that tab's own row ids (H3, H4, H7) in the results below : every złoty
  * here can be traced back to one line of the sheet in a few seconds.
  *
  * --- Two limits, not one ----------------------------------------------------
@@ -10,8 +10,8 @@
  * A grant is the SMALLER of two things, and conflating them is the classic way
  * to overstate one:
  *
- *   the rate  — the programme pays 40% / 70% / 100% of eligible cost by tier
- *   the cap   — and never more than a fixed złoty ceiling for that device
+ *   the rate  : the programme pays 40% / 70% / 100% of eligible cost by tier
+ *   the cap   : and never more than a fixed złoty ceiling for that device
  *
  * so `grant = min(cap, cost x rate)`. On a cheap job the rate binds; on an
  * expensive one the cap does. The result below says which one bit, because
@@ -24,7 +24,7 @@
  * Above 140 kWh/m²/y of pre-project demand, a heat-source-only project is NOT
  * ELIGIBLE AT ALL. The building has to be insulated as well, to at least a 40%
  * cut. HeatFit models heat-source swaps and nothing else, so for a household in
- * that band the honest answer is zero, plus an explanation — not a grant they
+ * that band the honest answer is zero, plus an explanation : not a grant they
  * would apply for and be refused.
  *
  * That band is also the only one where the highest tier exists. A household
@@ -131,7 +131,7 @@ function claim(
 /**
  * What this household gets towards this project.
  *
- * `heatingCapexPln` is whatever gross figure the UI is showing — the grant is
+ * `heatingCapexPln` is whatever gross figure the UI is showing : the grant is
  * always claimed against the cost actually on screen, so the arithmetic a
  * household can do in their head (gross minus grant is net) always holds.
  *
@@ -193,7 +193,7 @@ export function calculateGrant({
     warnings.push(
       `The solar figure follows the sheet's own PV rate. The subsidies tab records PV support running through ` +
         `przydomowemagazyny.gov.pl, capped at ${S.SHEET_PV_GRANT_PAUSED_CAP_PLN.toLocaleString("pl-PL", { useGrouping: true })} zł, ` +
-        `and marks that programme PAUSED — so treat this line as indicative, not as money you can count on.`,
+        `and marks that programme PAUSED : so treat this line as indicative, not as money you can count on.`,
     );
   }
 

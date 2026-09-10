@@ -1,5 +1,5 @@
 /**
- * loan.ts — net capex, spread over a loan, added to the running cost.
+ * loan.ts : net capex, spread over a loan, added to the running cost.
  *
  * The last step of the chain the sheet's `final` tab reports as three columns:
  *
@@ -26,7 +26,7 @@
  * is far wider: 10% total against roughly 93% for a true annuity.
  *
  * This file implements the sheet's formula, because reproducing the sheet is
- * what makes these numbers checkable against it — the same rule `baseline.ts`
+ * what makes these numbers checkable against it : the same rule `baseline.ts`
  * follows. But it also computes the annuity alongside, on every result, so the
  * gap is measured rather than assumed away, and `REPAYMENT_METHOD` switches
  * which one the UI shows in one line. See docs/grants-and-financing-model.md;
@@ -118,7 +118,7 @@ export function calculateLoan({
 }
 
 export interface TrueMonthlyCost {
-  /** Energy, after PV, per month — unchanged once the loan ends. */
+  /** Energy, after PV, per month : unchanged once the loan ends. */
   runningPlnPerMonth: number;
   /** Loan repayment per month, zero once the term is over. */
   capexPlnPerMonth: number;

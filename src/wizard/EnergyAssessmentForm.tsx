@@ -1,5 +1,12 @@
 import { useState } from "react";
-import { ArrowLeft, ArrowRight, Flame, Info, MapPin } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeft,
+  ArrowRight,
+  Flame,
+  Info,
+  MapPin,
+} from "lucide-react";
 import {
   Block,
   FieldLabel,
@@ -16,6 +23,10 @@ import {
 } from "./HouseholdCaseStudy";
 import { HouseholdCaseInputs, initialHouseholdCase } from "./householdCases";
 import { useScrollToTopOnChange } from "../hooks/useScrollToTopOnChange";
+import {
+  formatPolishPostalCode,
+  getPostalCodeWarning,
+} from "../utils/postalCode";
 
 const STEP_LABELS = [
   "Welcome & Location",
@@ -98,8 +109,13 @@ export function EnergyAssessmentForm({
                 . Over the next few steps we'll ask about your home, your
                 current coal use, and your electricity and water setup, then use
                 that to estimate the running costs, subsidies, and financing for
-                switching to gas, pellet, or a heat pump. If your home doesn't
-                burn coal for heat, this calculator isn't the right fit yet.
+                switching to pellet or a heat pump. If your home doesn't burn
+                coal for heat, this calculator isn't the right fit yet.
+              </p>
+              <p className="mt-3 text-sm text-ink-soft/80 italic">
+                Gas heating is not yet included. If you'd like to see gas
+                options or other heating solutions, let us know: we're expanding
+                this tool based on feedback.
               </p>
             </Block>
 
@@ -113,11 +129,14 @@ export function EnergyAssessmentForm({
                 </FieldLabel>
                 <TextInputWithIcon
                   icon={MapPin}
-                  inputMode="text"
-                  placeholder="e.g., 10115"
+                  inputMode="numeric"
+                  placeholder="e.g., 10-115"
                   value={state.location.postalCode}
                   onChange={(v) =>
-                    setState((s) => ({ ...s, location: { postalCode: v } }))
+                    setState((s) => ({
+                      ...s,
+                      location: { postalCode: formatPolishPostalCode(v) },
+                    }))
                   }
                 />
                 {attemptedNext && !postalCodeValid && (
@@ -125,6 +144,18 @@ export function EnergyAssessmentForm({
                     Enter a postal code to continue.
                   </p>
                 )}
+                {state.location.postalCode.length === 6 &&
+                  getPostalCodeWarning(state.location.postalCode) && (
+                    <div className="mt-3 flex items-start gap-2 rounded-lg bg-yellow-50 p-3 border border-yellow-200">
+                      <AlertCircle
+                        className="h-4 w-4 mt-0.5 text-yellow-600 flex-shrink-0"
+                        aria-hidden
+                      />
+                      <p className="text-sm text-yellow-700">
+                        {getPostalCodeWarning(state.location.postalCode)}
+                      </p>
+                    </div>
+                  )}
               </div>
               <InfoBox icon={Info}>
                 We use your postal code to check which regional subsidies apply

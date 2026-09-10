@@ -111,22 +111,22 @@ export function AlternativeHeatingOptions({
   /**
    * Read straight from the household's own data (Step 4's PV toggle).
    *
-   * True means solar is already part of today's setup — it is already
+   * True means solar is already part of today's setup : it is already
    * netted into every number below silently, and there is nothing left to
    * decide about it here, so nothing about it is called out on screen.
-   * False means the household could add it alongside this replacement — that
+   * False means the household could add it alongside this replacement : that
    * is a real, unmade decision, so Block 4 offers it as a distinct add-on.
    */
   hasPvPanels: boolean;
 }) {
   const [selected, setSelected] = useState<AlternativeHeatingId>("airToAirHp");
-  // Only offered, and only meaningful, when the household has no PV yet —
+  // Only offered, and only meaningful, when the household has no PV yet :
   // see the toggle itself below. Persists across switching between options,
   // since "would you add solar" is a question about the project, not about
   // any one option.
   const [addSolar, setAddSolar] = useState(false);
   // Never collected by the wizard, and deliberately not asked for as a złoty
-  // figure — the household picks the band their income falls in. Basic is the
+  // figure : the household picks the band their income falls in. Basic is the
   // default because it is the least generous, so nothing is ever overstated by
   // a household that has not touched this.
   const [tier, setTier] = useState<IncomeTier>("basic");
@@ -142,7 +142,7 @@ export function AlternativeHeatingOptions({
   }));
 
   // True PV already existing counts on its own; toggling the add-on counts
-  // the same way running-cost-wise — a panel is a panel, whichever screen it
+  // the same way running-cost-wise : a panel is a panel, whichever screen it
   // was decided on. Every number below reacts to this one value.
   const effectiveHasPv = hasPvPanels || addSolar;
 
@@ -190,7 +190,7 @@ export function AlternativeHeatingOptions({
     <>
       <Block
         title="Compare a replacement"
-        subtitle="Pick one option to see its running cost on today's numbers. Solar, grants and financing come further down — this is energy cost alone."
+        subtitle="Pick one option to see its running cost on today's numbers. Solar, grants and financing come further down : this is energy cost alone."
       >
         <div>
           <FieldLabel>Replacement option</FieldLabel>
@@ -205,7 +205,7 @@ export function AlternativeHeatingOptions({
         <p className="text-[14.5px] text-ink-soft">{result.description}</p>
 
         {/*
-          Only offered when the household has no PV yet — a household that
+          Only offered when the household has no PV yet : a household that
           already has it has nothing to toggle. Everything below reacts live:
           this is a real input into the numbers, not a separate preview.
         */}
@@ -313,10 +313,10 @@ export function AlternativeHeatingOptions({
         )}
       </Block>
 
-      {/* Block 4: equipment cost — the sticker price, before any grant or loan. */}
+      {/* Block 4: equipment cost : the sticker price, before any grant or loan. */}
       <Block
         title="What it costs to install"
-        subtitle={`Hardware and installation for ${result.name.toLowerCase()}${addSolar ? ", plus solar" : ""}. This is the price before any grant or loan — both come next.`}
+        subtitle={`Hardware and installation for ${result.name.toLowerCase()}${addSolar ? ", plus solar" : ""}. This is the price before any grant or loan : both come next.`}
       >
         <dl className="divide-y divide-line border-y border-line">
           <Line
@@ -357,7 +357,7 @@ export function AlternativeHeatingOptions({
             </span>
           </div>
           <p className="mt-1.5 text-[13.5px] text-ink-soft">
-            Typically {zlRange(capexTotal.lowPln, capexTotal.highPln)} —
+            Typically {zlRange(capexTotal.lowPln, capexTotal.highPln)} :
             installer quotes vary this much by sizing, radiators, and region.
           </p>
         </div>
@@ -461,7 +461,7 @@ export function AlternativeHeatingOptions({
       {/* Block 6: running cost + repayment. The one figure a household feels. */}
       <Block
         title="Your true monthly cost"
-        subtitle="Running cost plus the repayment on what is left — the number you would actually feel each month."
+        subtitle="Running cost plus the repayment on what is left : the number you would actually feel each month."
       >
         <div>
           <FieldLabel>Loan term</FieldLabel>
