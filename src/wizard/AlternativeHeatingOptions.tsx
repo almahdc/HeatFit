@@ -180,17 +180,45 @@ export function AlternativeHeatingOptions({
   // it. We do not ask what anyone earns; the bracket is all this needs.
   const [taxRate, setTaxRate] = useState<TaxRate>(DEFAULT_TAX_RATE);
 
+  // True PV already existing counts on its own; toggling the add-on counts
+  // the same way running-cost-wise : a panel is a panel, whichever screen it
+  // was decided on. Every number below reacts to this one value.
+  const effectiveHasPv = hasPvPanels || addSolar;
+
+  // The option that saves the household the most per year against coal,
+  // recomputed live as PV is toggled : the ranking is allowed to change.
+  // Running-cost savings only (not capex/grant/loan), same basis the
+  // savings box below reads from, so the badge and the number agree.
+  const bestOptionId = ALTERNATIVE_HEATING_IDS.reduce(
+    (best, id) => {
+      const savings = calculateAlternativeHeatingCost(
+        id,
+        baseline,
+        electricityTariff,
+        undefined,
+        effectiveHasPv,
+      ).savingsPlnPerYear;
+      return savings > best.savings ? { id, savings } : best;
+    },
+    { id: ALTERNATIVE_HEATING_IDS[0], savings: -Infinity },
+  ).id;
+
   const cardOptions = ALTERNATIVE_HEATING_IDS.map((id) => ({
     value: id,
     label: t.alternatives.options[id].name,
     sublabel: t.alternatives.options[id].shortLabel,
     icon: OPTION_ICON[id],
+    ...(id === bestOptionId
+      ? {
+          badge: t.alternatives.compare.bestValueBadge,
+          badgeClassName: "bg-savings text-savings-700",
+          highlightClassName: "ring-2 ring-savings ring-offset-1",
+          selectedIconClassName: "bg-savings text-savings-700",
+          selectedCheckClassName: "bg-savings",
+          selectedCheckIconClassName: "text-savings-700",
+        }
+      : {}),
   }));
-
-  // True PV already existing counts on its own; toggling the add-on counts
-  // the same way running-cost-wise : a panel is a panel, whichever screen it
-  // was decided on. Every number below reacts to this one value.
-  const effectiveHasPv = hasPvPanels || addSolar;
 
   const result = calculateAlternativeHeatingCost(
     selected,
@@ -286,19 +314,19 @@ export function AlternativeHeatingOptions({
         )}
 
         {/* Block 2: running cost on the household's own numbers. */}
-        <div className="rounded-[16px] border border-line bg-[#fbfaf8] p-5">
-          <p className="text-[12px] font-semibold uppercase tracking-wider text-ink-soft">
+        <div className="rounded-[16px] border border-savings bg-savings-tint p-5">
+          <p className="text-[12px] font-semibold uppercase tracking-wider text-savings-700/80">
             {c.newOutflow(option.name)}
           </p>
           <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <span className="text-[28px] font-bold leading-none tracking-tight text-ink">
+            <span className="text-[28px] font-bold leading-none tracking-tight text-savings-700">
               {zl(result.totalPlnPerMonth)}
             </span>
-            <span className="text-[15px] font-medium text-ink-soft">
+            <span className="text-[15px] font-medium text-savings-700/80">
               {c.perMonth}
             </span>
           </div>
-          <p className="mt-1.5 text-[13.5px] text-ink-soft">
+          <p className="mt-1.5 text-[13.5px] text-savings-700/80">
             {c.perYearAndEfficiency(
               zl(result.totalPlnPerYear),
               option.efficiencyLabel,
@@ -345,13 +373,13 @@ export function AlternativeHeatingOptions({
         <div
           className={`flex items-start gap-4 rounded-[16px] border p-5 ${
             saving
-              ? "border-accent-tint2 bg-accent-tint"
+              ? "border-savings bg-savings-tint"
               : "border-line bg-[#fbfaf8]"
           }`}
         >
           <div
             className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-[10px] ${
-              saving ? "bg-accent text-white" : "bg-chip text-ink-soft"
+              saving ? "bg-savings text-savings-700" : "bg-chip text-ink-soft"
             }`}
           >
             {saving ? (
@@ -363,7 +391,7 @@ export function AlternativeHeatingOptions({
           <div>
             <p
               className={`text-[22px] font-bold leading-tight tracking-tight ${
-                saving ? "text-accent-600" : "text-ink"
+                saving ? "text-savings-700" : "text-ink"
               }`}
             >
               {t.alternatives.savings.headline(
@@ -375,7 +403,7 @@ export function AlternativeHeatingOptions({
               )}
             </p>
             <p
-              className={`mt-1 text-[14px] ${saving ? "text-accent-600/80" : "text-ink-soft"}`}
+              className={`mt-1 text-[14px] ${saving ? "text-savings-700/80" : "text-ink-soft"}`}
             >
               {t.alternatives.savings.detail(
                 saving
@@ -443,21 +471,21 @@ export function AlternativeHeatingOptions({
           )}
         </dl>
 
-        <div className="rounded-[16px] border border-line bg-[#fbfaf8] p-5">
-          <p className="text-[12px] font-semibold uppercase tracking-wider text-ink-soft">
+        <div className="rounded-[16px] border border-accent-tint2 bg-accent-tint p-5">
+          <p className="text-[12px] font-semibold uppercase tracking-wider text-accent-600/80">
             {addSolar
               ? t.alternatives.capex.totalGrossWithSolar
               : t.alternatives.capex.totalGross}
           </p>
           <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <span className="text-[28px] font-bold leading-none tracking-tight text-ink">
+            <span className="text-[28px] font-bold leading-none tracking-tight text-accent-600">
               {zl(capexTotal.midPln)}
             </span>
-            <span className="text-[15px] font-medium text-ink-soft">
+            <span className="text-[15px] font-medium text-accent-600/80">
               {t.alternatives.capex.turnkey}
             </span>
           </div>
-          <p className="mt-1.5 text-[13.5px] text-ink-soft">
+          <p className="mt-1.5 text-[13.5px] text-accent-600/80">
             {t.alternatives.capex.spread(
               zlRange(capexTotal.lowPln, capexTotal.highPln),
             )}
@@ -551,19 +579,19 @@ export function AlternativeHeatingOptions({
           </dl>
         )}
 
-        <div className="rounded-[16px] border border-line bg-[#fbfaf8] p-5">
-          <p className="text-[12px] font-semibold uppercase tracking-wider text-ink-soft">
+        <div className="rounded-[16px] border border-accent-tint2 bg-accent-tint p-5">
+          <p className="text-[12px] font-semibold uppercase tracking-wider text-accent-600/80">
             {t.alternatives.grants.netCapex}
           </p>
           <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <span className="text-[28px] font-bold leading-none tracking-tight text-ink">
+            <span className="text-[28px] font-bold leading-none tracking-tight text-accent-600">
               {zl(loan.netCapexPln)}
             </span>
-            <span className="text-[15px] font-medium text-ink-soft">
+            <span className="text-[15px] font-medium text-accent-600/80">
               {t.alternatives.grants.leftToPay}
             </span>
           </div>
-          <p className="mt-1.5 text-[13.5px] text-ink-soft">
+          <p className="mt-1.5 text-[13.5px] text-accent-600/80">
             {t.alternatives.grants.netCapexDetail(
               zl(loan.grossCapexPln),
               zl(grant.totalGrantPln),
@@ -614,16 +642,16 @@ export function AlternativeHeatingOptions({
           </dl>
         )}
 
-        <div className="rounded-[16px] border border-accent-tint2 bg-accent-tint p-5">
-          <p className="text-[12px] font-semibold uppercase tracking-wider text-accent-600">
+        <div className="rounded-[16px] border border-savings bg-savings-tint p-5">
+          <p className="text-[12px] font-semibold uppercase tracking-wider text-savings-700">
             {TR.finalNetCost}
           </p>
           <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <span className="text-[28px] font-bold leading-none tracking-tight text-accent-600">
+            <span className="text-[28px] font-bold leading-none tracking-tight text-savings-700">
               {zl(taxRelief.finalNetCostPln)}
             </span>
           </div>
-          <p className="mt-1.5 text-[13.5px] text-accent-600/80">
+          <p className="mt-1.5 text-[13.5px] text-savings-700/80">
             {TR.finalNetCostDetail(
               zl(loan.netCapexPln),
               zl(taxRelief.cashBackPln),
@@ -687,41 +715,19 @@ export function AlternativeHeatingOptions({
           />
         </dl>
 
-        <div
-          className={`rounded-[16px] border p-5 ${
-            trueSaving >= 0
-              ? "border-accent-tint2 bg-accent-tint"
-              : "border-line bg-[#fbfaf8]"
-          }`}
-        >
-          <p
-            className={`text-[12px] font-semibold uppercase tracking-wider ${
-              trueSaving >= 0 ? "text-accent-600/80" : "text-ink-soft"
-            }`}
-          >
+        <div className="rounded-[16px] border border-savings bg-savings-tint p-5">
+          <p className="text-[12px] font-semibold uppercase tracking-wider text-savings-700/80">
             {t.alternatives.trueCost.heading}
           </p>
           <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <span
-              className={`text-[28px] font-bold leading-none tracking-tight ${
-                trueSaving >= 0 ? "text-accent-600" : "text-ink"
-              }`}
-            >
+            <span className="text-[28px] font-bold leading-none tracking-tight text-savings-700">
               {zl(trueCost.truePlnPerMonth)}
             </span>
-            <span
-              className={`text-[15px] font-medium ${
-                trueSaving >= 0 ? "text-accent-600/80" : "text-ink-soft"
-              }`}
-            >
+            <span className="text-[15px] font-medium text-savings-700/80">
               {t.alternatives.trueCost.whileRepaying}
             </span>
           </div>
-          <p
-            className={`mt-1.5 text-[13.5px] ${
-              trueSaving >= 0 ? "text-accent-600/80" : "text-ink-soft"
-            }`}
-          >
+          <p className="mt-1.5 text-[13.5px] text-savings-700/80">
             {t.alternatives.trueCost.comparison(
               zl(Math.abs(trueSaving)),
               trueSaving >= 0,

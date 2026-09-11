@@ -380,6 +380,7 @@ export const en = {
       subtitle:
         "One option at a time, so the comparison stays honest. This step is energy cost only: solar, grants and financing each get a step of their own below.",
       fieldLabel: "Replacement option",
+      bestValueBadge: "Biggest saving",
       addSolarLabel: "Add solar to this project",
       addSolarSublabel: (price: string, kwh: string) =>
         `+${price} for a ${kwh} kWh/year array`,

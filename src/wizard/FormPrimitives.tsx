@@ -113,6 +113,20 @@ export interface IconCardOption<T extends string> {
   label: string;
   sublabel?: string;
   badge?: string;
+  /** Overrides the badge's default selected/unselected colouring, e.g. to
+   *  call out a specific option (best value) regardless of selection state. */
+  badgeClassName?: string;
+  /** Extra classes applied to the card itself, independent of selection -
+   *  e.g. a ring that marks one option as the recommended one. */
+  highlightClassName?: string;
+  /** Overrides the icon square's default selected colouring (bg-accent
+   *  text-white), for the same "call out this specific option" cases as
+   *  badgeClassName/highlightClassName. Only applies while selected. */
+  selectedIconClassName?: string;
+  /** Overrides the selected-checkmark circle's background (bg-accent) and
+   *  the check glyph's colour (text-white), same purpose as above. */
+  selectedCheckClassName?: string;
+  selectedCheckIconClassName?: string;
   icon: LucideIcon;
 }
 
@@ -160,12 +174,16 @@ export function IconCardGroup<T extends string>({
               selected
                 ? "border-accent/60 bg-accent-tint shadow-card-selected"
                 : "border-line shadow-card hover:border-ink-soft/30"
-            }`}
+            } ${opt.highlightClassName ?? ""}`}
           >
             {selected && (
-              <span className="absolute right-2.5 top-2.5 flex h-[18px] w-[18px] items-center justify-center rounded-full bg-accent">
+              <span
+                className={`absolute right-2.5 top-2.5 flex h-[18px] w-[18px] items-center justify-center rounded-full ${
+                  opt.selectedCheckClassName ?? "bg-accent"
+                }`}
+              >
                 <Check
-                  className="h-[11px] w-[11px] text-white"
+                  className={`h-[11px] w-[11px] ${opt.selectedCheckIconClassName ?? "text-white"}`}
                   strokeWidth={3}
                   aria-hidden
                 />
@@ -174,9 +192,10 @@ export function IconCardGroup<T extends string>({
             {opt.badge && (
               <span
                 className={`self-start rounded-full px-2 py-1 text-[10.5px] font-semibold ${
-                  selected
+                  opt.badgeClassName ??
+                  (selected
                     ? "bg-accent-tint2 text-accent"
-                    : "bg-chip text-ink-soft"
+                    : "bg-chip text-ink-soft")
                 }`}
               >
                 {opt.badge}
@@ -185,7 +204,11 @@ export function IconCardGroup<T extends string>({
             <div
               className={`flex items-center justify-center rounded-[10px] ${
                 compact ? "h-7 w-7" : "h-9 w-9"
-              } ${selected ? "bg-accent text-white" : "bg-chip text-ink-soft"}`}
+              } ${
+                selected
+                  ? (opt.selectedIconClassName ?? "bg-accent text-white")
+                  : "bg-chip text-ink-soft"
+              }`}
             >
               <Icon
                 className={compact ? "h-3.5 w-3.5" : "h-[18px] w-[18px]"}

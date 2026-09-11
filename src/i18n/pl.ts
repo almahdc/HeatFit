@@ -376,6 +376,7 @@ export const pl: Dictionary = {
       subtitle:
         "Jedna opcja naraz, żeby porównanie pozostało uczciwe. Ten krok to sam koszt energii: fotowoltaika, dotacje i finansowanie mają niżej własne kroki.",
       fieldLabel: "Opcja wymiany",
+      bestValueBadge: "Największa oszczędność",
       addSolarLabel: "Dodaj fotowoltaikę do tej inwestycji",
       addSolarSublabel: (price: string, kwh: string) =>
         `+${price} za instalację ${kwh} kWh/rok`,

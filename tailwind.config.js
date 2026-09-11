@@ -22,6 +22,14 @@ export default {
           500: "#33508f",
           600: "#2a4272",
         },
+        // Financials-step-only highlight: the best switch-from-coal option
+        // and every saving figure on that page. Kept separate from `accent`
+        // (the app's blue) since blue reads as "selected", not "good news".
+        savings: {
+          tint: "#eafbec",
+          DEFAULT: "#ADEBB3",
+          700: "#1f7a3d",
+        },
       },
       boxShadow: {
         card: "0 1px 2px rgba(28,32,39,0.04), 0 8px 20px -12px rgba(28,32,39,0.12)",
