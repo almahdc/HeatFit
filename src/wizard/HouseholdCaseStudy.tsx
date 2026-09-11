@@ -92,7 +92,6 @@ function cards<T extends string>(
 const HOUSE_KIND_ICONS: Record<HouseKind, LucideIcon> = {
   detached: Home,
   semiDetached: Building,
-  apartment: Building,
 };
 
 const INSULATION_ICONS: Record<InsulationLevel, LucideIcon> = {
@@ -149,11 +148,7 @@ const WATER_HEATING_ICONS: Record<WaterHeatingCase, LucideIcon> = {
 };
 
 const houseKindOptions = (t: Dictionary) =>
-  cards(t.options.houseKind, HOUSE_KIND_ICONS, [
-    "detached",
-    "semiDetached",
-    "apartment",
-  ]);
+  cards(t.options.houseKind, HOUSE_KIND_ICONS, ["detached", "semiDetached"]);
 
 const insulationOptions = (t: Dictionary) =>
   cards(t.options.insulation, INSULATION_ICONS, [

@@ -4,7 +4,7 @@ import { StepEyebrow } from "./FormPrimitives";
 import { useT } from "../i18n";
 import type { Dictionary } from "../i18n";
 
-const CONTACT_EMAIL = "heatfit.hello@gmail.com";
+export const CONTACT_EMAIL = "heatfit.hello@gmail.com";
 
 /** Formspree form endpoint, created at formspree.io and pointed at
  *  heatfit.hello@gmail.com. Unset in an environment without one configured

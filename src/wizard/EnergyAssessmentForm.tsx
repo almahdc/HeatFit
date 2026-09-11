@@ -21,6 +21,7 @@ import {
   type IconCardOption,
 } from "./FormPrimitives";
 import { AssessmentState, initialAssessmentState } from "./assessmentTypes";
+import { CONTACT_EMAIL } from "./EarlyAccessBlock";
 import {
   CurrentHeatingSection,
   ElectricityWaterSection,
@@ -134,15 +135,26 @@ export function EnergyAssessmentForm({
               title={t.wizard.welcome.title}
               subtitle={t.wizard.welcome.subtitle}
             >
-              <p className="text-base text-ink-soft">
-                {t.wizard.welcome.bodyBefore}
-                <strong className="text-ink">
-                  {t.wizard.welcome.bodyEmphasis}
-                </strong>
-                {t.wizard.welcome.bodyAfter}
-              </p>
-              <p className="mt-3 text-sm text-ink-soft/80 italic">
-                {t.wizard.welcome.gasNote}
+              <div>
+                <h3 className="text-base font-semibold text-ink">
+                  {t.wizard.welcome.fitTitle}
+                </h3>
+                <ul className="mt-2 list-disc space-y-1.5 pl-5 text-sm text-ink-soft">
+                  <li>
+                    <strong className="text-ink">
+                      {t.wizard.welcome.fitCoalUsersLabel}
+                    </strong>{" "}
+                    {t.wizard.welcome.fitCoalUsersBody}
+                    <a href={`mailto:${CONTACT_EMAIL}`} className="underline">
+                      {CONTACT_EMAIL}
+                    </a>
+                    {t.wizard.welcome.fitCoalUsersEmailSuffix}
+                  </li>
+                </ul>
+              </div>
+
+              <p className="mt-3 text-base font-medium text-ink">
+                {t.wizard.welcome.readyPrompt}
               </p>
             </Block>
 

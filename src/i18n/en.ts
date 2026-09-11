@@ -43,16 +43,15 @@ export const en = {
       `Step ${current} of ${total} · ${label}`,
 
     welcome: {
-      title: "Welcome",
+      title: "Find Your Lowest Price & Best Financing",
       subtitle:
-        "A few minutes of questions, in exchange for a clear answer on what replacing your boiler would actually cost and save.",
-      bodyBefore: "This tool is built ",
-      bodyEmphasis:
-        "exclusively for households currently heating with a coal boiler",
-      bodyAfter:
-        ". Over the next few steps we'll ask about your home, your current coal use, and your electricity and water setup, then use that to estimate the running costs, subsidies, and financing for switching to pellet or a heat pump. If your home doesn't burn coal for heat, this calculator isn't the right fit yet.",
-      gasNote:
-        "Gas heating is not yet included. If you'd like to see gas options or other heating solutions, let us know: we're expanding this tool based on feedback.",
+        "Answer a few quick questions to calculate your exact equipment costs, max government subsidies, and low-interest financing.",
+      fitTitle: "Is This Tool for You?",
+      fitCoalUsersLabel: "For Coal Users:",
+      fitCoalUsersBody:
+        "Built for single-family homes (detached, semi-detached, or terraced) currently heated with coal. (Apartments and gas are not supported yet. Want gas? Email ",
+      fitCoalUsersEmailSuffix: ")",
+      readyPrompt: "Ready to get started?",
     },
 
     location: {
@@ -230,7 +229,6 @@ export const en = {
     houseKind: {
       detached: { label: "Detached" },
       semiDetached: { label: "Semi-detached / terraced" },
-      apartment: { label: "Apartment" },
     },
     insulation: {
       none: { label: "No insulation" },

@@ -37,16 +37,15 @@ export const pl: Dictionary = {
       `Krok ${current} z ${total} · ${label}`,
 
     welcome: {
-      title: "Witamy",
+      title: "Znajdź najniższą cenę i najlepsze finansowanie",
       subtitle:
-        "Kilka minut pytań w zamian za jasną odpowiedź, ile naprawdę kosztowałaby wymiana kotła i ile dzięki niej zaoszczędzisz.",
-      bodyBefore: "To narzędzie powstało ",
-      bodyEmphasis:
-        "wyłącznie dla gospodarstw domowych ogrzewających obecnie dom kotłem węglowym",
-      bodyAfter:
-        ". W kolejnych krokach zapytamy o Twój dom, obecne zużycie węgla oraz o prąd i ciepłą wodę, a następnie oszacujemy koszty eksploatacji, dotacje i finansowanie przejścia na pellet lub pompę ciepła. Jeśli Twój dom nie jest ogrzewany węglem, ten kalkulator nie jest jeszcze dla Ciebie.",
-      gasNote:
-        "Ogrzewanie gazowe nie jest jeszcze uwzględnione. Jeśli chcesz zobaczyć opcje gazowe lub inne rozwiązania grzewcze, daj nam znać: rozwijamy to narzędzie w oparciu o opinie użytkowników.",
+        "Odpowiedz na kilka krótkich pytań, aby obliczyć dokładny koszt urządzenia, maksymalne dotacje rządowe i nisko oprocentowane finansowanie.",
+      fitTitle: "Czy to narzędzie jest dla Ciebie?",
+      fitCoalUsersLabel: "Dla osób ogrzewających węglem:",
+      fitCoalUsersBody:
+        "Stworzone dla domów jednorodzinnych (wolnostojących, bliźniaków lub szeregowców) obecnie ogrzewanych węglem. (Mieszkania i ogrzewanie gazowe nie są jeszcze obsługiwane. Chcesz opcję gazową? Napisz na ",
+      fitCoalUsersEmailSuffix: ")",
+      readyPrompt: "Gotowy, aby zacząć?",
     },
 
     location: {
@@ -224,7 +223,6 @@ export const pl: Dictionary = {
     houseKind: {
       detached: { label: "Wolnostojący" },
       semiDetached: { label: "Bliźniak / szeregowiec" },
-      apartment: { label: "Mieszkanie" },
     },
     insulation: {
       none: { label: "Brak ocieplenia" },

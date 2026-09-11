@@ -19,7 +19,7 @@ export type BoilerClass = "bezklasowy" | "class3" | "class4" | "class5";
 export type CityDeadlineNotice =
   "none" | "pressOrMediaOnly" | "officialLetter" | "chimneySweep";
 export type RadiatorKind = "standard" | "floorHeating" | "mixed";
-export type HouseKind = "detached" | "semiDetached" | "apartment";
+export type HouseKind = "detached" | "semiDetached";
 export type ElectricityTariffCase = "G11" | "G12";
 export type WaterHeatingCase =
   | "electricBoilerNew"
