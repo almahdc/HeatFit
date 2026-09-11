@@ -1,10 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  Applicant,
-  DEFAULT_PROGRAMMES,
-  subsidiesFor,
-} from "../engines/subsidy";
-import {
   ROUTES,
   balanceAfter,
   financingPlan,
@@ -12,116 +7,6 @@ import {
   monthlyPayment,
 } from "../engines/financing";
 import { exact, range } from "../engines/range";
-
-const READY: Applicant = {
-  incomeLevel: "basic",
-  gatesSatisfied: [
-    "ownedThreeYears",
-    "deviceOnZumList",
-    "energyAuditDone",
-    "replacingKopciuch",
-    "incomeEvidenced",
-  ],
-};
-
-describe("subsidy engine", () => {
-  it("contains no hardcoded amounts of its own: everything comes from the programme set", () => {
-    // If someone inlines a złoty figure in the engine, passing an empty set
-    // should still produce a grant, and this test catches it.
-    const out = subsidiesFor("heatPump", 45000, READY, []);
-    expect(out.upfrontGrant.mid).toBe(0);
-    expect(out.detail).toHaveLength(0);
-  });
-
-  it("awards Clean Air to a household that clears every gate", () => {
-    const out = subsidiesFor("heatPump", 45000, READY);
-    const cp = out.detail.find((d) => d.programme.id === "czystePowietrze");
-    expect(cp?.applied).toBe(true);
-    expect(out.upfrontGrant.mid).toBeGreaterThan(0);
-  });
-
-  it("refuses to stack Clean Air and My Heat on the same device, keeping the larger", () => {
-    const applicant: Applicant = {
-      incomeLevel: "basic",
-      gatesSatisfied: [
-        "ownedThreeYears",
-        "deviceOnZumList",
-        "energyAuditDone",
-        "replacingKopciuch",
-        "newBuild",
-      ],
-    };
-    const out = subsidiesFor("heatPump", 45000, applicant);
-    const applied = out.detail.filter(
-      (d) => d.applied && !d.programme.isTaxRelief,
-    );
-    expect(applied).toHaveLength(1);
-    expect(applied[0]!.programme.id).toBe("czystePowietrze");
-
-    const blocked = out.detail.find((d) => d.programme.id === "mojeCiepło");
-    expect(blocked?.applied).toBe(false);
-    expect(blocked?.reason).toContain("cannot claim");
-  });
-
-  it("lets tax relief stack with a grant, because it does", () => {
-    const out = subsidiesFor("heatPump", 45000, READY);
-    expect(out.upfrontGrant.mid).toBeGreaterThan(0);
-    expect(out.taxRelief.mid).toBeGreaterThan(0);
-  });
-
-  it("explains every refusal in words a homeowner could read", () => {
-    const notReady: Applicant = { incomeLevel: "basic", gatesSatisfied: [] };
-    const out = subsidiesFor("heatPump", 45000, notReady);
-    for (const d of out.detail.filter((x) => !x.applied)) {
-      expect(d.reason).toBeTruthy();
-      expect(d.reason!.length).toBeGreaterThan(5);
-    }
-  });
-
-  it("names the specific missing gate rather than a generic refusal", () => {
-    const noAudit: Applicant = {
-      incomeLevel: "basic",
-      gatesSatisfied: [
-        "ownedThreeYears",
-        "deviceOnZumList",
-        "replacingKopciuch",
-      ],
-    };
-    const out = subsidiesFor("heatPump", 45000, noAudit);
-    const cp = out.detail.find((d) => d.programme.id === "czystePowietrze");
-    expect(cp?.applied).toBe(false);
-    expect(cp?.missingGates).toContain("energyAuditDone");
-  });
-
-  it("caps the grant at the eligible cost, never paying out more than the job", () => {
-    const cheap = subsidiesFor("heatPump", 10000, READY);
-    expect(cheap.upfrontGrant.high).toBeLessThanOrEqual(10000);
-  });
-
-  it("survives the amounts being edited live, which is the whole point", () => {
-    // The cap has to be edited to something that actually BINDS to prove the
-    // edit took effect. At the basic tier the programme pays 40%, so on a
-    // 45 000 zł job the rate alone caps the award at 18 000: editing the
-    // ceiling to anything above that changes nothing, which is correct
-    // behaviour and useless as a test. It also has to stay the LARGEST award
-    // on offer, or the exclusion pass hands the device to Ciepłe Mieszkanie
-    // instead and Clean Air correctly drops to zero.
-    const edited = DEFAULT_PROGRAMMES.map((p) =>
-      p.id === "czystePowietrze"
-        ? { ...p, maxByLevel: { ...p.maxByLevel, basic: 15000 } }
-        : p,
-    );
-    const out = subsidiesFor("heatPump", 45000, READY, edited);
-    const cp = out.detail.find((d) => d.programme.id === "czystePowietrze");
-    expect(cp?.amount.mid).toBe(15000);
-
-    const unedited = subsidiesFor("heatPump", 45000, READY);
-    const before = unedited.detail.find(
-      (d) => d.programme.id === "czystePowietrze",
-    );
-    expect(before?.amount.mid).toBe(18000);
-  });
-});
 
 describe("financing", () => {
   it("reproduces the published BOŚ example's total interest to the grosz", () => {

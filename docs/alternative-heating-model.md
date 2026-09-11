@@ -97,7 +97,8 @@ All three efficiencies come straight from `sheet.constants.ts`'s own FUEL
 table : the same point-value source `baseline.ts` reproduces : so both sides
 of every comparison come from one consistent model, rather than mixing sheet
 point values on one side with `constants.pl.ts`'s low/mid/high bands on the
-other, the way the still-dormant `runningCost.ts`/`verdict.ts` engines do.
+other. `capex.ts` is the one engine that still reads those bands, and it says
+so at the top of the file.
 
 Heat pump electricity is priced at the household's own tariff (G11 or G12),
 the same price the baseline already uses for their bill : a heat pump does

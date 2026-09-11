@@ -220,6 +220,14 @@ function FinancialsPlaceholder({
                   }
                 />
                 <Fact
+                  label={s.gasConnection}
+                  value={household.gasConnectionAvailable ? s.yes : s.no}
+                />
+                <Fact
+                  label={s.districtHeating}
+                  value={household.districtHeatingAvailable ? s.yes : s.no}
+                />
+                <Fact
                   label={s.replacementPreference}
                   value={
                     t.options.replacementPreference[
@@ -252,10 +260,6 @@ function FinancialsPlaceholder({
                 <Fact
                   label={s.showers}
                   value={String(household.showersBathsPerWeek)}
-                />
-                <Fact
-                  label={s.gasConnection}
-                  value={household.gasConnectionAvailable ? s.yes : s.no}
                 />
                 {/*
             Battery and heat storage are still on HouseholdCaseInputs (the

@@ -184,10 +184,13 @@ option.
 
 ## What is deliberately not here
 
-- **Tax relief (ulga termomodernizacyjna).** Modelled in the dormant
-  `subsidy.ts`, absent from the sheet's own chain, and not shown. It is a
-  deduction, not cash, and folding it into a monthly figure would overstate
-  the benefit by roughly the inverse of the marginal tax rate.
+- **Tax relief in the monthly figure.** The relief itself is modelled, in
+  `taxRelief.ts`, and shown as its own line in the grants block: claimed on
+  the post-grant cost, per art. 26h ust. 5 pkt 1. What is deliberately absent
+  is any attempt to fold it into a monthly figure. It is a deduction rather
+  than cash, and it arrives with an annual tax return, so spreading it across
+  months would overstate the benefit by roughly the inverse of the marginal
+  tax rate and imply a smaller loan than the household actually needs.
 - **Insulation and envelope work.** The subsidies tab's T1-T7 rows and their
   group caps are not transcribed, because HeatFit does not price insulation.
   This is what the scope gate above runs into.

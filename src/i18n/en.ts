@@ -99,11 +99,10 @@ export const en = {
           radiatorNote: "",
           unheatedRooms: "None: whole house heated",
           coalPriceNote: "300 zł/t is transport: 1,000 zł/t ex-works",
-          freeCoalNote: "Not asked",
+          freeCoalNote: "",
           coalProvider: "PGG (pgg.pl), delivered via regional KDW depot",
-          electricityBillNote: "Prognoza, flat, 6-month settlement",
-          additionalNotes:
-            "90% finances, 10% doesn't see why switching to clean energy is needed.",
+          electricityBillNote: "Forecast, flat, 6-month settlement",
+          additionalNotes: "",
         },
       },
       grandpaJanek: {
@@ -175,7 +174,7 @@ export const en = {
     unheatedRoomsPlaceholder: "e.g., none: whole house heated",
     insulationWhySummary: "Why we ask about insulation",
     insulationWhyBody:
-      "Insulation decides how much heat your house actually needs each year, measured in kWh per square metre. That single number drives two things: what any new system costs to run, and which Czyste Powietrze funding level is open to you. We show it back to you in full rather than hiding it inside a score.",
+      "Insulation decides how much heat your house actually needs each year, measured in kWh per square metre. That single number drives two things: what any new system costs to run, and which Czyste Powietrze funding level is open to you.",
   },
 
   heating: {
@@ -203,6 +202,11 @@ export const en = {
     boilerYearPlaceholder: "e.g., 2013",
     boilerClass: "Boiler class",
     cityDeadline: "Deadline info from city",
+    gasLabel: "Gas connection available",
+    gasSublabel: "A gas line already reaches the property",
+    districtHeatingLabel: "District heating available",
+    districtHeatingSublabel:
+      "A municipal/district heating network reaches the property",
     replacementPreference:
       "If your boiler had to be replaced tomorrow, what would you put in?",
     coalProvider: "Coal provider",
@@ -218,8 +222,6 @@ export const en = {
     billSuffix: "zł / month",
     billNote: "Bill note",
     billNotePlaceholder: "e.g., prognoza, flat, 6-month settlement",
-    gasLabel: "Gas connection available",
-    gasSublabel: "A gas line already reaches the property",
     waterHeater: "Water heater",
     showers: "Showers / baths per week, per person",
     showersUnit: "per week, per person",
@@ -544,6 +546,8 @@ export const en = {
     freeCoal: "Free/discounted coal",
     freeCoalValue: (tonnes: number | "") => `Yes (${tonnes} t)`,
     cityDeadline: "City deadline notice",
+    gasConnection: "Gas connection",
+    districtHeating: "District heating",
     replacementPreference: "Replacement preference",
     coalProvider: "Coal provider",
     electricitySection: "Electricity & water",
@@ -552,7 +556,6 @@ export const en = {
       `${tariff}, ${bill} zł/mo`,
     waterHeating: "Water heating",
     showers: "Showers/baths per week, per person",
-    gasConnection: "Gas connection",
     pvBatteryStorage: "PV / battery / storage",
     pv: "PV",
     battery: "Battery",

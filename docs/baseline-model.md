@@ -451,8 +451,8 @@ There are now two constant sets, and that is deliberate:
 | ------- | ------------------------------------------- | ------------------------------------------------------- |
 | Source  | Independently researched Polish market data | The sheet's own working assumptions                     |
 | Shape   | low/mid/high bands                          | Point values                                            |
-| Used by | `sensitivity.ts`, `verdict.ts`              | `baseline.ts`                                           |
-| Purpose | Carry honest uncertainty into a verdict     | Reproduce the sheet exactly, and be testable against it |
+| Used by | `capex.ts`, `baseline.ts` (summer DHW share) | `baseline.ts`, `grants.ts`, `loan.ts`                  |
+| Purpose | Carry honest uncertainty as a range          | Reproduce the sheet exactly, and be testable against it |
 
 They disagree in places, and the disagreements are real:
 
@@ -473,9 +473,10 @@ open, and question 4 above is the one that actually changes an answer.
 
 ## 6. Deliberately not modelled
 
-- **Subsidies**: excluded from this pass by request. The sheet's subsidy tab
-  holds the Czyste Powietrze cost-line caps, the three funding levels
-  (40/70/100%) and the scope gate; `src/engines/subsidy.ts` already exists.
+- **Subsidies**: excluded from this pass by request, and modelled since, in
+  `src/engines/grants.ts` (the Czyste Powietrze cost-line caps, the three
+  funding levels and the scope gate) and `src/engines/taxRelief.ts` (the
+  thermal modernisation relief). Neither touches the baseline.
 - **Capex and financing**: the SCENARIOS tab's `Capex /m` column is all zeros
   for the coal options (they carry `Is capex in the past? = TRUE`), so there is
   nothing to extract for the baseline. `financing.ts` covers this.

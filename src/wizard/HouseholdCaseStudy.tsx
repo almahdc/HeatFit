@@ -13,6 +13,7 @@ import {
   Mail,
   Megaphone,
   Mountain,
+  Network,
   Newspaper,
   Package,
   Receipt,
@@ -580,6 +581,22 @@ export function CurrentHeatingSection({ value, onChange }: Props) {
         />
       </div>
 
+      <ToggleCard
+        icon={Flame}
+        label={t.heating.gasLabel}
+        sublabel={t.heating.gasSublabel}
+        checked={value.gasConnectionAvailable}
+        onChange={(v) => onChange(update(value, "gasConnectionAvailable", v))}
+      />
+
+      <ToggleCard
+        icon={Network}
+        label={t.heating.districtHeatingLabel}
+        sublabel={t.heating.districtHeatingSublabel}
+        checked={value.districtHeatingAvailable}
+        onChange={(v) => onChange(update(value, "districtHeatingAvailable", v))}
+      />
+
       <div>
         <FieldLabel icon={ListChecks}>
           {t.heating.replacementPreference}
@@ -651,14 +668,6 @@ export function ElectricityWaterSection({ value, onChange }: Props) {
           />
         </div>
       </div>
-
-      <ToggleCard
-        icon={Flame}
-        label={t.electricity.gasLabel}
-        sublabel={t.electricity.gasSublabel}
-        checked={value.gasConnectionAvailable}
-        onChange={(v) => onChange(update(value, "gasConnectionAvailable", v))}
-      />
 
       <div>
         <FieldLabel icon={Flame}>{t.electricity.waterHeater}</FieldLabel>

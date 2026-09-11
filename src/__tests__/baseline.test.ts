@@ -543,14 +543,14 @@ describe("hot water blending", () => {
     expect(b.energy.waterEnergyKwh).toBeLessThan(waterEnergyKwh(litres));
   });
 
-  it("tames the overestimate for a large, frequently-showering household", () => {
-    // Grandma Krysia: 5 people x 7 showers/week. Unblended, that is
-    // 5x7x40x52 = 72 800 l/y, an implausible amount of hot water for a house
-    // this size: the exact case the blend factor exists to fix.
+  it("still applies the blend for a smaller household", () => {
+    // Grandma Krysia: 3 people x 5 showers/week. Unblended, that is
+    // 3x5x40x52 = 31 200 l/y; the blend factor knocks it down to 60% the
+    // same as it would for any other household size.
     const krysia = {
       heatedAreaM2: 125,
-      occupants: 5,
-      showersBathsPerWeek: 7,
+      occupants: 3,
+      showersBathsPerWeek: 5,
       acAvailable: false,
       coalType: "orzech" as const,
       coalTonnesPerSeason: 5,
@@ -560,12 +560,18 @@ describe("hot water blending", () => {
       waterHeating: "electricBoilerNew" as const,
     };
     const b = calculateBaseline(krysia);
-    const rawLitres = hotWaterLitres(5, 7);
+    const rawLitres = hotWaterLitres(3, 5);
     const naiveEnergy = waterEnergyKwh(rawLitres);
     expect(b.energy.waterEnergyKwh).toBeCloseTo(naiveEnergy * 0.6, 6);
-    // Her electricity bill (400 zł/mo, G11 -> 4 800 kWh/y) now sits close to
-    // what the model expects, rather than badly understating it.
-    expect(Math.abs(b.electricity.gapKwh!)).toBeLessThan(500);
+    // At this household size the blended hot-water draw is modest, so her
+    // 400 zł/mo bill (G11 -> 4 800 kWh/y) sits well above what the model
+    // attributes to her: base load 2 500 kWh + blended water 936 kWh / 0.98
+    // efficiency ≈ 3 455 kWh. gapKwh surfaces that ~1 345 kWh difference
+    // rather than hiding it.
+    const expectedModelledKwh =
+      S.DEFAULT_BASE_ELECTRICITY_KWH +
+      (naiveEnergy * 0.6) / S.ELECTRIC_BOILER_EFFICIENCY;
+    expect(b.electricity.gapKwh).toBeCloseTo(4800 - expectedModelledKwh, 6);
   });
 
   it("names the blend in the assumptions", () => {

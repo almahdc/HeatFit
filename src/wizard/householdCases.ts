@@ -64,6 +64,7 @@ export interface HouseholdCaseInputs {
   waterHeating: WaterHeatingCase;
   showersBathsPerWeek: number;
   gasConnectionAvailable: boolean;
+  districtHeatingAvailable: boolean;
   hasPvPanels: boolean;
   hasBattery: boolean;
   hasHeatStorage: boolean;
@@ -101,6 +102,7 @@ export const initialHouseholdCase: HouseholdCaseInputs = {
   waterHeating: "electricBoilerNew",
   showersBathsPerWeek: 7,
   gasConnectionAvailable: false,
+  districtHeatingAvailable: false,
   hasPvPanels: false,
   hasBattery: false,
   hasHeatStorage: false,
@@ -126,12 +128,12 @@ export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
       heatedAreaM2: 125,
       radiatorType: "standard",
       radiatorNote: "",
-      occupants: 5,
+      occupants: 3,
       acAvailable: false,
       unheatedRooms: "",
 
       coalType: "orzech",
-      usesWoodToo: false,
+      usesWoodToo: true,
       coalTonnesPerSeason: 5,
       coalPricePerTonnePln: 1300,
       coalPriceNote: "",
@@ -148,8 +150,9 @@ export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
       electricityBillPlnPerMonth: 400,
       electricityBillNote: "",
       waterHeating: "electricBoilerNew",
-      showersBathsPerWeek: 7,
+      showersBathsPerWeek: 5,
       gasConnectionAvailable: true,
+      districtHeatingAvailable: false,
       hasPvPanels: false,
       hasBattery: false,
       hasHeatStorage: false,
@@ -189,6 +192,7 @@ export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
       waterHeating: "electricSummerCoalWinter",
       showersBathsPerWeek: 4,
       gasConnectionAvailable: true,
+      districtHeatingAvailable: false,
       hasPvPanels: false,
       hasBattery: false,
       hasHeatStorage: false,
@@ -228,6 +232,7 @@ export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
       waterHeating: "coalCentralAllYear",
       showersBathsPerWeek: 4,
       gasConnectionAvailable: false,
+      districtHeatingAvailable: false,
       hasPvPanels: false,
       hasBattery: false,
       hasHeatStorage: false,
@@ -267,6 +272,7 @@ export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
       waterHeating: "electricNightTariff",
       showersBathsPerWeek: 4,
       gasConnectionAvailable: false,
+      districtHeatingAvailable: false,
       hasPvPanels: false,
       hasBattery: false,
       hasHeatStorage: false,
