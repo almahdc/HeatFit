@@ -348,7 +348,7 @@ export const LITRES_PER_SHOWER = 40;
  * comfortable ~38-40 °C, so a chunk of the 40 l counted per shower never went
  * near the heat source. Without this correction, `hotWaterLitres` scales
  * linearly with occupants × showers per week, and a large household showering
- * often (Grandma Krysia: 5 people × 7/week) reads as needing far more hot-water
+ * often (The Warmth Guardian, Babcia Krysia: 5 people × 7/week) reads as needing far more hot-water
  * energy than a real coal boiler or immersion tank would show for it.
  *
  * Applying 0.6 here changes only the ENERGY side of the calculation

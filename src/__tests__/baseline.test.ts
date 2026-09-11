@@ -192,7 +192,7 @@ describe("hot water source", () => {
 });
 
 describe("calculateBaseline", () => {
-  // Mrs. Teresa: coal boiler lit year-round, 130 m², living alone.
+  // The Ground Floor Manager (Pani Teresa): coal boiler lit year-round, 130 m², living alone.
   const teresa = {
     heatedAreaM2: 130,
     occupants: 1,
@@ -341,14 +341,14 @@ describe("cost breakdown by end use", () => {
 
 describe("calculateUserBaseline", () => {
   it("computes a persona straight from its id", () => {
-    const b = calculateUserBaseline("mrsTeresa");
+    const b = calculateUserBaseline("groundFloorManager");
     // 4.5 t kostka at 1400 zł/t, exactly as the persona records it.
     expect(b.cost.coalPlnPerYear).toBe(4.5 * 1400);
   });
 
   it("lets a custom input override the persona", () => {
-    const stock = calculateUserBaseline("mrsTeresa");
-    const edited = calculateUserBaseline("mrsTeresa", {
+    const stock = calculateUserBaseline("groundFloorManager");
+    const edited = calculateUserBaseline("groundFloorManager", {
       coalTonnesPerSeason: 6,
     });
     expect(edited.cost.coalPlnPerYear).toBe(6 * 1400);
@@ -358,8 +358,8 @@ describe("calculateUserBaseline", () => {
   });
 
   it("keeps every field the caller did not override", () => {
-    const stock = calculateUserBaseline("mrMarek");
-    const edited = calculateUserBaseline("mrMarek", { occupants: 4 });
+    const stock = calculateUserBaseline("nightWatch");
+    const edited = calculateUserBaseline("nightWatch", { occupants: 4 });
     // Marek already has 4 occupants, so nothing should move.
     expect(edited.cost.totalPlnPerYear).toBeCloseTo(
       stock.cost.totalPlnPerYear,
@@ -368,8 +368,8 @@ describe("calculateUserBaseline", () => {
   });
 
   it("ignores undefined overrides rather than blanking an answer", () => {
-    const stock = calculateUserBaseline("mrsTeresa");
-    const withUndefined = calculateUserBaseline("mrsTeresa", {
+    const stock = calculateUserBaseline("groundFloorManager");
+    const withUndefined = calculateUserBaseline("groundFloorManager", {
       coalTonnesPerSeason: undefined,
     });
     expect(withUndefined.cost.totalPlnPerYear).toBeCloseTo(
@@ -384,9 +384,9 @@ describe("calculateUserBaseline", () => {
   });
 
   it("counts a persona's free coal as energy but not as cost", () => {
-    // Grandpa Janek gets 1 t from a relative's farm.
-    const janek = calculateUserBaseline("grandpaJanek");
-    const noFree = calculateUserBaseline("grandpaJanek", {
+    // The Methodical Planner (Dziadek Janek) gets 1 t from a relative's farm.
+    const janek = calculateUserBaseline("methodicalPlanner");
+    const noFree = calculateUserBaseline("methodicalPlanner", {
       freeCoalReceived: false,
     });
     expect(janek.cost.coalPlnPerYear).toBe(noFree.cost.coalPlnPerYear);
@@ -506,9 +506,9 @@ describe("boiler efficiency by emission class", () => {
 
   it("carries the persona's class through calculateUserBaseline", () => {
     // Krysia's boiler is bezklasowy; Marek's is class 3.
-    const krysia = calculateUserBaseline("grandmaKrysia");
+    const krysia = calculateUserBaseline("warmthGuardian");
     expect(krysia.energy.coalHeatDeliveredKwh).toBeCloseTo(5 * 8056 * 0.6, 6);
-    const marek = calculateUserBaseline("mrMarek");
+    const marek = calculateUserBaseline("nightWatch");
     expect(marek.energy.coalHeatDeliveredKwh).toBeCloseTo(5.5 * 8056 * 0.75, 6);
   });
 });
@@ -549,7 +549,7 @@ describe("hot water blending", () => {
   });
 
   it("still applies the blend for a smaller household", () => {
-    // Grandma Krysia: 3 people x 5 showers/week. Unblended, that is
+    // The Warmth Guardian (Babcia Krysia): 3 people x 5 showers/week. Unblended, that is
     // 3x5x40x52 = 31 200 l/y; the blend factor knocks it down to 60% the
     // same as it would for any other household size.
     const krysia = {

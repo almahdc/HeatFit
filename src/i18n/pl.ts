@@ -84,10 +84,9 @@ export const pl: Dictionary = {
       "Wypełnij wszystkie kroki poniżej danymi z prawdziwego wywiadu albo wpisz je ręcznie.",
     fieldLabel: "Przykładowe gospodarstwo domowe",
     cases: {
-      grandmaKrysia: {
-        name: "Babcia Krysia",
-        tagline: "Po co to ruszać? Po co zmieniać?",
-        description: "Używa starego, bezklasowego kotła węglowego zasypowego.",
+      warmthGuardian: {
+        name: "Strażniczka Ciepła",
+        description: "Używa starego, bezklasowego kotła węglowego zasypowego",
         seed: {
           radiatorNote: "",
           coalPriceNote: "300 zł/t to transport: 1000 zł/t loco kopalnia",
@@ -97,11 +96,9 @@ export const pl: Dictionary = {
             "90% finansuje, 10% nie widzi potrzeby przechodzenia na czystą energię.",
         },
       },
-      grandpaJanek: {
-        name: "Dziadek Janek",
-        tagline: "Wszystko na ostatnią chwilę",
-        description:
-          "Ma przyłącze gazowe przy płocie i starzejący się kocioł klasy 4 z 2017 roku.",
+      methodicalPlanner: {
+        name: "Metodyczny Planista",
+        description: "Ma starzejący się kocioł klasy 4 z 2017 roku",
         seed: {
           radiatorNote: "Małe standardowe grzejniki płytowe",
           coalPriceNote: "Mieszane sortymenty (groszek / mieszanka)",
@@ -110,11 +107,9 @@ export const pl: Dictionary = {
           additionalNotes: "",
         },
       },
-      mrsTeresa: {
-        name: "Pani Teresa",
-        tagline: "W dużym domu",
-        description:
-          "Mieszka sama w dużym, starym domu z ogromnymi grzejnikami i nieogrzewanymi pokojami na piętrze.",
+      groundFloorManager: {
+        name: "Zarządczyni Parteru",
+        description: "Mieszka sama, z nieogrzewanymi pokojami na piętrze",
         seed: {
           radiatorNote:
             "Stare, masywne żeliwne grzejniki: bardzo gorące w dotyku",
@@ -124,11 +119,9 @@ export const pl: Dictionary = {
           additionalNotes: "",
         },
       },
-      mrMarek: {
-        name: "Pan Marek",
-        tagline: "Na taryfie nocnej",
-        description:
-          "Praktyczny optymalizator: taryfa nocna G12, węgiel orzech i podgrzewanie wody w nocy.",
+      nightWatch: {
+        name: "Nocna Warta",
+        description: "Węgiel orzech i podgrzewanie wody w nocy",
         seed: {
           radiatorNote: "Stare, duże żeliwne grzejniki: bardzo gorące w dotyku",
           coalPriceNote: "",
@@ -164,7 +157,7 @@ export const pl: Dictionary = {
     acSublabel: "Sprawna klimatyzacja w domu",
     insulationWhySummary: "Dlaczego pytamy o ocieplenie",
     insulationWhyBody:
-      "Ocieplenie decyduje o tym, ile ciepła Twój dom naprawdę potrzebuje w ciągu roku, liczone w kWh na metr kwadratowy. Ta jedna liczba wpływa na dwie rzeczy: ile będzie kosztować eksploatacja nowego systemu i który poziom dofinansowania z Czystego Powietrza jest dla Ciebie dostępny. Pokazujemy ją wprost, zamiast chować w punktacji.",
+      "Ocieplenie decyduje o tym, ile ciepła Twój dom naprawdę potrzebuje w ciągu roku, liczone w kWh na metr kwadratowy. Ta jedna liczba wpływa na dwie rzeczy: ile będzie kosztować eksploatacja nowego systemu i który poziom dofinansowania z Czystego Powietrza jest dla Ciebie dostępny. Zobaczysz ją tutaj prosto z mostu.",
   },
 
   heating: {
@@ -201,15 +194,14 @@ export const pl: Dictionary = {
 
   electricity: {
     title: "Prąd i ciepła woda",
-    subtitle:
-      "Opowiedz nam o zużyciu prądu i o tym, jak przygotowywana jest ciepła woda.",
+    subtitle: "Opowiedz nam o zużyciu prądu i o tym, jak ogrzewasz wodę.",
     tariff: "Taryfa energii elektrycznej",
     bill: "Rachunek za prąd",
     billPlaceholder: "np. 200",
     billSuffix: "zł / miesiąc",
     billNote: "Uwagi o rachunku",
     billNotePlaceholder: "np. prognoza, ryczałt, rozliczenie co pół roku",
-    waterHeater: "Podgrzewacz wody",
+    waterHeater: "Podgrzewacz wody: sposób ogrzewania wody",
     showers: "Prysznice / kąpiele tygodniowo, na osobę",
     showersUnit: "tygodniowo, na osobę",
     pvSetup: "Instalacja fotowoltaiczna",
@@ -333,7 +325,7 @@ export const pl: Dictionary = {
     assumptionsSummary: (count: number) => `Co założyliśmy (${count})`,
     whyTotalSummary: "Skąd bierze się ta kwota",
     whyTotalBody:
-      "Bierzemy węgiel, który podałeś, energię zawartą w tym sortymencie i to, ile z niej Twoja klasa kotła naprawdę zamienia w ciepło. Ciepłą wodę i całą resztę licznika wyceniamy z rachunku, który podałeś, a nie ze średniej krajowej. Wszystko, co musieliśmy założyć, wypisujemy powyżej, prostym językiem.",
+      "Bierzemy węgiel, który podałeś, energię zawartą w tym sortymencie i to, ile z niej Twoja klasa kotła naprawdę zamienia w ciepło. Ciepłą wodę i całą resztę licznika wyceniamy ze średniej krajowej. Wszystko, co musieliśmy założyć, wypisujemy powyżej.",
     whyConditionSummary: "Dlaczego ta liczba tyle znaczy",
     whyConditionBody:
       "kWh/m²/rok to stan Twojego budynku w jednej liczbie: ile ciepła potrzebuje na metr kwadratowy. Czyste Powietrze posługuje się tą samą miarą. Powyżej 140 program nie sfinansuje samego źródła ciepła bez termomodernizacji i dopiero powyżej 140 otwiera się najwyższy poziom dofinansowania. Nic nie jest punktowane po cichu: to jest ta liczba, a krok 5 pokazuje dokładnie, co oznacza dla Twojej dotacji.",

@@ -235,7 +235,7 @@ const waterHeatingOptions = (t: Dictionary) =>
 export function PersonaPicker({ value, onChange }: Props) {
   const t = useT();
   const [selectedPresetId, setSelectedPresetId] =
-    useState<HouseholdCaseId>("grandmaKrysia");
+    useState<HouseholdCaseId>("warmthGuardian");
 
   // The free-text fields (radiatorNote and so on) are display
   // prose, not data, so they live in the dictionary rather than on the preset
@@ -252,21 +252,21 @@ export function PersonaPicker({ value, onChange }: Props) {
   };
 
   useEffect(() => {
-    const grandmaPreset = HOUSEHOLD_CASE_PRESETS.find(
-      (p) => p.id === "grandmaKrysia",
+    const defaultPreset = HOUSEHOLD_CASE_PRESETS.find(
+      (p) => p.id === "warmthGuardian",
     );
-    if (grandmaPreset) {
+    if (defaultPreset) {
       onChange({
-        ...grandmaPreset.data,
+        ...defaultPreset.data,
         // Answered back on the welcome & location step, before this one ever
         // mounts: a persona default here would silently overwrite whatever
         // the household just told us about their city's deadline.
         cityDeadlineNotice: value.cityDeadlineNotice,
-        ...t.personas.cases.grandmaKrysia.seed,
+        ...t.personas.cases.warmthGuardian.seed,
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Load Grandma Krysia on mount, in whichever language is active then.
+  }, []); // Load the default persona on mount, in whichever language is active then.
 
   return (
     <Block title={t.personas.title} subtitle={t.personas.subtitle}>
@@ -310,9 +310,6 @@ export function PersonaPicker({ value, onChange }: Props) {
                 </div>
                 <p className="text-[15px] font-semibold text-ink">
                   {persona.name}
-                </p>
-                <p className="text-[13px] italic text-ink-soft">
-                  “{persona.tagline}”
                 </p>
                 <p className="text-[13px] text-ink-soft/80">
                   {persona.description}

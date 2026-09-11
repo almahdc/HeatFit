@@ -176,7 +176,7 @@ export const initialHouseholdCase: HouseholdCaseInputs = {
 
 /** Ids double as i18n keys: see `personas.cases` in the dictionaries. */
 export type HouseholdCaseId =
-  "grandmaKrysia" | "grandpaJanek" | "mrsTeresa" | "mrMarek";
+  "warmthGuardian" | "methodicalPlanner" | "groundFloorManager" | "nightWatch";
 
 export interface HouseholdCasePreset {
   id: HouseholdCaseId;
@@ -185,7 +185,7 @@ export interface HouseholdCasePreset {
 
 export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
   {
-    id: "grandmaKrysia",
+    id: "warmthGuardian",
     data: {
       cityDeadlineNotice: "pressOrMediaOnly",
 
@@ -227,7 +227,7 @@ export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
     },
   },
   {
-    id: "grandpaJanek",
+    id: "methodicalPlanner",
     data: {
       cityDeadlineNotice: "none",
 
@@ -269,7 +269,7 @@ export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
     },
   },
   {
-    id: "mrsTeresa",
+    id: "groundFloorManager",
     data: {
       cityDeadlineNotice: "none",
 
@@ -311,7 +311,7 @@ export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
     },
   },
   {
-    id: "mrMarek",
+    id: "nightWatch",
     data: {
       cityDeadlineNotice: "none",
 

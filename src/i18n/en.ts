@@ -90,10 +90,9 @@ export const en = {
       "Quick-fill every step below from a real interview, or fill it in by hand.",
     fieldLabel: "Household case study",
     cases: {
-      grandmaKrysia: {
-        name: "Grandma Krysia",
-        tagline: "Why touch it? Why change it?",
-        description: "Uses an old off-class manual coal boiler.",
+      warmthGuardian: {
+        name: "The Warmth Guardian",
+        description: "Uses an old off-class manual coal boiler",
         seed: {
           radiatorNote: "",
           coalPriceNote: "300 zł/t is transport: 1,000 zł/t ex-works",
@@ -102,11 +101,9 @@ export const en = {
           additionalNotes: "",
         },
       },
-      grandpaJanek: {
-        name: "Grandpa Janek",
-        tagline: "Everything at the last minute",
-        description:
-          "Has a gas connection at the fence and an aging Class 4 boiler from 2017.",
+      methodicalPlanner: {
+        name: "The Methodical Planner",
+        description: "Has an aging Class 4 boiler from 2017",
         seed: {
           radiatorNote: "Small standard panels",
           coalPriceNote: "Mixed grades (groszek / mieszanka)",
@@ -115,11 +112,9 @@ export const en = {
           additionalNotes: "",
         },
       },
-      mrsTeresa: {
-        name: "Mrs. Teresa",
-        tagline: "In the big house",
-        description:
-          "Living alone in a large legacy home with massive radiators and unheated upper rooms.",
+      groundFloorManager: {
+        name: "The Ground Floor Manager",
+        description: "Living alone in unheated upper rooms",
         seed: {
           radiatorNote:
             "Old, massive cast-iron radiators: extremely hot to touch",
@@ -129,11 +124,9 @@ export const en = {
           additionalNotes: "",
         },
       },
-      mrMarek: {
-        name: "Mr. Marek",
-        tagline: "On the night tariff",
-        description:
-          "A pragmatic optimizer using the G12 night tariff, Orzech coal, and night-active water heating.",
+      nightWatch: {
+        name: "The Night Watcher",
+        description: "Orzech coal, and night-active water heating",
         seed: {
           radiatorNote:
             "Old, large cast-iron radiators: extremely hot to touch",
@@ -215,7 +208,7 @@ export const en = {
     billSuffix: "zł / month",
     billNote: "Bill note",
     billNotePlaceholder: "e.g., prognoza, flat, 6-month settlement",
-    waterHeater: "Water heater",
+    waterHeater: "Water heater: How water is heated",
     showers: "Showers / baths per week, per person",
     showersUnit: "per week, per person",
     pvSetup: "PV setup",
@@ -336,7 +329,7 @@ export const en = {
     assumptionsSummary: (count: number) => `What we assumed (${count})`,
     whyTotalSummary: "Where this figure comes from",
     whyTotalBody:
-      "We take the coal you told us you burn, the energy in that grade, and how much of it your boiler class actually turns into heat. Hot water and everything else on the meter are priced from the bill you gave us, not from a national average. Anything we had to assume is listed above, in plain words.",
+      "We take the coal you provided, the energy contained in that grade, and how much of it your boiler class actually converts into heat. We calculate the cost of hot water and the remaining meter reading based on the national average. We’ve listed all the assumptions we had to make above.",
     whyConditionSummary: "Why this number decides so much",
     whyConditionBody:
       "kWh/m²/year is your building's condition in one figure: the heat it needs per square metre. Czyste Powietrze uses the same measure. Above 140, the programme will not fund a heat source on its own without insulation work, and only above 140 does the highest funding level open up. Nothing is scored behind the scenes: this is the number, and step 5 shows exactly what it means for your grant.",

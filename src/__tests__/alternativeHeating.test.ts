@@ -11,7 +11,7 @@ import {
 } from "../engines/baseline";
 import * as S from "../data/sheet.constants";
 
-// Mrs. Teresa: coal boiler lit year-round, 130 m², living alone, class 3.
+// The Ground Floor Manager (Pani Teresa): coal boiler lit year-round, 130 m², living alone, class 3.
 const teresaInputs = {
   heatedAreaM2: 130,
   occupants: 1,
@@ -160,10 +160,10 @@ describe("calculateAllAlternativeHeatingCosts", () => {
 
   it("every persona gets a sane, positive running cost for every option", () => {
     for (const presetId of [
-      "grandmaKrysia",
-      "grandpaJanek",
-      "mrsTeresa",
-      "mrMarek",
+      "warmthGuardian",
+      "methodicalPlanner",
+      "groundFloorManager",
+      "nightWatch",
     ]) {
       const baseline = calculateUserBaseline(presetId);
       const results = calculateAllAlternativeHeatingCosts(baseline, "G11");
