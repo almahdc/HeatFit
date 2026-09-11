@@ -5,14 +5,20 @@ import {
   ArrowRight,
   Flame,
   Info,
+  Mail,
   MapPin,
+  Megaphone,
+  Newspaper,
+  UserCheck,
 } from "lucide-react";
 import {
   Block,
   FieldLabel,
+  IconCardGroup,
   InfoBox,
   StepProgress,
   TextInputWithIcon,
+  type IconCardOption,
 } from "./FormPrimitives";
 import { AssessmentState, initialAssessmentState } from "./assessmentTypes";
 import {
@@ -21,10 +27,40 @@ import {
   HomeComfortSection,
   PersonaPicker,
 } from "./HouseholdCaseStudy";
-import { HouseholdCaseInputs, initialHouseholdCase } from "./householdCases";
+import {
+  CityDeadlineNotice,
+  HouseholdCaseInputs,
+  initialHouseholdCase,
+} from "./householdCases";
 import { useScrollToTopOnChange } from "../hooks/useScrollToTopOnChange";
 import { formatPolishPostalCode, postalCodeIssue } from "../utils/postalCode";
 import { LanguageToggle, useT } from "../i18n";
+import type { Dictionary } from "../i18n";
+
+const cityDeadlineOptions = (
+  t: Dictionary,
+): IconCardOption<CityDeadlineNotice>[] => [
+  {
+    value: "none",
+    label: t.options.cityDeadlineNotice.none.label,
+    icon: Megaphone,
+  },
+  {
+    value: "pressOrMediaOnly",
+    label: t.options.cityDeadlineNotice.pressOrMediaOnly.label,
+    icon: Newspaper,
+  },
+  {
+    value: "officialLetter",
+    label: t.options.cityDeadlineNotice.officialLetter.label,
+    icon: Mail,
+  },
+  {
+    value: "chimneySweep",
+    label: t.options.cityDeadlineNotice.chimneySweep.label,
+    icon: UserCheck,
+  },
+];
 
 export function EnergyAssessmentForm({
   onComplete,
@@ -56,19 +92,14 @@ export function EnergyAssessmentForm({
   const isLastStep = step === stepLabels.length - 1;
 
   // Every field elsewhere has a sensible default from a persona or the
-  // initial state, so it can never be "empty": postal code, boiler year and
-  // coal provider are the only fields a user must actually type themselves,
-  // which makes them the only ones worth gating on.
+  // initial state, so it can never be "empty": postal code and boiler year
+  // are the only fields a user must actually type themselves, which makes
+  // them the only ones worth gating on.
   const postalCodeValid = state.location.postalCode.trim() !== "";
   const boilerYearValid = household.boilerYear !== "";
-  const coalProviderValid = household.coalProvider.trim() !== "";
 
   const stepValid =
-    step === 0
-      ? postalCodeValid
-      : step === 2
-        ? boilerYearValid && coalProviderValid
-        : true;
+    step === 0 ? postalCodeValid : step === 2 ? boilerYearValid : true;
 
   const goNext = () => {
     if (!stepValid) {
@@ -154,6 +185,21 @@ export function EnergyAssessmentForm({
                     </div>
                   )}
               </div>
+
+              <div>
+                <FieldLabel icon={Megaphone}>
+                  {t.wizard.location.cityDeadline}
+                </FieldLabel>
+                <IconCardGroup
+                  columns={4}
+                  value={household.cityDeadlineNotice}
+                  onChange={(v) =>
+                    setHousehold((h) => ({ ...h, cityDeadlineNotice: v }))
+                  }
+                  options={cityDeadlineOptions(t)}
+                />
+              </div>
+
               <InfoBox icon={Info}>{t.wizard.location.info}</InfoBox>
             </Block>
           </>

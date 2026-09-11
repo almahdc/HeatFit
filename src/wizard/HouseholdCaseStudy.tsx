@@ -10,11 +10,8 @@ import {
   Gauge,
   Home,
   ListChecks,
-  Mail,
-  Megaphone,
   Mountain,
   Network,
-  Newspaper,
   Package,
   Receipt,
   Scale,
@@ -43,7 +40,6 @@ import {
 } from "./FormPrimitives";
 import {
   BoilerClass,
-  CityDeadlineNotice,
   CoalType,
   ElectricityTariffCase,
   HOUSEHOLD_CASE_PRESETS,
@@ -132,12 +128,6 @@ const BOILER_CLASS_ICONS: Record<BoilerClass, LucideIcon> = {
   class5: Gauge,
 };
 
-const CITY_DEADLINE_ICONS: Record<CityDeadlineNotice, LucideIcon> = {
-  none: Megaphone,
-  pressOrMediaOnly: Newspaper,
-  officialLetter: Mail,
-};
-
 const REPLACEMENT_ICONS: Record<ReplacementPreference, LucideIcon> = {
   gas: Flame,
   pelletBoiler: Package,
@@ -203,13 +193,6 @@ const boilerClassOptions = (t: Dictionary) =>
     "class5",
   ]);
 
-const cityDeadlineOptions = (t: Dictionary) =>
-  cards(t.options.cityDeadlineNotice, CITY_DEADLINE_ICONS, [
-    "none",
-    "pressOrMediaOnly",
-    "officialLetter",
-  ]);
-
 const replacementOptions = (t: Dictionary) =>
   cards(t.options.replacementPreference, REPLACEMENT_ICONS, [
     "gas",
@@ -236,7 +219,7 @@ export function PersonaPicker({ value, onChange }: Props) {
   const [selectedPresetId, setSelectedPresetId] =
     useState<HouseholdCaseId>("grandmaKrysia");
 
-  // The free-text fields (coalProvider, unheatedRooms, and so on) are display
+  // The free-text fields (unheatedRooms and so on) are display
   // prose, not data, so they live in the dictionary rather than on the preset
   // itself: merging them in here is what makes a loaded persona read in
   // whichever language is active. Loading again later (or switching language
@@ -257,6 +240,10 @@ export function PersonaPicker({ value, onChange }: Props) {
     if (grandmaPreset) {
       onChange({
         ...grandmaPreset.data,
+        // Answered back on the welcome & location step, before this one ever
+        // mounts: a persona default here would silently overwrite whatever
+        // the household just told us about their city's deadline.
+        cityDeadlineNotice: value.cityDeadlineNotice,
         ...t.personas.cases.grandmaKrysia.seed,
       });
     }
@@ -571,16 +558,6 @@ export function CurrentHeatingSection({ value, onChange }: Props) {
         />
       </div>
 
-      <div>
-        <FieldLabel icon={Megaphone}>{t.heating.cityDeadline}</FieldLabel>
-        <IconCardGroup
-          columns={3}
-          value={value.cityDeadlineNotice}
-          onChange={(v) => onChange(update(value, "cityDeadlineNotice", v))}
-          options={cityDeadlineOptions(t)}
-        />
-      </div>
-
       <ToggleCard
         icon={Flame}
         label={t.heating.gasLabel}
@@ -606,18 +583,6 @@ export function CurrentHeatingSection({ value, onChange }: Props) {
           value={value.replacementPreference}
           onChange={(v) => onChange(update(value, "replacementPreference", v))}
           options={replacementOptions(t)}
-        />
-      </div>
-
-      <div>
-        <FieldLabel icon={Truck}>
-          {t.heating.coalProvider} <span className="text-accent">*</span>
-        </FieldLabel>
-        <TextAreaWithIcon
-          icon={Truck}
-          placeholder={t.heating.coalProviderPlaceholder}
-          value={value.coalProvider}
-          onChange={(v) => onChange(update(value, "coalProvider", v))}
         />
       </div>
     </Block>

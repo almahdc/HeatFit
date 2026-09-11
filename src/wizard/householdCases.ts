@@ -8,7 +8,7 @@
 // assessmentTypes.ts.
 //
 // The free-text fields below (radiatorNote, unheatedRooms, coalPriceNote,
-// freeCoalNote, coalProvider, electricityBillNote, additionalNotes) are left
+// freeCoalNote, electricityBillNote, additionalNotes) are left
 // empty here on purpose: they are display prose, not data, so their real
 // values live in the i18n dictionary under `personas.cases.<id>.seed` and are
 // merged in at load time, in whichever language is active. See
@@ -16,7 +16,8 @@
 
 export type CoalType = "orzech" | "groszek" | "kostka" | "mul" | "other";
 export type BoilerClass = "bezklasowy" | "class3" | "class4" | "class5";
-export type CityDeadlineNotice = "none" | "pressOrMediaOnly" | "officialLetter";
+export type CityDeadlineNotice =
+  "none" | "pressOrMediaOnly" | "officialLetter" | "chimneySweep";
 export type RadiatorKind = "standard" | "floorHeating" | "mixed";
 export type HouseKind = "detached" | "semiDetached" | "apartment";
 export type ElectricityTariffCase = "G11" | "G12";
@@ -31,6 +32,10 @@ export type InsulationLevel = "none" | "standard" | "veryGood";
 export type WindowFrame = "woodenOld" | "doublePanePvc" | "triplePanePvc";
 
 export interface HouseholdCaseInputs {
+  // Location & municipal contact: asked alongside the postal code on step 1,
+  // even though it lives on the household record rather than AssessmentState.
+  cityDeadlineNotice: CityDeadlineNotice;
+
   // Home & comfort
   houseKind: HouseKind;
   insulation: InsulationLevel;
@@ -53,9 +58,7 @@ export interface HouseholdCaseInputs {
   freeCoalNote: string;
   boilerYear: number | "";
   boilerClass: BoilerClass;
-  cityDeadlineNotice: CityDeadlineNotice;
   replacementPreference: ReplacementPreference;
-  coalProvider: string;
 
   // Electricity & water
   electricityTariff: ElectricityTariffCase;
@@ -72,6 +75,8 @@ export interface HouseholdCaseInputs {
 }
 
 export const initialHouseholdCase: HouseholdCaseInputs = {
+  cityDeadlineNotice: "none",
+
   houseKind: "detached",
   insulation: "standard",
   windowFrame: "doublePanePvc",
@@ -92,9 +97,7 @@ export const initialHouseholdCase: HouseholdCaseInputs = {
   freeCoalNote: "",
   boilerYear: "",
   boilerClass: "class4",
-  cityDeadlineNotice: "none",
   replacementPreference: "undecided",
-  coalProvider: "",
 
   electricityTariff: "G11",
   electricityBillPlnPerMonth: 200,
@@ -122,6 +125,8 @@ export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
   {
     id: "grandmaKrysia",
     data: {
+      cityDeadlineNotice: "pressOrMediaOnly",
+
       houseKind: "detached",
       insulation: "none",
       windowFrame: "woodenOld",
@@ -142,9 +147,7 @@ export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
       freeCoalNote: "",
       boilerYear: 2011,
       boilerClass: "bezklasowy",
-      cityDeadlineNotice: "pressOrMediaOnly",
       replacementPreference: "gas",
-      coalProvider: "",
 
       electricityTariff: "G11",
       electricityBillPlnPerMonth: 400,
@@ -162,6 +165,8 @@ export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
   {
     id: "grandpaJanek",
     data: {
+      cityDeadlineNotice: "none",
+
       houseKind: "detached",
       insulation: "none",
       windowFrame: "woodenOld",
@@ -182,9 +187,7 @@ export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
       freeCoalNote: "",
       boilerYear: 2017,
       boilerClass: "class4",
-      cityDeadlineNotice: "none",
       replacementPreference: "gas",
-      coalProvider: "",
 
       electricityTariff: "G11",
       electricityBillPlnPerMonth: 190,
@@ -202,6 +205,8 @@ export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
   {
     id: "mrsTeresa",
     data: {
+      cityDeadlineNotice: "none",
+
       houseKind: "detached",
       insulation: "none",
       windowFrame: "woodenOld",
@@ -222,9 +227,7 @@ export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
       freeCoalNote: "",
       boilerYear: 2011,
       boilerClass: "class3",
-      cityDeadlineNotice: "none",
       replacementPreference: "pelletOrHeatPump",
-      coalProvider: "",
 
       electricityTariff: "G11",
       electricityBillPlnPerMonth: 150,
@@ -242,6 +245,8 @@ export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
   {
     id: "mrMarek",
     data: {
+      cityDeadlineNotice: "none",
+
       houseKind: "detached",
       insulation: "standard",
       windowFrame: "doublePanePvc",
@@ -262,9 +267,7 @@ export const HOUSEHOLD_CASE_PRESETS: HouseholdCasePreset[] = [
       freeCoalNote: "",
       boilerYear: 2013,
       boilerClass: "class3",
-      cityDeadlineNotice: "none",
       replacementPreference: "pelletOrHeatPump",
-      coalProvider: "",
 
       electricityTariff: "G12",
       electricityBillPlnPerMonth: 380,

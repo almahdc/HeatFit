@@ -63,10 +63,10 @@ export const en = {
       postalCodePlaceholder: "e.g., 10-115",
       postalCodeRequired: "Enter a postal code to continue.",
       info: "We use your postal code to check which regional subsidies apply to your area, what your municipality's deadline for replacing coal boilers is, and whether a local clean-air programme covers part of the cost.",
+      cityDeadline: "Has your city/gmina contacted you about a deadline?",
     },
 
-    heatingStepRequired:
-      "Boiler installation year and coal provider are required to continue.",
+    heatingStepRequired: "Boiler installation year is required to continue.",
   },
 
   postalCode: {
@@ -100,7 +100,6 @@ export const en = {
           unheatedRooms: "None: whole house heated",
           coalPriceNote: "300 zł/t is transport: 1,000 zł/t ex-works",
           freeCoalNote: "",
-          coalProvider: "PGG (pgg.pl), delivered via regional KDW depot",
           electricityBillNote: "Forecast, flat, 6-month settlement",
           additionalNotes: "",
         },
@@ -115,7 +114,6 @@ export const en = {
           unheatedRooms: "Guest room (~20 m²)",
           coalPriceNote: "Mixed grades (groszek / mieszanka)",
           freeCoalNote: "From a relative's farm",
-          coalProvider: "Private agricultural depot",
           electricityBillNote: "",
           additionalNotes: "",
         },
@@ -132,7 +130,6 @@ export const en = {
             "Upper-floor bedrooms / storage rooms (~50 m²) left completely unheated",
           coalPriceNote: "",
           freeCoalNote: "",
-          coalProvider: "Local fuel merchant with private transport",
           electricityBillNote: "",
           additionalNotes: "",
         },
@@ -148,7 +145,6 @@ export const en = {
           unheatedRooms: "Uninsulated attic space (~15 m²)",
           coalPriceNote: "",
           freeCoalNote: "",
-          coalProvider: "Local private fuel depot (skład opału)",
           electricityBillNote: "",
           additionalNotes: "",
         },
@@ -201,7 +197,6 @@ export const en = {
     boilerYear: "Boiler installation year",
     boilerYearPlaceholder: "e.g., 2013",
     boilerClass: "Boiler class",
-    cityDeadline: "Deadline info from city",
     gasLabel: "Gas connection available",
     gasSublabel: "A gas line already reaches the property",
     districtHeatingLabel: "District heating available",
@@ -209,8 +204,6 @@ export const en = {
       "A municipal/district heating network reaches the property",
     replacementPreference:
       "If your boiler had to be replaced tomorrow, what would you put in?",
-    coalProvider: "Coal provider",
-    coalProviderPlaceholder: "Merchant name, website, delivery notes...",
   },
 
   electricity: {
@@ -271,6 +264,7 @@ export const en = {
       none: { label: "No contact" },
       pressOrMediaOnly: { label: "Press / media only" },
       officialLetter: { label: "Official letter" },
+      chimneySweep: { label: "Chimney sweep visit" },
     },
     replacementPreference: {
       gas: { label: "Gas" },
@@ -523,6 +517,7 @@ export const en = {
     subtitle:
       "Every figure above is built from what you told us. Here it is back, so you can check anything that looks wrong.",
     postalCode: "Postal code",
+    cityDeadline: "City deadline notice",
     empty: "—",
     homeSection: "Home & comfort",
     houseType: "House type",
@@ -545,11 +540,9 @@ export const en = {
       year === "" ? classLabel : `${classLabel}, ${year}`,
     freeCoal: "Free/discounted coal",
     freeCoalValue: (tonnes: number | "") => `Yes (${tonnes} t)`,
-    cityDeadline: "City deadline notice",
     gasConnection: "Gas connection",
     districtHeating: "District heating",
     replacementPreference: "Replacement preference",
-    coalProvider: "Coal provider",
     electricitySection: "Electricity & water",
     electricity: "Electricity",
     electricityValue: (tariff: string, bill: number) =>

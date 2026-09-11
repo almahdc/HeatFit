@@ -141,6 +141,13 @@ function FinancialsPlaceholder({
                   label={s.postalCode}
                   value={assessment.location.postalCode || s.empty}
                 />
+                <Fact
+                  label={s.cityDeadline}
+                  value={
+                    t.options.cityDeadlineNotice[household.cityDeadlineNotice]
+                      .label
+                  }
+                />
               </dl>
 
               <h3 className="mt-8 text-xs font-semibold uppercase tracking-wider text-ink-soft/70">
@@ -213,13 +220,6 @@ function FinancialsPlaceholder({
                   }
                 />
                 <Fact
-                  label={s.cityDeadline}
-                  value={
-                    t.options.cityDeadlineNotice[household.cityDeadlineNotice]
-                      .label
-                  }
-                />
-                <Fact
                   label={s.gasConnection}
                   value={household.gasConnectionAvailable ? s.yes : s.no}
                 />
@@ -234,10 +234,6 @@ function FinancialsPlaceholder({
                       household.replacementPreference
                     ].label
                   }
-                />
-                <Fact
-                  label={s.coalProvider}
-                  value={household.coalProvider || s.empty}
                 />
               </dl>
 

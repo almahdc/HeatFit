@@ -57,10 +57,10 @@ export const pl: Dictionary = {
       postalCodePlaceholder: "np. 10-115",
       postalCodeRequired: "Podaj kod pocztowy, aby przejść dalej.",
       info: "Na podstawie kodu pocztowego sprawdzamy, które dotacje regionalne obejmują Twoją okolicę, jaki termin wymiany kotła węglowego wyznaczyła Twoja gmina i czy lokalny program czystego powietrza pokryje część kosztów.",
+      cityDeadline: "Czy gmina skontaktowała się z Tobą w sprawie terminu?",
     },
 
-    heatingStepRequired:
-      "Rok montażu kotła i dostawca węgla są wymagane, aby przejść dalej.",
+    heatingStepRequired: "Rok montażu kotła jest wymagany, aby przejść dalej.",
   },
 
   postalCode: {
@@ -94,7 +94,6 @@ export const pl: Dictionary = {
           unheatedRooms: "Brak: cały dom ogrzewany",
           coalPriceNote: "300 zł/t to transport: 1000 zł/t loco kopalnia",
           freeCoalNote: "Nie pytano",
-          coalProvider: "PGG (pgg.pl), dostawa przez regionalny skład KDW",
           electricityBillNote: "Prognoza, ryczałt, rozliczenie co pół roku",
           additionalNotes:
             "90% finansuje, 10% nie widzi potrzeby przechodzenia na czystą energię.",
@@ -110,7 +109,6 @@ export const pl: Dictionary = {
           unheatedRooms: "Pokój gościnny (~20 m²)",
           coalPriceNote: "Mieszane sortymenty (groszek / mieszanka)",
           freeCoalNote: "Z gospodarstwa krewnego",
-          coalProvider: "Prywatny skład rolniczy",
           electricityBillNote: "",
           additionalNotes: "",
         },
@@ -127,7 +125,6 @@ export const pl: Dictionary = {
             "Sypialnie / pomieszczenia gospodarcze na piętrze (~50 m²) całkowicie nieogrzewane",
           coalPriceNote: "",
           freeCoalNote: "",
-          coalProvider: "Lokalny skład opału z własnym transportem",
           electricityBillNote: "",
           additionalNotes: "",
         },
@@ -142,7 +139,6 @@ export const pl: Dictionary = {
           unheatedRooms: "Nieocieplony strych (~15 m²)",
           coalPriceNote: "",
           freeCoalNote: "",
-          coalProvider: "Lokalny prywatny skład opału",
           electricityBillNote: "",
           additionalNotes: "",
         },
@@ -195,15 +191,12 @@ export const pl: Dictionary = {
     boilerYear: "Rok montażu kotła",
     boilerYearPlaceholder: "np. 2013",
     boilerClass: "Klasa kotła",
-    cityDeadline: "Informacja o terminie z gminy",
     gasLabel: "Dostępne przyłącze gazowe",
     gasSublabel: "Sieć gazowa dochodzi już do posesji",
     districtHeatingLabel: "Dostępne ciepło systemowe",
     districtHeatingSublabel: "Sieć ciepłownicza dochodzi już do posesji",
     replacementPreference:
       "Gdyby kocioł trzeba było wymienić jutro, co byś zamontował?",
-    coalProvider: "Dostawca węgla",
-    coalProviderPlaceholder: "Nazwa składu, strona www, uwagi o dostawie...",
   },
 
   electricity: {
@@ -265,6 +258,7 @@ export const pl: Dictionary = {
       none: { label: "Brak kontaktu" },
       pressOrMediaOnly: { label: "Tylko prasa / media" },
       officialLetter: { label: "Oficjalne pismo" },
+      chimneySweep: { label: "Wizyta kominiarza" },
     },
     replacementPreference: {
       gas: { label: "Gaz" },
@@ -518,6 +512,7 @@ export const pl: Dictionary = {
     subtitle:
       "Każda liczba powyżej wynika z tego, co nam powiedziałeś. Oto te dane z powrotem, żebyś mógł sprawdzić, czy coś nie wygląda źle.",
     postalCode: "Kod pocztowy",
+    cityDeadline: "Informacja o terminie z gminy",
     empty: "—",
     homeSection: "Dom i komfort",
     houseType: "Rodzaj budynku",
@@ -540,11 +535,9 @@ export const pl: Dictionary = {
       year === "" ? classLabel : `${classLabel}, ${year}`,
     freeCoal: "Węgiel darmowy/z rabatem",
     freeCoalValue: (tonnes: number | "") => `Tak (${tonnes} t)`,
-    cityDeadline: "Informacja o terminie z gminy",
     gasConnection: "Przyłącze gazowe",
     districtHeating: "Ciepło systemowe",
     replacementPreference: "Preferowana wymiana",
-    coalProvider: "Dostawca węgla",
     electricitySection: "Prąd i ciepła woda",
     electricity: "Prąd",
     electricityValue: (tariff: string, bill: number) =>
