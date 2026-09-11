@@ -378,24 +378,35 @@ export const HOT_WATER_BLEND_FACTOR = 0.6;
  * yet, so treat them as reviewable.
  */
 export const BOILER_EFFICIENCY: Record<
-  "bezklasowy" | "class3" | "class4" | "class5",
+  "bezklasowy" | "class3" | "class4" | "class5" | "ecodesign",
   number
 > = {
   bezklasowy: 0.6,
   class3: 0.75,
   class4: 0.75,
   class5: 0.85,
+  // VERIFY: "ecodesign" is a household-known credential (Regulation (EU)
+  // 2015/1189), not a Polish PN-EN 303-5 class, so it has no place in the
+  // rise-with-class ramp above by rights. Set just above class5 because the
+  // Ecodesign regulation's own minimum efficiency requirement sits there;
+  // see the "Ecodesign regulation minimum" bands in constants.pl.ts's
+  // COAL_BOILER_EFFICIENCY for the fuller low/mid/high figure this is drawn
+  // from. Combustion efficiency only: says nothing about whether the unit
+  // also carries a Class 5 rating, which regulatoryDeadlines.ts still treats
+  // as unconfirmed.
+  ecodesign: 0.88,
 };
 
 /** Human-readable name per class, for assumption lines shown to the user. */
 export const BOILER_CLASS_LABEL: Record<
-  "bezklasowy" | "class3" | "class4" | "class5",
+  "bezklasowy" | "class3" | "class4" | "class5" | "ecodesign",
   string
 > = {
   bezklasowy: "no-class (bezklasowy)",
   class3: "class 3",
   class4: "class 4",
   class5: "class 5",
+  ecodesign: "Ecodesign-certified",
 };
 
 /**

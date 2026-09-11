@@ -90,7 +90,6 @@ export const pl: Dictionary = {
         description: "Używa starego, bezklasowego kotła węglowego zasypowego.",
         seed: {
           radiatorNote: "",
-          unheatedRooms: "Brak: cały dom ogrzewany",
           coalPriceNote: "300 zł/t to transport: 1000 zł/t loco kopalnia",
           freeCoalNote: "Nie pytano",
           electricityBillNote: "Prognoza, ryczałt, rozliczenie co pół roku",
@@ -105,7 +104,6 @@ export const pl: Dictionary = {
           "Ma przyłącze gazowe przy płocie i starzejący się kocioł klasy 4 z 2017 roku.",
         seed: {
           radiatorNote: "Małe standardowe grzejniki płytowe",
-          unheatedRooms: "Pokój gościnny (~20 m²)",
           coalPriceNote: "Mieszane sortymenty (groszek / mieszanka)",
           freeCoalNote: "Z gospodarstwa krewnego",
           electricityBillNote: "",
@@ -120,8 +118,6 @@ export const pl: Dictionary = {
         seed: {
           radiatorNote:
             "Stare, masywne żeliwne grzejniki: bardzo gorące w dotyku",
-          unheatedRooms:
-            "Sypialnie / pomieszczenia gospodarcze na piętrze (~50 m²) całkowicie nieogrzewane",
           coalPriceNote: "",
           freeCoalNote: "",
           electricityBillNote: "",
@@ -135,7 +131,6 @@ export const pl: Dictionary = {
           "Praktyczny optymalizator: taryfa nocna G12, węgiel orzech i podgrzewanie wody w nocy.",
         seed: {
           radiatorNote: "Stare, duże żeliwne grzejniki: bardzo gorące w dotyku",
-          unheatedRooms: "Nieocieplony strych (~15 m²)",
           coalPriceNote: "",
           freeCoalNote: "",
           electricityBillNote: "",
@@ -150,8 +145,16 @@ export const pl: Dictionary = {
     houseKind: "Rodzaj budynku",
     insulation: "Stopień ocieplenia",
     windowFrame: "Stan stolarki okiennej",
+    totalArea: "Całkowita powierzchnia domu",
+    totalAreaUnit: "m²",
+    wholeHouseHeatedLabel: "Czy cały dom jest ogrzewany?",
+    wholeHouseHeatedSublabel: "Każde pomieszczenie ma ciepło przez całą zimę",
+    unheatedPortion: "Co nie jest ogrzewane?",
     heatedArea: "Powierzchnia ogrzewana",
-    heatedAreaUnit: "m²",
+    estimatedHeatedArea: "Szacowana powierzchnia ogrzewana",
+    estimatedHeatedAreaEditableNote:
+      "Nasze oszacowanie na podstawie odpowiedzi powyżej. Popraw je, jeśli znasz dokładną liczbę.",
+    heatedAreaValue: (m2: number) => `${m2} m²`,
     radiatorType: "Grzejniki / ogrzewanie podłogowe",
     radiatorNote: "Uwagi o grzejnikach",
     radiatorNotePlaceholder: "np. stare żeliwne, bardzo gorące w dotyku",
@@ -159,8 +162,6 @@ export const pl: Dictionary = {
     occupantsUnit: "osób",
     acLabel: "Klimatyzacja",
     acSublabel: "Sprawna klimatyzacja w domu",
-    unheatedRooms: "Pomieszczenia nieogrzewane",
-    unheatedRoomsPlaceholder: "np. brak: cały dom ogrzewany",
     insulationWhySummary: "Dlaczego pytamy o ocieplenie",
     insulationWhyBody:
       "Ocieplenie decyduje o tym, ile ciepła Twój dom naprawdę potrzebuje w ciągu roku, liczone w kWh na metr kwadratowy. Ta jedna liczba wpływa na dwie rzeczy: ile będzie kosztować eksploatacja nowego systemu i który poziom dofinansowania z Czystego Powietrza jest dla Ciebie dostępny. Pokazujemy ją wprost, zamiast chować w punktacji.",
@@ -239,6 +240,17 @@ export const pl: Dictionary = {
       floorHeating: { label: "Ogrzewanie podłogowe" },
       mixed: { label: "Mieszane" },
     },
+    unheatedPortion: {
+      wholeFloor: {
+        label: "Całe jedno piętro",
+        sublabel: "np. górne piętro",
+      },
+      someRooms: {
+        label: "Kilka pomieszczeń",
+        sublabel: "Kilka pokoi, nie całe piętro",
+      },
+      basementOrGarage: { label: "Tylko piwnica lub garaż" },
+    },
     coalType: {
       orzech: { label: "Orzech" },
       groszek: { label: "Groszek" },
@@ -251,6 +263,10 @@ export const pl: Dictionary = {
       class3: { label: "Klasa 3" },
       class4: { label: "Klasa 4" },
       class5: { label: "Klasa 5" },
+      ecodesign: {
+        label: "Certyfikat Ecodesign",
+        sublabel: "Norma unijna, to nie to samo co klasa 5",
+      },
     },
     cityDeadlineNotice: {
       none: { label: "Brak kontaktu" },
@@ -280,6 +296,7 @@ export const pl: Dictionary = {
       class3: "klasy 3",
       class4: "klasy 4",
       class5: "klasy 5",
+      ecodesign: "z certyfikatem Ecodesign",
     },
   },
 
@@ -516,12 +533,15 @@ export const pl: Dictionary = {
     houseType: "Rodzaj budynku",
     insulation: "Ocieplenie",
     windowFrames: "Stolarka okienna",
+    totalArea: "Całkowita powierzchnia domu",
+    totalAreaValue: (m2: number) => `${m2} m²`,
     heatedArea: "Powierzchnia ogrzewana",
+    estimatedHeatedArea: "Szacowana powierzchnia ogrzewana",
     heatedAreaValue: (m2: number) => `${m2} m²`,
+    unheatedPortion: "Co nie jest ogrzewane",
     radiators: "Grzejniki",
     occupants: "Domownicy",
     acAvailable: "Klimatyzacja",
-    unheatedRooms: "Pomieszczenia nieogrzewane",
     heatingSection: "Obecne ogrzewanie i paliwo",
     coalType: "Rodzaj węgla",
     alsoBurnsWood: "Pali także drewnem",
@@ -607,6 +627,31 @@ export const pl: Dictionary = {
     },
     disclaimer:
       "Uwaga: zapisujesz się na wczesny dostęp. HeatFit jest obecnie w budowie i nie działa jeszcze w pełni: odezwiemy się, gdy tylko wystartujemy!",
+  },
+
+  regulatoryCountdown: {
+    eyebrow: "Warto wiedzieć",
+    title: "Uchwała antysmogowa dla województwa śląskiego",
+    headlineUpcoming: (date: string) =>
+      `Okres przejściowy dla Twojego kotła kończy się ${date}`,
+    headlinePassed:
+      "Twój kocioł nie spełnia już śląskich norm jakości powietrza",
+    headlinePassedUncertain:
+      "Twój kocioł może nie spełniać śląskich norm jakości powietrza",
+    requirementUpcoming: (date: string) =>
+      `Uchwała antysmogowa dla województwa śląskiego wymaga, aby taki kocioł jak Twój został podniesiony do klasy 5 do ${date}. Do tego czasu jego eksploatacja pozostaje legalna.`,
+    requirementPassed: (date: string) =>
+      `Uchwała antysmogowa dla województwa śląskiego wymagała, aby taki kocioł jak Twój został podniesiony do klasy 5 do ${date}. Ten termin już minął.`,
+    requirementPassedUncertain: (date: string) =>
+      `Uchwała antysmogowa dla województwa śląskiego wymagała, aby taki kocioł jak Twój został podniesiony do klasy 5 do ${date}. Certyfikat Ecodesign to odrębna norma unijna i sam w sobie nie potwierdza klasy 5, więc nie możemy tego stwierdzić z całą pewnością – ale biorąc pod uwagę wiek kotła, mógł on już nie spełniać wymogów uchwały.`,
+    countdownLabel: "Pozostały czas",
+    countdown: (months: number, days: number) => `${months} mies., ${days} dni`,
+    consequenceTitle: "Co przewiduje uchwała",
+    consequenceBody:
+      "Mandat do 500 zł, a w przypadku wniosku o ukaranie do sądu – grzywna do 5000 zł. Karę można nałożyć ponownie za każdym razem, gdy instalacja zostanie znaleziona w użyciu po upływie terminu.",
+    sourceLabel:
+      "Uchwała antysmogowa dla województwa śląskiego (V/36/1/2017), §8",
+    sourceLink: "Przeczytaj treść uchwały",
   },
 
   assumptions: {

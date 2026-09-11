@@ -96,7 +96,6 @@ export const en = {
         description: "Uses an old off-class manual coal boiler.",
         seed: {
           radiatorNote: "",
-          unheatedRooms: "None: whole house heated",
           coalPriceNote: "300 zł/t is transport: 1,000 zł/t ex-works",
           freeCoalNote: "",
           electricityBillNote: "Forecast, flat, 6-month settlement",
@@ -110,7 +109,6 @@ export const en = {
           "Has a gas connection at the fence and an aging Class 4 boiler from 2017.",
         seed: {
           radiatorNote: "Small standard panels",
-          unheatedRooms: "Guest room (~20 m²)",
           coalPriceNote: "Mixed grades (groszek / mieszanka)",
           freeCoalNote: "From a relative's farm",
           electricityBillNote: "",
@@ -125,8 +123,6 @@ export const en = {
         seed: {
           radiatorNote:
             "Old, massive cast-iron radiators: extremely hot to touch",
-          unheatedRooms:
-            "Upper-floor bedrooms / storage rooms (~50 m²) left completely unheated",
           coalPriceNote: "",
           freeCoalNote: "",
           electricityBillNote: "",
@@ -141,7 +137,6 @@ export const en = {
         seed: {
           radiatorNote:
             "Old, large cast-iron radiators: extremely hot to touch",
-          unheatedRooms: "Uninsulated attic space (~15 m²)",
           coalPriceNote: "",
           freeCoalNote: "",
           electricityBillNote: "",
@@ -156,8 +151,16 @@ export const en = {
     houseKind: "House type",
     insulation: "Level of insulation",
     windowFrame: "Condition of window frames",
+    totalArea: "Total floor area",
+    totalAreaUnit: "m²",
+    wholeHouseHeatedLabel: "Is the whole house heated?",
+    wholeHouseHeatedSublabel: "Every room gets heat, all winter",
+    unheatedPortion: "What's not heated?",
     heatedArea: "Heated area",
-    heatedAreaUnit: "m²",
+    estimatedHeatedArea: "Estimated heated area",
+    estimatedHeatedAreaEditableNote:
+      "Our estimate, based on your answer above. Edit it if you know the real number.",
+    heatedAreaValue: (m2: number) => `${m2} m²`,
     radiatorType: "Radiators / underfloor",
     radiatorNote: "Radiator note",
     radiatorNotePlaceholder: "e.g., old cast-iron, extremely hot to touch",
@@ -165,8 +168,6 @@ export const en = {
     occupantsUnit: "people",
     acLabel: "Air conditioning",
     acSublabel: "Working AC unit available",
-    unheatedRooms: "Unheated rooms",
-    unheatedRoomsPlaceholder: "e.g., none: whole house heated",
     insulationWhySummary: "Why we ask about insulation",
     insulationWhyBody:
       "Insulation decides how much heat your house actually needs each year, measured in kWh per square metre. That single number drives two things: what any new system costs to run, and which Czyste Powietrze funding level is open to you.",
@@ -184,7 +185,7 @@ export const en = {
     pricePerTonne: "Price per tonne",
     pricePerTonnePlaceholder: "e.g., 1300",
     pricePerTonneSuffix: "zł / t",
-    priceNote: "Price note",
+    priceNote: "Price details",
     priceNotePlaceholder: "e.g., includes transport, ex-works price...",
     freeCoalLabel: "Free or discounted coal",
     freeCoalSublabel: "Received coal outside a normal purchase",
@@ -245,6 +246,14 @@ export const en = {
       floorHeating: { label: "Floor heating" },
       mixed: { label: "Mixed" },
     },
+    unheatedPortion: {
+      wholeFloor: {
+        label: "One whole floor",
+        sublabel: "e.g., the upper floor",
+      },
+      someRooms: { label: "Some rooms", sublabel: "A handful, not a floor" },
+      basementOrGarage: { label: "Basement or garage only" },
+    },
     coalType: {
       orzech: { label: "Orzech" },
       groszek: { label: "Groszek" },
@@ -257,6 +266,10 @@ export const en = {
       class3: { label: "Class 3" },
       class4: { label: "Class 4" },
       class5: { label: "Class 5" },
+      ecodesign: {
+        label: "Ecodesign-certified",
+        sublabel: "EU standard, not the same as Class 5",
+      },
     },
     cityDeadlineNotice: {
       none: { label: "No contact" },
@@ -287,6 +300,7 @@ export const en = {
       class3: "class 3",
       class4: "class 4",
       class5: "class 5",
+      ecodesign: "Ecodesign-certified",
     },
   },
 
@@ -521,12 +535,15 @@ export const en = {
     houseType: "House type",
     insulation: "Insulation",
     windowFrames: "Window frames",
+    totalArea: "Total floor area",
+    totalAreaValue: (m2: number) => `${m2} m²`,
     heatedArea: "Heated area",
+    estimatedHeatedArea: "Estimated heated area",
     heatedAreaValue: (m2: number) => `${m2} m²`,
+    unheatedPortion: "What's not heated",
     radiators: "Radiators",
     occupants: "Occupants",
     acAvailable: "AC available",
-    unheatedRooms: "Unheated rooms",
     heatingSection: "Current heating & fuel",
     coalType: "Coal type",
     alsoBurnsWood: "Also burns wood",
@@ -611,6 +628,31 @@ export const en = {
     },
     disclaimer:
       "Note: You are signing up for early access. HeatFit is currently in development and not yet fully operational: we will reach out as soon as we launch!",
+  },
+
+  regulatoryCountdown: {
+    eyebrow: "Worth knowing",
+    title: "Silesian anti-smog resolution",
+    headlineUpcoming: (date: string) =>
+      `Your boiler's grace period ends ${date}`,
+    headlinePassed: "Your boiler no longer meets Silesian air-quality rules",
+    headlinePassedUncertain:
+      "Your boiler may not meet Silesian air-quality rules",
+    requirementUpcoming: (date: string) =>
+      `Silesia's anti-smog resolution requires a boiler like yours to be upgraded to Class 5 by ${date}. It remains legal to operate until then.`,
+    requirementPassed: (date: string) =>
+      `Silesia's anti-smog resolution required a boiler like yours to be upgraded to Class 5 by ${date}. That date has passed.`,
+    requirementPassedUncertain: (date: string) =>
+      `Silesia's anti-smog resolution required a boiler like yours to be upgraded to Class 5 by ${date}. Ecodesign certification is a separate EU standard and doesn't by itself confirm Class 5, so we can't say for certain whether yours does: but based on its age, it may already fall short of what the resolution requires.`,
+    countdownLabel: "Time remaining",
+    countdown: (months: number, days: number) =>
+      `${months} months, ${days} days`,
+    consequenceTitle: "What the resolution provides for",
+    consequenceBody:
+      "A fine of up to 500 zł on the spot, or up to 5,000 zł if pursued through a court motion. It can be imposed again each time the installation is found in use after the deadline.",
+    sourceLabel:
+      "Uchwała antysmogowa dla województwa śląskiego (V/36/1/2017), §8",
+    sourceLink: "Read the resolution",
   },
 
   /**

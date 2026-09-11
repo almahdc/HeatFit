@@ -126,14 +126,21 @@ export function IconCardGroup<T extends string>({
   value: T;
   onChange: (v: T) => void;
   options: IconCardOption<T>[];
-  columns?: 2 | 3 | 4;
+  columns?: 2 | 3 | 4 | 5;
 }) {
   const colsClass =
-    columns === 4
-      ? "sm:grid-cols-2 lg:grid-cols-4"
-      : columns === 3
-        ? "sm:grid-cols-3"
-        : "sm:grid-cols-2";
+    columns === 5
+      ? "sm:grid-cols-3 lg:grid-cols-5"
+      : columns === 4
+        ? "sm:grid-cols-2 lg:grid-cols-4"
+        : columns === 3
+          ? "sm:grid-cols-3"
+          : "sm:grid-cols-2";
+
+  // Five across a card this wide needs a tighter card than four does, or the
+  // row no longer fits a normal desktop viewport without wrapping; every
+  // other count keeps the regular size.
+  const compact = columns === 5;
 
   return (
     <div className={`grid grid-cols-1 gap-2.5 ${colsClass}`} role="radiogroup">
@@ -147,7 +154,9 @@ export function IconCardGroup<T extends string>({
             role="radio"
             aria-checked={selected}
             onClick={() => onChange(opt.value)}
-            className={`relative flex flex-col items-start gap-2 rounded-[14px] border bg-white p-3.5 text-left transition-all duration-150 active:scale-[0.97] ${
+            className={`relative flex flex-col items-start gap-1.5 rounded-[14px] border bg-white text-left transition-all duration-150 active:scale-[0.97] ${
+              compact ? "p-2.5" : "gap-2 p-3.5"
+            } ${
               selected
                 ? "border-accent/60 bg-accent-tint shadow-card-selected"
                 : "border-line shadow-card hover:border-ink-soft/30"
@@ -174,16 +183,27 @@ export function IconCardGroup<T extends string>({
               </span>
             )}
             <div
-              className={`flex h-9 w-9 items-center justify-center rounded-[10px] ${
-                selected ? "bg-accent text-white" : "bg-chip text-ink-soft"
-              }`}
+              className={`flex items-center justify-center rounded-[10px] ${
+                compact ? "h-7 w-7" : "h-9 w-9"
+              } ${selected ? "bg-accent text-white" : "bg-chip text-ink-soft"}`}
             >
-              <Icon className="h-[18px] w-[18px]" aria-hidden />
+              <Icon
+                className={compact ? "h-3.5 w-3.5" : "h-[18px] w-[18px]"}
+                aria-hidden
+              />
             </div>
             <div>
-              <p className="text-[15px] font-semibold text-ink">{opt.label}</p>
+              <p
+                className={`font-semibold text-ink ${compact ? "text-[13px] leading-snug" : "text-[15px]"}`}
+              >
+                {opt.label}
+              </p>
               {opt.sublabel && (
-                <p className="text-[13px] text-ink-soft">{opt.sublabel}</p>
+                <p
+                  className={`text-ink-soft ${compact ? "text-[11px] leading-snug" : "text-[13px]"}`}
+                >
+                  {opt.sublabel}
+                </p>
               )}
             </div>
           </button>

@@ -6,7 +6,7 @@ import posthog from "posthog-js";
  * No `posthog.capture(...)` calls exist anywhere in this codebase on
  * purpose: what ships today is pageviews and autocapture (clicks, form
  * submits) and nothing else. Add custom events deliberately, one at a time,
- * when a real question needs answering — not speculatively.
+ * when a real question needs answering: not speculatively.
  *
  * Session replay is explicitly off rather than merely unconfigured, so a
  * project-side toggle in the PostHog dashboard can't silently start

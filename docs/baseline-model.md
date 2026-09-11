@@ -176,6 +176,20 @@ Czyste Powietrze scope gate bands on (below 80 / 80–140 / above 140). It is
 derived from **measured tonnage in this specific house**, not from floor area,
 which is the thing that separates this tool from every other Polish calculator.
 
+`heatedAreaM2` itself, however, is not always the household's own stated
+number. The wizard asks for total floor area, then whether the whole house is
+heated; if not, it asks which part isn't (one whole floor / some rooms /
+basement or garage only) and applies a fixed reduction — see
+`computeHeatedAreaM2` and `UNHEATED_PORTION_REDUCTION` in
+[`src/wizard/householdCases.ts`](../src/wizard/householdCases.ts). Those
+percentages are working assumptions (marked `// VERIFY`), not measured, and
+are due for revision once the 50-household Silesia pilot gives a real sense of
+the heated/unheated split in the target housing stock. The raw Step 3
+selection is stored alongside the computed number (`unheatedPortion`) and
+surfaced in the UI as "estimated heated area" whenever it applies, so the
+assumption stays visible rather than silently folding into the condition
+figure.
+
 ### Cooling
 
 ```

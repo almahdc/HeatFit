@@ -6,6 +6,7 @@ import { AssessmentState } from "./wizard/assessmentTypes";
 import { HouseholdCaseInputs } from "./wizard/householdCases";
 import { BaselineSummary } from "./wizard/BaselineSummary";
 import { AlternativeHeatingOptions } from "./wizard/AlternativeHeatingOptions";
+import { RegulatoryCountdownCard } from "./wizard/RegulatoryCountdownCard";
 import { EarlyAccessBlock } from "./wizard/EarlyAccessBlock";
 import { StepEyebrow } from "./wizard/FormPrimitives";
 import { calculateUserBaseline } from "./engines/baseline";
@@ -106,6 +107,11 @@ function FinancialsPlaceholder({
         return (
           <div className="flex flex-col gap-6">
             <BaselineSummary baseline={baseline} />
+            <RegulatoryCountdownCard
+              postalCode={assessment.location.postalCode}
+              boilerClass={household.boilerClass}
+              boilerYear={household.boilerYear}
+            />
             <AlternativeHeatingOptions
               baseline={baseline}
               electricityTariff={household.electricityTariff}
@@ -167,9 +173,25 @@ function FinancialsPlaceholder({
                   value={t.options.windowFrame[household.windowFrame].label}
                 />
                 <Fact
-                  label={s.heatedArea}
+                  label={s.totalArea}
+                  value={s.totalAreaValue(household.totalAreaM2)}
+                />
+                <Fact
+                  label={
+                    household.wholeHouseHeated
+                      ? s.heatedArea
+                      : s.estimatedHeatedArea
+                  }
                   value={s.heatedAreaValue(household.heatedAreaM2)}
                 />
+                {!household.wholeHouseHeated && household.unheatedPortion && (
+                  <Fact
+                    label={s.unheatedPortion}
+                    value={
+                      t.options.unheatedPortion[household.unheatedPortion].label
+                    }
+                  />
+                )}
                 <Fact
                   label={s.radiators}
                   value={t.options.radiatorType[household.radiatorType].label}
@@ -178,10 +200,6 @@ function FinancialsPlaceholder({
                 <Fact
                   label={s.acAvailable}
                   value={household.acAvailable ? s.yes : s.no}
-                />
-                <Fact
-                  label={s.unheatedRooms}
-                  value={household.unheatedRooms || s.empty}
                 />
               </dl>
 

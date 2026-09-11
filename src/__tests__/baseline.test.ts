@@ -415,6 +415,11 @@ describe("boiler efficiency by emission class", () => {
     expect(boilerEfficiency("class3")).toBe(0.75);
     expect(boilerEfficiency("class4")).toBe(0.75);
     expect(boilerEfficiency("class5")).toBe(0.85);
+    // Ecodesign is a separate EU standard, not a Polish class: its
+    // combustion efficiency happens to sit just above class5's, but that
+    // says nothing about whether the unit also carries a Class 5 rating
+    // (see engines/regulatoryDeadlines.ts, which treats that as unconfirmed).
+    expect(boilerEfficiency("ecodesign")).toBe(0.88);
   });
 
   it("returns undefined when no class was collected", () => {

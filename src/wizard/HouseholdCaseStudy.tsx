@@ -5,10 +5,13 @@ import {
   Check,
   Clock,
   Columns3,
+  DoorOpen,
   FileText,
   Flame,
   Gauge,
   Home,
+  Layers,
+  Leaf,
   ListChecks,
   Mountain,
   Network,
@@ -23,6 +26,7 @@ import {
   Truck,
   User,
   Users,
+  Warehouse,
   Zap,
   type LucideIcon,
 } from "lucide-react";
@@ -41,6 +45,7 @@ import {
 import {
   BoilerClass,
   CoalType,
+  computeHeatedAreaM2,
   ElectricityTariffCase,
   HOUSEHOLD_CASE_PRESETS,
   HouseholdCaseId,
@@ -49,6 +54,7 @@ import {
   InsulationLevel,
   RadiatorKind,
   ReplacementPreference,
+  UnheatedPortion,
   WaterHeatingCase,
   WindowFrame,
 } from "./householdCases";
@@ -112,6 +118,12 @@ const RADIATOR_ICONS: Record<RadiatorKind, LucideIcon> = {
   mixed: Gauge,
 };
 
+const UNHEATED_PORTION_ICONS: Record<UnheatedPortion, LucideIcon> = {
+  wholeFloor: Layers,
+  someRooms: DoorOpen,
+  basementOrGarage: Warehouse,
+};
+
 const COAL_TYPE_ICONS: Record<CoalType, LucideIcon> = {
   orzech: Mountain,
   groszek: Mountain,
@@ -125,6 +137,9 @@ const BOILER_CLASS_ICONS: Record<BoilerClass, LucideIcon> = {
   class3: Gauge,
   class4: Gauge,
   class5: Gauge,
+  // Distinct from the numbered classes on purpose: it is a different
+  // standard, not a fifth rung on the same ladder.
+  ecodesign: Leaf,
 };
 
 const REPLACEMENT_ICONS: Record<ReplacementPreference, LucideIcon> = {
@@ -171,6 +186,13 @@ const radiatorOptions = (t: Dictionary) =>
     "mixed",
   ]);
 
+const unheatedPortionOptions = (t: Dictionary) =>
+  cards(t.options.unheatedPortion, UNHEATED_PORTION_ICONS, [
+    "wholeFloor",
+    "someRooms",
+    "basementOrGarage",
+  ]);
+
 const coalTypeOptions = (t: Dictionary) =>
   cards(t.options.coalType, COAL_TYPE_ICONS, [
     "orzech",
@@ -186,6 +208,7 @@ const boilerClassOptions = (t: Dictionary) =>
     "class3",
     "class4",
     "class5",
+    "ecodesign",
   ]);
 
 const replacementOptions = (t: Dictionary) =>
@@ -214,7 +237,7 @@ export function PersonaPicker({ value, onChange }: Props) {
   const [selectedPresetId, setSelectedPresetId] =
     useState<HouseholdCaseId>("grandmaKrysia");
 
-  // The free-text fields (unheatedRooms and so on) are display
+  // The free-text fields (radiatorNote and so on) are display
   // prose, not data, so they live in the dictionary rather than on the preset
   // itself: merging them in here is what makes a loaded persona read in
   // whichever language is active. Loading again later (or switching language
@@ -342,16 +365,102 @@ export function HomeComfortSection({ value, onChange }: Props) {
       </div>
 
       <div>
-        <FieldLabel>{t.home.heatedArea}</FieldLabel>
+        <FieldLabel>{t.home.totalArea}</FieldLabel>
         <IconSlider
           icon={Scale}
           min={50}
           max={300}
           step={5}
-          unit={t.home.heatedAreaUnit}
-          value={value.heatedAreaM2}
-          onChange={(v) => onChange(update(value, "heatedAreaM2", v))}
+          unit={t.home.totalAreaUnit}
+          value={value.totalAreaM2}
+          onChange={(v) => {
+            const heatedAreaM2 = computeHeatedAreaM2(
+              v,
+              value.wholeHouseHeated,
+              value.unheatedPortion,
+            );
+            onChange({ ...value, totalAreaM2: v, heatedAreaM2 });
+          }}
         />
+      </div>
+
+      <ToggleCard
+        icon={Home}
+        label={t.home.wholeHouseHeatedLabel}
+        sublabel={t.home.wholeHouseHeatedSublabel}
+        checked={value.wholeHouseHeated}
+        onChange={(checked) => {
+          // Toggling off always lands on "one whole floor": a concrete,
+          // recalculated estimate beats leaving the household staring at
+          // an unchanged number until they pick an option themselves.
+          const unheatedPortion: UnheatedPortion | null = checked
+            ? null
+            : "wholeFloor";
+          const heatedAreaM2 = computeHeatedAreaM2(
+            value.totalAreaM2,
+            checked,
+            unheatedPortion,
+          );
+          onChange({
+            ...value,
+            wholeHouseHeated: checked,
+            unheatedPortion,
+            heatedAreaM2,
+          });
+        }}
+      />
+
+      {!value.wholeHouseHeated && (
+        <div>
+          <FieldLabel icon={Layers}>{t.home.unheatedPortion}</FieldLabel>
+          <IconCardGroup
+            columns={3}
+            value={value.unheatedPortion ?? "wholeFloor"}
+            onChange={(v) => {
+              const heatedAreaM2 = computeHeatedAreaM2(
+                value.totalAreaM2,
+                false,
+                v,
+              );
+              onChange({ ...value, unheatedPortion: v, heatedAreaM2 });
+            }}
+            options={unheatedPortionOptions(t)}
+          />
+        </div>
+      )}
+
+      <div>
+        <FieldLabel icon={Scale}>
+          {value.wholeHouseHeated
+            ? t.home.heatedArea
+            : t.home.estimatedHeatedArea}
+        </FieldLabel>
+        {value.wholeHouseHeated ? (
+          <p className="rounded-[14px] border border-line bg-[#fbfaf8] px-4 py-3 text-[15px] font-semibold text-ink">
+            {t.home.heatedAreaValue(value.heatedAreaM2)}
+          </p>
+        ) : (
+          <>
+            <TextInputWithIcon
+              icon={Scale}
+              inputMode="numeric"
+              suffix={t.home.totalAreaUnit}
+              value={String(value.heatedAreaM2)}
+              onChange={(v) =>
+                onChange(
+                  update(
+                    value,
+                    "heatedAreaM2",
+                    v === "" ? 0 : Number(v.replace(/[^0-9]/g, "")),
+                  ),
+                )
+              }
+            />
+            <p className="mt-1.5 text-[12.5px] text-ink-soft">
+              {t.home.estimatedHeatedAreaEditableNote}
+            </p>
+          </>
+        )}
       </div>
 
       <div>
@@ -393,16 +502,6 @@ export function HomeComfortSection({ value, onChange }: Props) {
         checked={value.acAvailable}
         onChange={(v) => onChange(update(value, "acAvailable", v))}
       />
-
-      <div>
-        <FieldLabel icon={FileText}>{t.home.unheatedRooms}</FieldLabel>
-        <TextAreaWithIcon
-          icon={FileText}
-          placeholder={t.home.unheatedRoomsPlaceholder}
-          value={value.unheatedRooms}
-          onChange={(v) => onChange(update(value, "unheatedRooms", v))}
-        />
-      </div>
     </Block>
   );
 }
@@ -546,7 +645,7 @@ export function CurrentHeatingSection({ value, onChange }: Props) {
       <div>
         <FieldLabel icon={Gauge}>{t.heating.boilerClass}</FieldLabel>
         <IconCardGroup
-          columns={4}
+          columns={5}
           value={value.boilerClass}
           onChange={(v) => onChange(update(value, "boilerClass", v))}
           options={boilerClassOptions(t)}
