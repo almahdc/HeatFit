@@ -4,7 +4,6 @@ import {
   ArrowLeft,
   ArrowRight,
   Flame,
-  Info,
   Mail,
   MapPin,
   Megaphone,
@@ -15,9 +14,9 @@ import {
   Block,
   FieldLabel,
   IconCardGroup,
-  InfoBox,
   StepProgress,
   TextInputWithIcon,
+  WhyNote,
   type IconCardOption,
 } from "./FormPrimitives";
 import { AssessmentState, initialAssessmentState } from "./assessmentTypes";
@@ -212,7 +211,9 @@ export function EnergyAssessmentForm({
                 />
               </div>
 
-              <InfoBox icon={Info}>{t.wizard.location.info}</InfoBox>
+              <WhyNote summary={t.wizard.location.whySummary}>
+                {t.wizard.location.info}
+              </WhyNote>
             </Block>
           </>
         )}

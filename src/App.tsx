@@ -9,7 +9,12 @@ import { AlternativeHeatingOptions } from "./wizard/AlternativeHeatingOptions";
 import { RegulatoryCountdownCard } from "./wizard/RegulatoryCountdownCard";
 import { EarlyAccessBlock } from "./wizard/EarlyAccessBlock";
 import { StepEyebrow } from "./wizard/FormPrimitives";
-import { calculateUserBaseline } from "./engines/baseline";
+import {
+  applyCostOverrides,
+  calculateUserBaseline,
+  type BaselineCostOverrides,
+  type EditableBaselineCostField,
+} from "./engines/baseline";
 import type { AlternativeHeatingId } from "./engines/alternativeHeating";
 import type { IncomeTier } from "./engines/grants";
 import { DEFAULT_TAX_RATE, type TaxRate } from "./engines/taxRelief";
@@ -101,6 +106,27 @@ function FinancialsPlaceholder({
   );
   const [taxRate, setTaxRate] = useState<TaxRate>(DEFAULT_TAX_RATE);
 
+  // Household-entered corrections on top of the baseline's modelled space
+  // heating / water heating / electricity & cooling costs (see
+  // BaselineSummary's per-line edit controls and applyCostOverrides in
+  // engines/baseline.ts). Owned here, alongside the other financials-screen
+  // state above, so every downstream figure - savings, capex comparisons,
+  // the PDF report - is built from the household's own corrected baseline
+  // rather than a second copy that only BaselineSummary sees.
+  const [costOverrides, setCostOverrides] = useState<BaselineCostOverrides>({});
+  const handleCostOverrideChange = (
+    field: EditableBaselineCostField,
+    value: number | null,
+  ) => {
+    setCostOverrides((prev) => {
+      if (value === null) {
+        const { [field]: _removed, ...rest } = prev;
+        return rest;
+      }
+      return { ...prev, [field]: value };
+    });
+  };
+
   return (
     <div className="mx-auto w-full lg:w-1/2 lg:min-w-[600px] xl:max-w-[820px] px-4 py-8">
       <div className="mb-6 flex items-center justify-between gap-3">
@@ -123,7 +149,8 @@ function FinancialsPlaceholder({
         edits, so it is passed wholesale as the override set with no persona id.
       */}
       {(() => {
-        const baseline = calculateUserBaseline("", household);
+        const modelledBaseline = calculateUserBaseline("", household);
+        const baseline = applyCostOverrides(modelledBaseline, costOverrides);
         const reportSnapshot = buildReportSnapshot({
           postalCode: assessment.location.postalCode,
           household,
@@ -139,7 +166,11 @@ function FinancialsPlaceholder({
         });
         return (
           <div className="flex flex-col gap-6">
-            <BaselineSummary baseline={baseline} />
+            <BaselineSummary
+              baseline={baseline}
+              overrides={costOverrides}
+              onOverrideChange={handleCostOverrideChange}
+            />
             <RegulatoryCountdownCard
               postalCode={assessment.location.postalCode}
               boilerClass={household.boilerClass}

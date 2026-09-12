@@ -175,6 +175,65 @@ export interface Baseline {
   assumptions: BaselineAssumption[];
 }
 
+/**
+ * The three "by what it was spent on" lines a household actually sees and can
+ * judge on sight (see BaselineSummary.tsx). The only baseline figures a
+ * household can correct by hand when the model gets something wrong.
+ */
+export type EditableBaselineCostField =
+  | "spaceHeatingPlnPerYear"
+  | "waterHeatingPlnPerYear"
+  | "electricityAndCoolingPlnPerYear";
+
+export type BaselineCostOverrides = Partial<
+  Record<EditableBaselineCostField, number>
+>;
+
+/**
+ * Applies household-entered corrections on top of the modelled baseline cost.
+ *
+ * Only the three lines above are ever overridden. The "by what it was bought
+ * as" split (coalPlnPerYear/electricityPlnPerYear) and every energy/kWh
+ * figure stay exactly what the model computed: they are not shown next to an
+ * edit control, nothing downstream reads them expecting them to reconcile
+ * with the edited totals, and a household correcting a cost they disagree
+ * with is not saying anything about what the underlying energy model should
+ * have assumed instead (grant eligibility, for one, still has to be decided
+ * from the model's own kWh/m², not from a corrected złoty figure). Totals are
+ * always the sum of the three lines below, overridden or not, so the
+ * arithmetic a household can do in their head always holds.
+ */
+export function applyCostOverrides(
+  baseline: Baseline,
+  overrides: BaselineCostOverrides,
+): Baseline {
+  if (Object.keys(overrides).length === 0) return baseline;
+
+  const spaceHeatingPlnPerYear =
+    overrides.spaceHeatingPlnPerYear ?? baseline.cost.spaceHeatingPlnPerYear;
+  const waterHeatingPlnPerYear =
+    overrides.waterHeatingPlnPerYear ?? baseline.cost.waterHeatingPlnPerYear;
+  const electricityAndCoolingPlnPerYear =
+    overrides.electricityAndCoolingPlnPerYear ??
+    baseline.cost.electricityAndCoolingPlnPerYear;
+  const totalPlnPerYear =
+    spaceHeatingPlnPerYear +
+    waterHeatingPlnPerYear +
+    electricityAndCoolingPlnPerYear;
+
+  return {
+    ...baseline,
+    cost: {
+      ...baseline.cost,
+      spaceHeatingPlnPerYear,
+      waterHeatingPlnPerYear,
+      electricityAndCoolingPlnPerYear,
+      totalPlnPerYear,
+      totalPlnPerMonth: totalPlnPerYear / 12,
+    },
+  };
+}
+
 // --- step 1: coal in, useful heat out ---------------------------------------
 
 /**

@@ -1,5 +1,22 @@
-import { AlertTriangle, Droplets, Flame, Plug, Wallet } from "lucide-react";
-import type { Baseline, BaselineAssumption } from "../engines/baseline";
+import { useState } from "react";
+import {
+  AlertTriangle,
+  Check,
+  Droplets,
+  Flame,
+  Pencil,
+  Plug,
+  RotateCcw,
+  Wallet,
+  X,
+  type LucideIcon,
+} from "lucide-react";
+import type {
+  Baseline,
+  BaselineAssumption,
+  BaselineCostOverrides,
+  EditableBaselineCostField,
+} from "../engines/baseline";
 import { StepEyebrow, WhyNote } from "./FormPrimitives";
 import { useT } from "../i18n";
 import type { Dictionary } from "../i18n";
@@ -41,31 +58,89 @@ export function assumptionText(t: Dictionary, a: BaselineAssumption): string {
  * Deliberately the first thing shown on the financials screen. Everything that
  * comes later (capex, subsidy, financing) is a change measured against this
  * number, so it has to be on screen and believable before any of it lands.
+ *
+ * The three lines below are editable: `baseline.cost` here is already the
+ * household's own correction applied on top of the model (see
+ * applyCostOverrides in engines/baseline.ts), and `overrides` is only read
+ * to know which lines to mark "edited" and which show a reset control - the
+ * displayed values themselves always come from `baseline`, never recomputed
+ * here, so this component never disagrees with what capex/grants/financing
+ * downstream are actually using.
  */
-export function BaselineSummary({ baseline }: { baseline: Baseline }) {
+export function BaselineSummary({
+  baseline,
+  overrides,
+  onOverrideChange,
+}: {
+  baseline: Baseline;
+  overrides: BaselineCostOverrides;
+  onOverrideChange: (
+    field: EditableBaselineCostField,
+    value: number | null,
+  ) => void;
+}) {
   const t = useT();
   const { cost, energy, electricity } = baseline;
 
-  const lines = [
+  const [editingField, setEditingField] =
+    useState<EditableBaselineCostField | null>(null);
+  const [draft, setDraft] = useState("");
+
+  const lines: {
+    field: EditableBaselineCostField;
+    icon: LucideIcon;
+    label: string;
+    sub: string;
+    value: number;
+  }[] = [
     {
+      field: "spaceHeatingPlnPerYear",
       icon: Flame,
       label: t.baseline.spaceHeating,
       sub: t.baseline.spaceHeatingSub,
       value: cost.spaceHeatingPlnPerYear,
     },
     {
+      field: "waterHeatingPlnPerYear",
       icon: Droplets,
       label: t.baseline.waterHeating,
       sub: t.baseline.waterHeatingSub,
       value: cost.waterHeatingPlnPerYear,
     },
     {
+      field: "electricityAndCoolingPlnPerYear",
       icon: Plug,
       label: t.baseline.electricityAndCooling,
       sub: t.baseline.electricityAndCoolingSub,
       value: cost.electricityAndCoolingPlnPerYear,
     },
   ];
+
+  const hasOverrides = Object.keys(overrides).length > 0;
+
+  const startEdit = (
+    field: EditableBaselineCostField,
+    currentValue: number,
+  ) => {
+    setEditingField(field);
+    setDraft(String(Math.round(currentValue)));
+  };
+
+  const cancelEdit = () => setEditingField(null);
+
+  const commitEdit = () => {
+    if (!editingField) return;
+    const n = Number(draft);
+    if (draft.trim() !== "" && Number.isFinite(n) && n >= 0) {
+      onOverrideChange(editingField, Math.round(n));
+    }
+    setEditingField(null);
+  };
+
+  const resetField = (field: EditableBaselineCostField) => {
+    if (editingField === field) setEditingField(null);
+    onOverrideChange(field, null);
+  };
 
   return (
     <section className="rounded-[20px] border border-line bg-white p-6 shadow-block">
@@ -96,32 +171,122 @@ export function BaselineSummary({ baseline }: { baseline: Baseline }) {
         </p>
       </div>
 
-      {/* The same total, split by what it was spent on. */}
-      <dl className="mt-5 divide-y divide-line border-y border-line">
-        {lines.map(({ icon: Icon, label, sub, value }) => (
-          <div
-            key={label}
-            className="flex items-center justify-between gap-4 py-3.5"
+      {hasOverrides && (
+        <div className="mt-3 flex items-start justify-between gap-3 rounded-[12px] border border-line bg-[#fbfaf8] px-3.5 py-2.5">
+          <p className="text-[12.5px] leading-snug text-ink-soft">
+            {t.baseline.overriddenNote}
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setEditingField(null);
+              (Object.keys(overrides) as EditableBaselineCostField[]).forEach(
+                (field) => onOverrideChange(field, null),
+              );
+            }}
+            className="shrink-0 whitespace-nowrap text-[12.5px] font-semibold text-accent-600 underline decoration-accent-tint2 underline-offset-2 hover:decoration-accent-600"
           >
-            <div className="flex min-w-0 items-center gap-3">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-chip text-ink-soft">
-                <Icon className="h-[18px] w-[18px]" aria-hidden />
-              </span>
-              <div className="min-w-0">
-                <dt className="text-[15px] font-semibold text-ink">{label}</dt>
-                <p className="text-[13px] text-ink-soft">{sub}</p>
+            {t.baseline.resetAll}
+          </button>
+        </div>
+      )}
+
+      {/* The same total, split by what it was spent on - each line editable,
+          since this is the one section of the tool a household can judge on
+          sight and may know is wrong for their own life. */}
+      <dl className="mt-5 divide-y divide-line border-y border-line">
+        {lines.map(({ field, icon: Icon, label, sub, value }) => {
+          const isOverridden = overrides[field] !== undefined;
+          const isEditing = editingField === field;
+          return (
+            <div
+              key={field}
+              className="flex items-center justify-between gap-4 py-3.5"
+            >
+              <div className="flex min-w-0 items-center gap-3">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-chip text-ink-soft">
+                  <Icon className="h-[18px] w-[18px]" aria-hidden />
+                </span>
+                <div className="min-w-0">
+                  <dt className="text-[15px] font-semibold text-ink">
+                    {label}
+                  </dt>
+                  <p className="text-[13px] text-ink-soft">
+                    {sub}
+                    {isOverridden && !isEditing && (
+                      <span className="ml-1.5 font-medium text-accent-600">
+                        · {t.baseline.editedTag}
+                      </span>
+                    )}
+                  </p>
+                </div>
               </div>
+
+              {isEditing ? (
+                <div className="flex shrink-0 items-center gap-1">
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    min={0}
+                    autoFocus
+                    value={draft}
+                    onChange={(e) => setDraft(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") commitEdit();
+                      if (e.key === "Escape") cancelEdit();
+                    }}
+                    className="w-24 rounded-lg border border-accent/60 bg-white px-2 py-1.5 text-right text-[15px] font-bold text-ink outline-none ring-1 ring-accent/30"
+                  />
+                  <button
+                    type="button"
+                    onClick={commitEdit}
+                    aria-label={t.baseline.saveEdit}
+                    className="rounded-full p-1.5 text-savings-700 transition-colors hover:bg-savings-tint"
+                  >
+                    <Check className="h-4 w-4" aria-hidden />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={cancelEdit}
+                    aria-label={t.baseline.cancelEdit}
+                    className="rounded-full p-1.5 text-ink-soft transition-colors hover:bg-chip"
+                  >
+                    <X className="h-4 w-4" aria-hidden />
+                  </button>
+                </div>
+              ) : (
+                <dd className="flex shrink-0 items-center gap-0.5 text-right">
+                  <div>
+                    <span className="text-[16px] font-bold tabular-nums text-ink">
+                      {zl(value)}
+                    </span>
+                    <span className="block text-[12px] text-ink-soft">
+                      {t.baseline.perYear}
+                    </span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => startEdit(field, value)}
+                    aria-label={t.baseline.editValue}
+                    className="ml-1 rounded-full p-1.5 text-ink-soft/60 transition-colors hover:bg-chip hover:text-ink-soft"
+                  >
+                    <Pencil className="h-3.5 w-3.5" aria-hidden />
+                  </button>
+                  {isOverridden && (
+                    <button
+                      type="button"
+                      onClick={() => resetField(field)}
+                      aria-label={t.baseline.resetValue}
+                      className="rounded-full p-1.5 text-ink-soft/60 transition-colors hover:bg-chip hover:text-ink-soft"
+                    >
+                      <RotateCcw className="h-3.5 w-3.5" aria-hidden />
+                    </button>
+                  )}
+                </dd>
+              )}
             </div>
-            <dd className="shrink-0 text-right">
-              <span className="text-[16px] font-bold tabular-nums text-ink">
-                {zl(value)}
-              </span>
-              <span className="block text-[12px] text-ink-soft">
-                {t.baseline.perYear}
-              </span>
-            </dd>
-          </div>
-        ))}
+          );
+        })}
       </dl>
 
       <WhyNote summary={t.baseline.whyTotalSummary}>

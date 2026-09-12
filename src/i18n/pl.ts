@@ -55,6 +55,7 @@ export const pl: Dictionary = {
       postalCode: "Kod pocztowy",
       postalCodePlaceholder: "np. 10-115",
       postalCodeRequired: "Podaj kod pocztowy, aby przejść dalej.",
+      whySummary: "Dlaczego pytamy o kod pocztowy",
       info: "Na podstawie kodu pocztowego sprawdzamy, które dotacje regionalne obejmują Twoją okolicę, jaki termin wymiany kotła węglowego wyznaczyła Twoja gmina i czy lokalny program czystego powietrza pokryje część kosztów.",
       cityDeadline: "Czy gmina skontaktowała się z Tobą w sprawie terminu?",
     },
@@ -204,7 +205,7 @@ export const pl: Dictionary = {
     waterHeater: "Podgrzewacz wody: sposób ogrzewania wody",
     showers: "Prysznice / kąpiele tygodniowo, na osobę",
     showersUnit: "tygodniowo, na osobę",
-    pvSetup: "Instalacja fotowoltaiczna",
+    pvSetup: "Instalacja fotowoltaiczna: Czy masz już panele fotowoltaiczne?",
     pvLabel: "Panele fotowoltaiczne",
     pvSublabel: "Prąd ze słońca",
     additionalNotes: "Dodatkowe uwagi",
@@ -295,8 +296,8 @@ export const pl: Dictionary = {
   baseline: {
     title: "Ile płacisz dzisiaj",
     subtitle:
-      "Twój obecny rok na węglu, odtworzony z Twoich własnych odpowiedzi. Wszystko, co dalej, mierzymy względem tej jednej kwoty, więc sprawdź przez chwilę, czy wygląda jak Twoje życie.",
-    totalOutflow: "Łączny wydatek",
+      "Twój roczny bilans węgla oparty na Twoich odpowiedziach. Czy tak wygląda Twoje życie? Jeśli nie, zmień to.",
+    totalOutflow: "",
     perMonth: "miesięcznie",
     perYear: "rocznie",
     perYearTotal: (amount: string) => `${amount} rocznie`,
@@ -329,6 +330,14 @@ export const pl: Dictionary = {
     whyConditionSummary: "Dlaczego ta liczba tyle znaczy",
     whyConditionBody:
       "kWh/m²/rok to stan Twojego budynku w jednej liczbie: ile ciepła potrzebuje na metr kwadratowy. Czyste Powietrze posługuje się tą samą miarą. Powyżej 140 program nie sfinansuje samego źródła ciepła bez termomodernizacji i dopiero powyżej 140 otwiera się najwyższy poziom dofinansowania. Nic nie jest punktowane po cichu: to jest ta liczba, a krok 5 pokazuje dokładnie, co oznacza dla Twojej dotacji.",
+    editValue: "Edytuj tę kwotę",
+    saveEdit: "Zapisz",
+    cancelEdit: "Anuluj",
+    resetValue: "Przywróć nasze oszacowanie",
+    editedTag: "poprawione",
+    overriddenNote:
+      "Poprawiłeś jedną lub więcej kwot poniżej. Wszystko od tego miejsca dalej (oszczędności, dotacje, finansowanie) korzysta teraz z Twoich liczb zamiast naszego oszacowania.",
+    resetAll: "Przywróć wszystkie do naszego oszacowania",
   },
 
   alternatives: {

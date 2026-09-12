@@ -61,6 +61,7 @@ export const en = {
       postalCode: "Postal Code",
       postalCodePlaceholder: "e.g., 10-115",
       postalCodeRequired: "Enter a postal code to continue.",
+      whySummary: "Why do we ask for postal code",
       info: "We use your postal code to check which regional subsidies apply to your area, what your municipality's deadline for replacing coal boilers is, and whether a local clean-air programme covers part of the cost.",
       cityDeadline: "Has your city/gmina contacted you about a deadline?",
     },
@@ -211,7 +212,7 @@ export const en = {
     waterHeater: "Water heater: How water is heated",
     showers: "Showers / baths per week, per person",
     showersUnit: "per week, per person",
-    pvSetup: "PV setup",
+    pvSetup: "PV setup: Do you already have PV panels?",
     pvLabel: "PV panels",
     pvSublabel: "Solar electricity",
     additionalNotes: "Additional notes",
@@ -300,8 +301,8 @@ export const en = {
   baseline: {
     title: "What you're paying now",
     subtitle:
-      "Your current year on coal, rebuilt from your own answers. Everything that follows is measured against this one figure, so take a moment to check it looks like your life.",
-    totalOutflow: "Total outflow",
+      "Your year on coal, built from your answers. Does this match your life? Adjust if not.",
+    totalOutflow: "",
     perMonth: "per month",
     perYear: "per year",
     perYearTotal: (amount: string) => `${amount} per year`,
@@ -333,6 +334,14 @@ export const en = {
     whyConditionSummary: "Why this number decides so much",
     whyConditionBody:
       "kWh/m²/year is your building's condition in one figure: the heat it needs per square metre. Czyste Powietrze uses the same measure. Above 140, the programme will not fund a heat source on its own without insulation work, and only above 140 does the highest funding level open up. Nothing is scored behind the scenes: this is the number, and step 5 shows exactly what it means for your grant.",
+    editValue: "Edit this figure",
+    saveEdit: "Save",
+    cancelEdit: "Cancel",
+    resetValue: "Reset to our estimate",
+    editedTag: "edited",
+    overriddenNote:
+      "You've corrected one or more figures below. Everything from this point on (savings, grants, financing) uses your numbers instead of our estimate.",
+    resetAll: "Reset all to our estimate",
   },
 
   alternatives: {
