@@ -40,6 +40,7 @@ export const pl: Dictionary = {
       title: "Znajdź najniższą cenę i najlepsze finansowanie",
       subtitle:
         "Odpowiedz na kilka krótkich pytań, aby obliczyć dokładny koszt urządzenia, maksymalne dotacje rządowe i nisko oprocentowane finansowanie.",
+      timeEstimate: "Zajmuje około 10 minut, od początku do końca",
       fitTitle: "Czy to narzędzie jest dla Ciebie?",
       fitCoalUsersLabel: "Dla osób ogrzewających węglem:",
       fitCoalUsersBody:

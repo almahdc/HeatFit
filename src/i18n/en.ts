@@ -46,6 +46,7 @@ export const en = {
       title: "Find Your Lowest Price & Best Financing",
       subtitle:
         "Answer a few quick questions to calculate your exact equipment costs, max government subsidies, and low-interest financing.",
+      timeEstimate: "Takes about 10 minutes, start to finish",
       fitTitle: "Is This Tool for You?",
       fitCoalUsersLabel: "For Coal Users:",
       fitCoalUsersBody:

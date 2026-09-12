@@ -3,6 +3,7 @@ import {
   AlertCircle,
   ArrowLeft,
   ArrowRight,
+  Clock,
   Flame,
   Mail,
   MapPin,
@@ -134,6 +135,11 @@ export function EnergyAssessmentForm({
               title={t.wizard.welcome.title}
               subtitle={t.wizard.welcome.subtitle}
             >
+              <p className="inline-flex w-fit items-center gap-1.5 rounded-full bg-chip px-3 py-1.5 text-[12.5px] font-medium text-ink-soft">
+                <Clock className="h-3.5 w-3.5" aria-hidden />
+                {t.wizard.welcome.timeEstimate}
+              </p>
+
               <div>
                 <h3 className="text-base font-semibold text-ink">
                   {t.wizard.welcome.fitTitle}

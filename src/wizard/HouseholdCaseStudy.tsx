@@ -203,12 +203,14 @@ const coalTypeOptions = (t: Dictionary) =>
   ]);
 
 const boilerClassOptions = (t: Dictionary) =>
+  // "ecodesign" removed from the UI for now: kept in BoilerClass and its
+  // downstream engines (regulatoryDeadlines.ts's ecodesignCaveat included),
+  // just not offered as a choice here.
   cards(t.options.boilerClass, BOILER_CLASS_ICONS, [
     "bezklasowy",
     "class3",
     "class4",
     "class5",
-    "ecodesign",
   ]);
 
 const replacementOptions = (t: Dictionary) =>
