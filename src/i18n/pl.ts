@@ -456,6 +456,7 @@ export const pl: Dictionary = {
       unitAdded: "doliczone",
       solarLabel: "Panele fotowoltaiczne (PV)",
       solarSub: (kwh: string) => `Nowa instalacja ${kwh} kWh/rok`,
+      breakdownLabel: "Zobacz podział kosztów",
       totalGross: "Łączny koszt brutto",
       totalGrossWithSolar: "Łączny koszt brutto (z fotowoltaiką)",
       turnkey: "pod klucz, z VAT",
@@ -547,9 +548,9 @@ export const pl: Dictionary = {
   },
 
   summary: {
-    title: "Odpowiedzi, na których oparliśmy te liczby",
+    title: "Zabierz to ze sobą",
     subtitle:
-      "Każda liczba powyżej wynika z tego, co nam powiedziałeś. Oto te dane z powrotem, żebyś mógł sprawdzić, czy coś nie wygląda źle.",
+      "Pobierz PDF ze wszystkim powyżej: Twoimi liczbami, porównaniem i odpowiedziami, na których je oparliśmy.",
     postalCode: "Kod pocztowy",
     cityDeadline: "Informacja o terminie z gminy",
     empty: "—",

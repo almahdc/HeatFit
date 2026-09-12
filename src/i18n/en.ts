@@ -459,6 +459,7 @@ export const en = {
       unitAdded: "added",
       solarLabel: "Solar panels (PV)",
       solarSub: (kwh: string) => `New, ${kwh} kWh/year array`,
+      breakdownLabel: "See the cost breakdown",
       totalGross: "Total gross capex",
       totalGrossWithSolar: "Total gross capex (incl. solar)",
       turnkey: "turnkey, incl. VAT",
@@ -550,9 +551,9 @@ export const en = {
   },
 
   summary: {
-    title: "The answers behind these numbers",
+    title: "Take it with you",
     subtitle:
-      "Every figure above is built from what you told us. Here it is back, so you can check anything that looks wrong.",
+      "Download a PDF with everything above: your numbers, the comparison, and the answers behind them.",
     postalCode: "Postal code",
     cityDeadline: "City deadline notice",
     empty: "—",

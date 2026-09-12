@@ -223,6 +223,9 @@ class ReportDoc {
       boldLastRow?: boolean;
       align?: ("left" | "right")[];
       noHeader?: boolean;
+      /** Row index -> tint/text color, for rows that carry the same
+       *  green-savings / blue-accent meaning they have on the web. */
+      highlightRows?: Record<number, { bg: string; text: string }>;
     } = {},
   ) {
     const headerHeight = 8;
@@ -254,17 +257,21 @@ class ReportDoc {
     rows.forEach((row, rIdx) => {
       this.ensureSpace(rowHeight);
       if (this.y === MARGIN.top) drawHeader();
+      const highlight = opts.highlightRows?.[rIdx];
       const isLast = opts.boldLastRow && rIdx === rows.length - 1;
-      if (isLast) {
+      if (highlight) {
+        this.doc.setFillColor(highlight.bg);
+        this.doc.rect(MARGIN.left, this.y, totalWidth, rowHeight, "F");
+      } else if (isLast) {
         this.doc.setFillColor(COLOR.chip);
         this.doc.rect(MARGIN.left, this.y, totalWidth, rowHeight, "F");
       } else if (rIdx % 2 === 1) {
         this.doc.setFillColor("#fbfaf8");
         this.doc.rect(MARGIN.left, this.y, totalWidth, rowHeight, "F");
       }
-      this.doc.setFont(FONT, isLast ? "bold" : "normal");
+      this.doc.setFont(FONT, isLast || highlight ? "bold" : "normal");
       this.doc.setFontSize(9);
-      this.doc.setTextColor(COLOR.ink);
+      this.doc.setTextColor(highlight ? highlight.text : COLOR.ink);
       let x = MARGIN.left + 2.5;
       row.forEach((cell, i) => {
         const width = colWidths[i]!;
@@ -548,7 +555,12 @@ export function generateReportPdf(
       ],
     ],
     [CONTENT_WIDTH - 3 * 42, 42, 42, 42],
-    { boldLastRow: true, align: ["left", "right", "right", "right"] },
+    {
+      align: ["left", "right", "right", "right"],
+      highlightRows: {
+        5: { bg: COLOR.savingsTint, text: COLOR.savings700 },
+      },
+    },
   );
   pdf.paragraph(RT.note, { size: 8, color: COLOR.inkSoft });
 
@@ -580,7 +592,15 @@ export function generateReportPdf(
       [F.afterLoanMonthlyCost, zl(snapshot.trueCost.afterLoanPlnPerMonth)],
     ],
     [CONTENT_WIDTH - 50, 50],
-    { noHeader: true, align: ["left", "right"] },
+    {
+      noHeader: true,
+      align: ["left", "right"],
+      highlightRows: {
+        2: { bg: COLOR.accentTint, text: COLOR.accent600 },
+        4: { bg: COLOR.savingsTint, text: COLOR.savings700 },
+        8: { bg: COLOR.savingsTint, text: COLOR.savings700 },
+      },
+    },
   );
 
   // --- assumptions & sources ---------------------------------------------

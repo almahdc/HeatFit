@@ -574,44 +574,6 @@ export function AlternativeHeatingOptions({
           addSolar,
         )}
       >
-        <dl className="divide-y divide-line border-y border-line">
-          <Line
-            icon={Wrench}
-            label={t.alternatives.capex.hardware}
-            sub={t.alternatives.capex.typically(
-              zlRange(
-                heatingCapex.hardware.lowPln,
-                heatingCapex.hardware.highPln,
-              ),
-            )}
-            value={heatingCapex.hardware.midPln}
-            unit={t.alternatives.capex.unitEquipment}
-          />
-          <Line
-            icon={HardHat}
-            label={t.alternatives.capex.installation}
-            sub={t.alternatives.capex.typically(
-              zlRange(
-                heatingCapex.installation.lowPln,
-                heatingCapex.installation.highPln,
-              ),
-            )}
-            value={heatingCapex.installation.midPln}
-            unit={t.alternatives.capex.unitLabour}
-          />
-          {addSolar && (
-            <Line
-              icon={Sun}
-              label={t.alternatives.capex.solarLabel}
-              sub={t.alternatives.capex.solarSub(
-                kwh(solarAddOn.productionKwhPerYear),
-              )}
-              value={solarAddOn.capexPln}
-              unit={t.alternatives.capex.unitAdded}
-            />
-          )}
-        </dl>
-
         <div className="rounded-[16px] border border-accent-tint2 bg-accent-tint p-5">
           <p className="text-[12px] font-semibold uppercase tracking-wider text-accent-600/80">
             {addSolar
@@ -633,7 +595,47 @@ export function AlternativeHeatingOptions({
           </p>
         </div>
 
-        <div className="flex gap-3 rounded-[14px] border border-accent-tint2 bg-accent-tint p-4 text-sm text-accent-600">
+        <CollapsibleBreakdown label={t.alternatives.capex.breakdownLabel}>
+          <dl className="divide-y divide-line">
+            <Line
+              icon={Wrench}
+              label={t.alternatives.capex.hardware}
+              sub={t.alternatives.capex.typically(
+                zlRange(
+                  heatingCapex.hardware.lowPln,
+                  heatingCapex.hardware.highPln,
+                ),
+              )}
+              value={heatingCapex.hardware.midPln}
+              unit={t.alternatives.capex.unitEquipment}
+            />
+            <Line
+              icon={HardHat}
+              label={t.alternatives.capex.installation}
+              sub={t.alternatives.capex.typically(
+                zlRange(
+                  heatingCapex.installation.lowPln,
+                  heatingCapex.installation.highPln,
+                ),
+              )}
+              value={heatingCapex.installation.midPln}
+              unit={t.alternatives.capex.unitLabour}
+            />
+            {addSolar && (
+              <Line
+                icon={Sun}
+                label={t.alternatives.capex.solarLabel}
+                sub={t.alternatives.capex.solarSub(
+                  kwh(solarAddOn.productionKwhPerYear),
+                )}
+                value={solarAddOn.capexPln}
+                unit={t.alternatives.capex.unitAdded}
+              />
+            )}
+          </dl>
+        </CollapsibleBreakdown>
+
+        <div className="flex gap-3 rounded-[14px] border border-line bg-[#fbfaf8] p-4 text-[13.5px] text-ink-soft">
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
           <div>
             <p>{t.alternatives.capex.zumNote}</p>
@@ -641,7 +643,7 @@ export function AlternativeHeatingOptions({
               href={ZUM_DATABASE_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-2 inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-accent-600 underline decoration-accent-tint2 underline-offset-2 hover:decoration-accent-600"
+              className="mt-2 inline-flex items-center gap-1.5 font-semibold text-ink underline decoration-line underline-offset-2 hover:decoration-ink-soft"
             >
               {t.alternatives.capex.zumLink}
               <ExternalLink className="h-3.5 w-3.5" aria-hidden />
