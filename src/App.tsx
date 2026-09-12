@@ -100,6 +100,7 @@ function FinancialsPlaceholder({
   const [selectedHeating, setSelectedHeating] =
     useState<AlternativeHeatingId>("airToAirHp");
   const [addSolar, setAddSolar] = useState(false);
+  const [switchToDynamicTariff, setSwitchToDynamicTariff] = useState(false);
   const [tier, setTier] = useState<IncomeTier>("basic");
   const [loanYears, setLoanYears] = useState<string>(
     String(DEFAULT_LOAN_TERMS.years),
@@ -159,6 +160,7 @@ function FinancialsPlaceholder({
           selection: {
             heatingId: selectedHeating,
             addSolar,
+            switchToDynamicTariff,
             tier,
             loanYears,
             taxRate,
@@ -189,6 +191,8 @@ function FinancialsPlaceholder({
               onSelectedChange={setSelectedHeating}
               addSolar={addSolar}
               onAddSolarChange={setAddSolar}
+              switchToDynamicTariff={switchToDynamicTariff}
+              onSwitchToDynamicTariffChange={setSwitchToDynamicTariff}
               tier={tier}
               onTierChange={setTier}
               loanYears={loanYears}

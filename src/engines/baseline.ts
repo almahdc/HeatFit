@@ -176,13 +176,19 @@ export type BaselineAssumption =
   | { code: "hotWaterPerShower"; litres: number; heatedSharePct: number }
   | { code: "summerElectricWater"; sharePct: number }
   | { code: "electricWaterHeaterEfficiency"; efficiencyPct: number }
-  | { code: "electricityUseModelled"; kwhPerYear: number };
+  | { code: "electricityUseModelled"; kwhPerYear: number }
+  | { code: "electricityPriceAssumedFlat"; pricePerKwh: number }
+  | { code: "electricityPriceAssumedDynamic"; pricePerKwh: number };
 
 export interface Baseline {
   energy: BaselineEnergy;
   cost: BaselineCost;
   electricity: ElectricityReconciliation;
-  /** Every assumption that was used because an answer was missing or soft. */
+  /**
+   * Every assumption that was used because an answer was missing or soft,
+   * plus the handful (electricity price, for one) this model always makes
+   * regardless of what was answered.
+   */
   assumptions: BaselineAssumption[];
 }
 
@@ -494,6 +500,11 @@ export function calculateBaseline(input: BaselineInputs): Baseline {
   // --- electricity ----------------------------------------------------------
   const tariff = S.TARIFF_FROM_WIZARD[input.electricityTariff];
   const price = S.SHEET_ELECTRICITY_PRICE[tariff];
+  assumptions.push(
+    input.electricityTariff === "G12"
+      ? { code: "electricityPriceAssumedDynamic", pricePerKwh: price }
+      : { code: "electricityPriceAssumedFlat", pricePerKwh: price },
+  );
 
   const modelledKwh =
     S.DEFAULT_BASE_ELECTRICITY_KWH +

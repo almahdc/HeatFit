@@ -280,7 +280,7 @@ export const en = {
     },
     electricityTariff: {
       G11: { label: "G11", sublabel: "Flat, all day" },
-      G12: { label: "G12", sublabel: "Cheaper nights" },
+      G12: { label: "G12", sublabel: "Cheaper nights & midday" },
     },
     waterHeating: {
       electricBoilerNew: { label: "New electric boiler" },
@@ -422,6 +422,7 @@ export const en = {
       districtHeatingPelletWarningOther:
         "Some other regions restrict solid fuel where district heating is available too. Worth checking with your gmina before committing to a pellet boiler.",
       addSolarLabel: "Add solar to this project",
+      switchToDynamicLabel: "Switch to a dynamic tariff",
       newOutflow: (name: string) => `${name}: new yearly outflow`,
       perMonth: "per month",
       perYearAndEfficiency: (amount: string, efficiency: string) =>
@@ -719,6 +720,10 @@ export const en = {
       `We assumed your electric water heater is ${pct}% efficient.`,
     electricityUseModelled: (kwh: number) =>
       `We assumed your yearly electricity use is about ${kwh} kWh, based on a typical household's usage plus your hot water and cooling, since you did not give a bill.`,
+    electricityPriceAssumedFlat: (pricePerKwh: string) =>
+      `We priced your G11 electricity at ${pricePerKwh}/kWh: one flat rate used across this tool, not your exact supplier's rate.`,
+    electricityPriceAssumedDynamic: (pricePerKwh: string) =>
+      `We priced your G12 electricity at ${pricePerKwh}/kWh: a flat rate that assumes most of your use already falls in the cheaper off-peak hours.`,
   },
 
   /** Same idea as `assumptions` above, for `alternativeHeating.ts`'s typed
@@ -734,10 +739,13 @@ export const en = {
       cop: number,
       pricePerKwh: string,
       tariffLabel: string,
+      tariff: "G11" | "G12",
     ) =>
-      `We assumed a ${optionName.toLowerCase()} running at COP ${cop.toFixed(1)} (each kWh of electricity delivers ${cop.toFixed(1)} kWh of heat), priced at your ${tariffLabel} tariff rate of ${pricePerKwh}/kWh.`,
+      `We assumed a ${optionName.toLowerCase()} running at COP ${cop.toFixed(1)} (each kWh of electricity delivers ${cop.toFixed(1)} kWh of heat), priced at your ${tariffLabel} tariff${tariff === "G12" ? "'s average rate" : " rate"} of ${pricePerKwh}/kWh.`,
     pvMarginalPricing: (pct: number) =>
       `Because you have solar, we assumed ${pct}% of this heat pump's extra electricity draw is covered directly by your panels; the rest is priced at what it actually changes your bill by, not a flat rate.`,
+    dynamicTariffHabitShift:
+      "We assumed you shift most of this heating's electricity use to off-peak hours to actually get that price.",
     carriedOverFromBaseline:
       "Water heating and electricity & cooling are carried over unchanged from what you are paying today: this replacement only changes space heating.",
   },

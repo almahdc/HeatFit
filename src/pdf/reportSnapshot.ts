@@ -59,6 +59,9 @@ import type {
 export interface ReportSelection {
   heatingId: AlternativeHeatingId;
   addSolar: boolean;
+  /** Only meaningful, and only offered on screen, when the household is not
+   *  already on a dynamic tariff - see AlternativeHeatingOptions.tsx. */
+  switchToDynamicTariff: boolean;
   tier: IncomeTier;
   loanYears: string;
   taxRate: TaxRate;
@@ -129,27 +132,32 @@ export function buildReportSnapshot({
   selection: ReportSelection;
 }): ReportSnapshot {
   const effectiveHasPv = household.hasPvPanels || selection.addSolar;
+  const effectiveElectricityTariff: ElectricityTariffCase =
+    selection.switchToDynamicTariff ? "G12" : electricityTariff;
 
   const selected = calculateAlternativeHeatingCost(
     selection.heatingId,
     baseline,
-    electricityTariff,
+    effectiveElectricityTariff,
     undefined,
     effectiveHasPv,
+    selection.switchToDynamicTariff,
   );
   const withoutPv = calculateAlternativeHeatingCost(
     selection.heatingId,
     baseline,
-    electricityTariff,
+    effectiveElectricityTariff,
     undefined,
     false,
+    selection.switchToDynamicTariff,
   );
   const withPv = calculateAlternativeHeatingCost(
     selection.heatingId,
     baseline,
-    electricityTariff,
+    effectiveElectricityTariff,
     undefined,
     true,
+    selection.switchToDynamicTariff,
   );
 
   const heatingCapex = calculateCapexBreakdown(selection.heatingId);
@@ -195,7 +203,7 @@ export function buildReportSnapshot({
     effectiveHasPv,
     bestHeatingId: findBestHeatingId(
       baseline,
-      electricityTariff,
+      effectiveElectricityTariff,
       effectiveHasPv,
     ),
     runningCost: { selected, withoutPv, withPv },

@@ -93,6 +93,7 @@ export type AlternativeHeatingAssumption =
       tariff: ElectricityTariffCase;
     }
   | { code: "pvMarginalPricing"; selfConsumedSharePct: number }
+  | { code: "dynamicTariffHabitShift" }
   | { code: "carriedOverFromBaseline" };
 
 export interface AlternativeHeatingCost {
@@ -140,6 +141,12 @@ function electricityPricePerKwh(tariff: ElectricityTariffCase): number {
  * `hasPvPanels` should be the same value `baseline` itself was computed with
  *: this only prices the NEW electricity a heat pump adds; it does not
  * re-derive whether the household has panels at all.
+ *
+ * `dynamicTariffSwitched` is true only when `electricityTariff` is a
+ * hypothetical switch to G12 rather than the household's real answer (see
+ * the toggle in AlternativeHeatingOptions.tsx) : it changes no number here,
+ * `electricityTariff` alone already does that, but it decides whether the
+ * "you'll need to shift usage off-peak" assumption gets said out loud.
  */
 export function calculateAlternativeHeatingCost(
   id: AlternativeHeatingId,
@@ -147,6 +154,7 @@ export function calculateAlternativeHeatingCost(
   electricityTariff: ElectricityTariffCase,
   usefulHeatKwh: number = baseline.energy.spaceHeatKwh,
   hasPvPanels: boolean = false,
+  dynamicTariffSwitched: boolean = false,
 ): AlternativeHeatingCost {
   let fuelPerYear: number;
   let fuelUnit: "kWh" | "t";
@@ -202,6 +210,9 @@ export function calculateAlternativeHeatingCost(
       pricePerKwh: price,
       tariff: electricityTariff,
     });
+    if (dynamicTariffSwitched) {
+      assumptions.push({ code: "dynamicTariffHabitShift" });
+    }
     if (hasPvPanels) {
       assumptions.push({
         code: "pvMarginalPricing",

@@ -36,6 +36,16 @@ const num = (n: number) =>
 const tonnes = (n: number) =>
   n.toLocaleString("pl-PL", { maximumFractionDigits: 2 });
 
+/** Electricity prices are sub-złoty per kWh, so `zl`'s whole-number rounding
+ *  would flatten 0.70 and 1.00 to the same "1 zł". */
+const plnPerKwh = (n: number) =>
+  `${n
+    .toLocaleString("pl-PL", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+    .replace(/\xa0/g, " ")} zł`;
+
 /** A typed descriptor from baseline.ts, said in the language on screen. */
 export function assumptionText(t: Dictionary, a: BaselineAssumption): string {
   switch (a.code) {
@@ -58,6 +68,14 @@ export function assumptionText(t: Dictionary, a: BaselineAssumption): string {
       return t.assumptions.electricWaterHeaterEfficiency(a.efficiencyPct);
     case "electricityUseModelled":
       return t.assumptions.electricityUseModelled(a.kwhPerYear);
+    case "electricityPriceAssumedFlat":
+      return t.assumptions.electricityPriceAssumedFlat(
+        plnPerKwh(a.pricePerKwh),
+      );
+    case "electricityPriceAssumedDynamic":
+      return t.assumptions.electricityPriceAssumedDynamic(
+        plnPerKwh(a.pricePerKwh),
+      );
   }
 }
 

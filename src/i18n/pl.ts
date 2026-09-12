@@ -276,7 +276,7 @@ export const pl: Dictionary = {
     },
     electricityTariff: {
       G11: { label: "G11", sublabel: "Stała, całą dobę" },
-      G12: { label: "G12", sublabel: "Tańsze noce" },
+      G12: { label: "G12", sublabel: "Taniej w nocy i w południe" },
     },
     waterHeating: {
       electricBoilerNew: { label: "Nowy bojler elektryczny" },
@@ -419,6 +419,7 @@ export const pl: Dictionary = {
       districtHeatingPelletWarningOther:
         "Inne województwa też mogą ograniczać paliwo stałe tam, gdzie dostępne jest ciepło systemowe. Warto to sprawdzić w swojej gminie przed wyborem kotła na pellet.",
       addSolarLabel: "Dodaj fotowoltaikę do tej inwestycji",
+      switchToDynamicLabel: "Przejdź na taryfę dynamiczną",
       newOutflow: (name: string) => `${name}: nowy roczny wydatek`,
       perMonth: "miesięcznie",
       perYearAndEfficiency: (amount: string, efficiency: string) =>
@@ -713,6 +714,10 @@ export const pl: Dictionary = {
       `Założyliśmy, że Twój elektryczny podgrzewacz wody ma sprawność ${pct}%.`,
     electricityUseModelled: (kwh: number) =>
       `Założyliśmy roczne zużycie prądu na około ${kwh} kWh, na podstawie zużycia typowego gospodarstwa domowego plus Twojej ciepłej wody i chłodzenia, ponieważ nie podałeś rachunku.`,
+    electricityPriceAssumedFlat: (pricePerKwh: string) =>
+      `Wyceniliśmy Twój prąd na taryfie G11 na ${pricePerKwh}/kWh: to jedna płaska stawka używana w całym narzędziu, a nie stawka Twojego dostawcy.`,
+    electricityPriceAssumedDynamic: (pricePerKwh: string) =>
+      `Wyceniliśmy Twój prąd na taryfie G12 na ${pricePerKwh}/kWh: płaska stawka, która zakłada, że większość zużycia przypada na tańsze godziny poza szczytem.`,
   },
 
   alternativeAssumptions: {
@@ -725,10 +730,13 @@ export const pl: Dictionary = {
       cop: number,
       pricePerKwh: string,
       tariffLabel: string,
+      tariff: "G11" | "G12",
     ) =>
-      `${optionName}: przyjęliśmy COP ${cop.toFixed(1)} (1 kWh prądu daje ${cop.toFixed(1)} kWh ciepła), wg Twojej taryfy ${tariffLabel} po ${pricePerKwh}/kWh.`,
+      `${optionName}: przyjęliśmy COP ${cop.toFixed(1)} (1 kWh prądu daje ${cop.toFixed(1)} kWh ciepła), wg ${tariff === "G12" ? `średniej stawki Twojej taryfy ${tariffLabel}` : `Twojej taryfy ${tariffLabel}`} po ${pricePerKwh}/kWh.`,
     pvMarginalPricing: (pct: number) =>
       `Ponieważ masz fotowoltaikę, założyliśmy, że ${pct}% dodatkowego prądu tej pompy ciepła pokrywają bezpośrednio Twoje panele; reszta jest wyceniona wg tego, o ile faktycznie zmienia Twój rachunek, a nie wg stawki płaskiej.`,
+    dynamicTariffHabitShift:
+      "Założyliśmy, że przesuniesz większość zużycia prądu tego ogrzewania na godziny poza szczytem, by faktycznie uzyskać tę cenę.",
     carriedOverFromBaseline:
       "Podgrzewanie wody oraz prąd i chłodzenie pozostają bez zmian względem tego, co płacisz dziś: ta wymiana zmienia tylko ogrzewanie pomieszczeń.",
   },

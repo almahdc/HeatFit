@@ -22,6 +22,7 @@ import {
   Waves,
   Wind,
   Wrench,
+  Zap,
   type LucideIcon,
 } from "lucide-react";
 import {
@@ -162,9 +163,12 @@ function alternativeAssumptionText(
         a.cop,
         plnPerKwh(a.pricePerKwh),
         t.options.electricityTariff[a.tariff].label,
+        a.tariff,
       );
     case "pvMarginalPricing":
       return aa.pvMarginalPricing(a.selfConsumedSharePct);
+    case "dynamicTariffHabitShift":
+      return aa.dynamicTariffHabitShift;
     case "carriedOverFromBaseline":
       return aa.carriedOverFromBaseline;
   }
@@ -189,6 +193,8 @@ export function AlternativeHeatingOptions({
   onSelectedChange,
   addSolar,
   onAddSolarChange,
+  switchToDynamicTariff,
+  onSwitchToDynamicTariffChange,
   tier,
   onTierChange,
   loanYears,
@@ -227,6 +233,16 @@ export function AlternativeHeatingOptions({
    *  any one option. */
   addSolar: boolean;
   onAddSolarChange: (value: boolean) => void;
+  /**
+   * Only offered when the household's real tariff (`electricityTariff`)
+   * is not already dynamic : there is nothing to switch to otherwise. Like
+   * `addSolar`, a hypothetical on top of the real answer, so it only
+   * changes what this replacement's own electricity is priced at - never
+   * the baseline's water heating or electricity & cooling lines, which stay
+   * priced at the household's real tariff regardless.
+   */
+  switchToDynamicTariff: boolean;
+  onSwitchToDynamicTariffChange: (value: boolean) => void;
   /** Never collected by the wizard, and deliberately not asked for as a złoty
    *  figure : the household picks the band their income falls in. Basic is
    *  the default because it is the least generous, so nothing is ever
@@ -249,18 +265,26 @@ export function AlternativeHeatingOptions({
   // was decided on. Every number below reacts to this one value.
   const effectiveHasPv = hasPvPanels || addSolar;
 
+  // Same idea as PV above, for tariff : a household already on G12 has
+  // nothing to switch, so the toggle (and this override) only ever applies
+  // on top of a real G11 answer.
+  const effectiveElectricityTariff = switchToDynamicTariff
+    ? "G12"
+    : electricityTariff;
+
   // The option that saves the household the most per year against coal,
-  // recomputed live as PV is toggled : the ranking is allowed to change.
-  // Running-cost savings only (not capex/grant/loan), same basis the
-  // savings box below reads from, so the badge and the number agree.
+  // recomputed live as PV and tariff are toggled : the ranking is allowed
+  // to change. Running-cost savings only (not capex/grant/loan), same basis
+  // the savings box below reads from, so the badge and the number agree.
   const bestOptionId = ALTERNATIVE_HEATING_IDS.reduce(
     (best, id) => {
       const savings = calculateAlternativeHeatingCost(
         id,
         baseline,
-        electricityTariff,
+        effectiveElectricityTariff,
         undefined,
         effectiveHasPv,
+        switchToDynamicTariff,
       ).savingsPlnPerYear;
       return savings > best.savings ? { id, savings } : best;
     },
@@ -287,9 +311,10 @@ export function AlternativeHeatingOptions({
   const result = calculateAlternativeHeatingCost(
     selected,
     baseline,
-    electricityTariff,
+    effectiveElectricityTariff,
     undefined,
     effectiveHasPv,
+    switchToDynamicTariff,
   );
   const option = t.alternatives.options[selected];
   const heatingCapex = calculateCapexBreakdown(selected);
@@ -392,6 +417,23 @@ export function AlternativeHeatingOptions({
             label={c.addSolarLabel}
             checked={addSolar}
             onChange={onAddSolarChange}
+          />
+        )}
+
+        {/*
+          Only offered when the household is not already on a dynamic
+          tariff : there is nothing left to switch to. Combines freely with
+          the solar toggle above - both just feed the same marginal-cost
+          calculation in alternativeHeating.ts. The why (price assumed, habit
+          shift needed) lives in "What we assumed" below, not on the toggle
+          itself - same one-line treatment as the solar toggle above.
+        */}
+        {electricityTariff !== "G12" && (
+          <ToggleCard
+            icon={Zap}
+            label={c.switchToDynamicLabel}
+            checked={switchToDynamicTariff}
+            onChange={onSwitchToDynamicTariffChange}
           />
         )}
 
