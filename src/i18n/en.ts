@@ -742,8 +742,8 @@ export const en = {
       cheaperPct: number | null,
     ) =>
       heatPumpPlnPerYear !== null && cheaperPct !== null
-        ? `Some of your hot water currently rides along on your coal boiler. Since it's being replaced, we assumed that share switches to a plain electric boiler, like the rest of your hot water already uses: about ${electricBoilerPlnPerYear}/year. Running it through this heat pump instead would typically cost about ${heatPumpPlnPerYear}/year, ${cheaperPct}% less, though that means adding a dedicated water-heating device, which isn't included in this project's cost.`
-        : `Some of your hot water currently rides along on your coal boiler. Since it's being replaced, we assumed that share switches to a plain electric boiler, like the rest of your hot water already uses: about ${electricBoilerPlnPerYear}/year. We haven't modelled switching it onto the pellet boiler itself.`,
+        ? `Some of your hot water currently rides along on your coal boiler. Since it's being replaced, we assumed that share switches to a plain electric boiler, like the rest of your hot water already uses: about ${electricBoilerPlnPerYear}/year to run. Buying that boiler is a small extra cost, not included in step 4's install price. Running the same hot water through this heat pump instead would typically cost about ${heatPumpPlnPerYear}/year, ${cheaperPct}% less to run, but it means buying a dedicated water-heating device instead, which would add to step 4's install price rather than replace it.`
+        : `Some of your hot water currently rides along on your coal boiler. Since it's being replaced, we assumed that share switches to a plain electric boiler, like the rest of your hot water already uses: about ${electricBoilerPlnPerYear}/year to run. Buying that boiler is a small extra cost, not included in step 4's install price. We haven't modelled switching it onto the pellet boiler itself.`,
   },
 
   grantWarnings: {

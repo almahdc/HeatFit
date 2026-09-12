@@ -732,8 +732,8 @@ export const pl: Dictionary = {
       cheaperPct: number | null,
     ) =>
       heatPumpPlnPerYear !== null && cheaperPct !== null
-        ? `Część Twojej ciepłej wody jest dziś podgrzewana przy okazji przez kocioł węglowy. Ponieważ jest on wymieniany, założyliśmy, że ta część przechodzi na zwykły bojler elektryczny, tak jak reszta Twojej ciepłej wody już dziś: to około ${electricBoilerPlnPerYear}/rok. Podgrzewanie jej tą pompą ciepła zamiast bojlera kosztowałoby zwykle około ${heatPumpPlnPerYear}/rok, czyli o ${cheaperPct}% mniej, ale to oznacza dodanie osobnego urządzenia do podgrzewania wody, którego koszt nie jest ujęty w tym projekcie.`
-        : `Część Twojej ciepłej wody jest dziś podgrzewana przy okazji przez kocioł węglowy. Ponieważ jest on wymieniany, założyliśmy, że ta część przechodzi na zwykły bojler elektryczny, tak jak reszta Twojej ciepłej wody już dziś: to około ${electricBoilerPlnPerYear}/rok. Nie modelowaliśmy przeniesienia jej na kocioł na pellet.`,
+        ? `Część Twojej ciepłej wody jest dziś podgrzewana przy okazji przez kocioł węglowy. Ponieważ jest on wymieniany, założyliśmy, że ta część przechodzi na zwykły bojler elektryczny, tak jak reszta Twojej ciepłej wody już dziś: to około ${electricBoilerPlnPerYear}/rok eksploatacji. Zakup takiego bojlera to niewielki dodatkowy koszt, nieujęty w cenie instalacji z kroku 4. Podgrzewanie tej samej wody tą pompą ciepła zamiast bojlera kosztowałoby zwykle około ${heatPumpPlnPerYear}/rok, czyli o ${cheaperPct}% mniej w eksploatacji, ale wymagałoby zakupu osobnego urządzenia do podgrzewania wody, co doliczyłoby się do ceny instalacji z kroku 4, zamiast ją zastąpić.`
+        : `Część Twojej ciepłej wody jest dziś podgrzewana przy okazji przez kocioł węglowy. Ponieważ jest on wymieniany, założyliśmy, że ta część przechodzi na zwykły bojler elektryczny, tak jak reszta Twojej ciepłej wody już dziś: to około ${electricBoilerPlnPerYear}/rok eksploatacji. Zakup takiego bojlera to niewielki dodatkowy koszt, nieujęty w cenie instalacji z kroku 4. Nie modelowaliśmy przeniesienia jej na kocioł na pellet.`,
   },
 
   grantWarnings: {
