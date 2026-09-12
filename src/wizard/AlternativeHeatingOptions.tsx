@@ -31,6 +31,7 @@ import {
   FieldLabel,
   IconCardGroup,
   ToggleCard,
+  WhyNote,
 } from "./FormPrimitives";
 import {
   ALTERNATIVE_HEATING_IDS,
@@ -842,13 +843,15 @@ export function AlternativeHeatingOptions({
           </p>
         </div>
 
-        <p className="text-[13px] leading-relaxed text-ink-soft">{TR.note}</p>
-        <p className="text-[12.5px] leading-relaxed text-ink-soft/80">
-          {TR.capAndIncomeNote(
-            zl(TAX_RELIEF_CAP_PLN),
-            TAX_RELIEF_CARRY_FORWARD_YEARS,
-          )}
-        </p>
+        <WhyNote summary={TR.noteSummary}>
+          <p>{TR.note}</p>
+          <p className="mt-2">
+            {TR.capAndIncomeNote(
+              zl(TAX_RELIEF_CAP_PLN),
+              TAX_RELIEF_CARRY_FORWARD_YEARS,
+            )}
+          </p>
+        </WhyNote>
       </Block>
 
       {/* Block 6: running cost + repayment. The one figure a household feels. */}

@@ -516,9 +516,10 @@ export const pl: Dictionary = {
       finalNetCost: "Ostateczny koszt netto, po dotacji i uldze",
       finalNetCostDetail: (net: string, relief: string) =>
         `${net} zostaje po dotacji, minus ${relief} zwrócone w rozliczeniu rocznym.`,
+      noteSummary: "Jak faktycznie działa ta ulga",
       note: "Ulga to odliczenie od dochodu, a nie wypłata: odzyskujesz swoją stawkę podatku od tej kwoty i dostajesz ją z rocznym zeznaniem, a nie z góry. Dlatego krok 6 wciąż liczy kredyt od pełnej kwoty, która zostaje po dotacji.",
       capAndIncomeNote: (cap: string, years: number) =>
-        `Maksymalnie ${cap} na podatnika, łącznie za wszystkie prace termomodernizacyjne, a niewykorzystaną część można rozliczać jeszcze przez ${years} lat. Zakładamy, że Twój dochód jest wystarczająco wysoki, żeby odliczenie się zmieściło: nie pytaliśmy, ile zarabiasz, i nie zamierzamy.`,
+        `Maksymalnie ${cap} na podatnika, łącznie za wszystkie prace termomodernizacyjne, a niewykorzystaną część można rozliczać jeszcze przez ${years} lat. Zakładamy, że Twój dochód jest wystarczająco wysoki, żeby odliczenie się zmieściło.`,
     },
 
     trueCost: {

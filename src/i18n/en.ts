@@ -519,9 +519,10 @@ export const en = {
       finalNetCost: "Final net cost, after grant and tax relief",
       finalNetCostDetail: (net: string, relief: string) =>
         `${net} left after the grant, less ${relief} returned through your tax return.`,
+      noteSummary: "How this relief actually works",
       note: "The relief is a deduction from taxable income, not a payment: you get your own tax rate back on it, and it arrives with your annual tax return rather than up front. That is why step 6 still sizes the loan on the full amount left after the grant.",
       capAndIncomeNote: (cap: string, years: number) =>
-        `At most ${cap} per taxpayer across all thermal modernisation work, with any unused part carried forward for up to ${years} years. This assumes your taxable income is high enough to absorb the deduction: we never asked what you earn, and we are not going to.`,
+        `At most ${cap} per taxpayer across all thermal modernisation work, with any unused part carried forward for up to ${years} years. This assumes your taxable income is high enough to absorb the deduction.`,
     },
 
     trueCost: {
