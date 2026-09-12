@@ -324,9 +324,8 @@ export const pl: Dictionary = {
     gapClosing:
       " Wyceniliśmy rachunek, który podałeś, a nie nasze oszacowanie.",
     assumptionsSummary: (count: number) => `Co założyliśmy (${count})`,
-    whyTotalSummary: "Skąd bierze się ta kwota",
-    whyTotalBody:
-      "Bierzemy węgiel, który podałeś, energię zawartą w tym sortymencie i to, ile z niej Twoja klasa kotła naprawdę zamienia w ciepło. Ciepłą wodę i całą resztę licznika wyceniamy ze średniej krajowej. Wszystko, co musieliśmy założyć, wypisujemy powyżej.",
+    assumptionsIntro:
+      "Bierzemy węgiel, który podałeś, energię zawartą w tym sortymencie i to, ile z niej Twoja klasa kotła naprawdę zamienia w ciepło. Ciepłą wodę i resztę licznika szacujemy na podstawie średniej krajowej.",
     whyConditionSummary: "Dlaczego ta liczba tyle znaczy",
     whyConditionBody:
       "kWh/m²/rok to stan Twojego budynku w jednej liczbie: ile ciepła potrzebuje na metr kwadratowy. Czyste Powietrze posługuje się tą samą miarą. Powyżej 140 program nie sfinansuje samego źródła ciepła bez termomodernizacji i dopiero powyżej 140 otwiera się najwyższy poziom dofinansowania. Nic nie jest punktowane po cichu: to jest ta liczba, a krok 5 pokazuje dokładnie, co oznacza dla Twojej dotacji.",

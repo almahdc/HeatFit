@@ -328,9 +328,8 @@ export const en = {
       "That usually means the typical household we compare everyday electricity use against (lighting, fridge, and similar) uses more than your household does.",
     gapClosing: " We priced the bill you gave us, not our estimate.",
     assumptionsSummary: (count: number) => `What we assumed (${count})`,
-    whyTotalSummary: "Where this figure comes from",
-    whyTotalBody:
-      "We take the coal you provided, the energy contained in that grade, and how much of it your boiler class actually converts into heat. We calculate the cost of hot water and the remaining meter reading based on the national average. We’ve listed all the assumptions we had to make above.",
+    assumptionsIntro:
+      "We take the coal you provided, the energy contained in that grade, and how much of it your boiler class actually converts into heat. Hot water and the rest of the meter are estimated from the national average.",
     whyConditionSummary: "Why this number decides so much",
     whyConditionBody:
       "kWh/m²/year is your building's condition in one figure: the heat it needs per square metre. Czyste Powietrze uses the same measure. Above 140, the programme will not fund a heat source on its own without insulation work, and only above 140 does the highest funding level open up. Nothing is scored behind the scenes: this is the number, and step 5 shows exactly what it means for your grant.",

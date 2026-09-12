@@ -4,6 +4,7 @@ import {
   Check,
   Droplets,
   Flame,
+  Gauge,
   Pencil,
   Plug,
   RotateCcw,
@@ -289,17 +290,17 @@ export function BaselineSummary({
         })}
       </dl>
 
-      <WhyNote summary={t.baseline.whyTotalSummary}>
-        {t.baseline.whyTotalBody}
-      </WhyNote>
-
-      {/* Facts that decide eligibility later, so worth surfacing now. */}
-      <div className="mt-5 grid grid-cols-1 gap-x-6 gap-y-3 text-sm sm:grid-cols-2">
+      {/* Highlighted rather than another plain dl row: these two numbers
+          decide grant eligibility later (see WhyNote below), so they need
+          to register now even to someone skimming. */}
+      <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Fact
+          icon={Flame}
           label={t.baseline.heatDelivered}
           value={t.baseline.kwhPerYear(num(energy.coalHeatDeliveredKwh))}
         />
         <Fact
+          icon={Gauge}
           label={t.baseline.buildingCondition}
           value={t.baseline.kwhPerM2PerYear(energy.spaceHeatPerM2.toFixed(0))}
         />
@@ -326,20 +327,17 @@ export function BaselineSummary({
           const modelIncludedWaterOrCooling =
             energy.waterElectricityKwh > 0 || energy.coolingElectricityKwh > 0;
           return (
-            <div className="mt-5 flex gap-3 rounded-[14px] border border-line bg-[#fbfaf8] p-4 text-sm text-ink-soft">
-              <AlertTriangle
-                className="mt-0.5 h-4 w-4 shrink-0 text-ink-soft/70"
-                aria-hidden
-              />
-              <p>
+            <details className="mt-5 rounded-[14px] border border-line bg-[#fbfaf8] p-4">
+              <summary className="cursor-pointer text-[13px] font-semibold text-ink-soft">
                 {t.baseline.gapBefore}
-                <strong className="text-ink">
-                  {t.baseline.gapAmount(
-                    num(Math.abs(electricity.gapKwh!)),
-                    over,
-                  )}
-                </strong>
+                {t.baseline.gapAmount(num(Math.abs(electricity.gapKwh!)), over)}
                 {t.baseline.gapAfter}
+                <AlertTriangle
+                  className="ml-1.5 inline-block h-4 w-4 shrink-0 -translate-y-px align-middle text-ink-soft/70"
+                  aria-hidden
+                />
+              </summary>
+              <p className="mt-3 text-[13px] text-ink-soft">
                 {over
                   ? t.baseline.gapReasonOver
                   : modelIncludedWaterOrCooling
@@ -347,7 +345,7 @@ export function BaselineSummary({
                     : t.baseline.gapReasonUnderBaseline}
                 {t.baseline.gapClosing}
               </p>
-            </div>
+            </details>
           );
         })()}
 
@@ -356,6 +354,9 @@ export function BaselineSummary({
           <summary className="cursor-pointer text-[13px] font-semibold text-ink-soft">
             {t.baseline.assumptionsSummary(baseline.assumptions.length)}
           </summary>
+          <p className="mt-3 text-[13px] text-ink-soft">
+            {t.baseline.assumptionsIntro}
+          </p>
           <ul className="mt-3 flex list-disc flex-col gap-2 pl-4 text-[13px] text-ink-soft">
             {baseline.assumptions.map((a) => (
               <li key={a.code}>{assumptionText(t, a)}</li>
@@ -367,13 +368,28 @@ export function BaselineSummary({
   );
 }
 
-function Fact({ label, value }: { label: string; value: string }) {
+function Fact({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: string;
+}) {
   return (
-    <div>
-      <dt className="text-xs font-semibold uppercase tracking-wider text-ink-soft/70">
-        {label}
-      </dt>
-      <dd className="text-ink">{value}</dd>
+    <div className="flex items-center gap-3 rounded-[14px] border border-accent-tint2 bg-accent-tint/40 px-4 py-3">
+      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-white text-accent-600">
+        <Icon className="h-[18px] w-[18px]" aria-hidden />
+      </span>
+      <div className="min-w-0">
+        <dt className="text-[11px] font-semibold uppercase tracking-wider text-accent-600/70">
+          {label}
+        </dt>
+        <dd className="text-[17px] font-bold leading-tight text-ink">
+          {value}
+        </dd>
+      </div>
     </div>
   );
 }
