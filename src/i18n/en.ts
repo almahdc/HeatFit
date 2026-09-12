@@ -432,6 +432,9 @@ export const en = {
       waterHeating: "Water heating",
       unchanged: "Unchanged from today",
       electricityAndCooling: "Electricity & cooling",
+      assumptionsSummary: (count: number) => `What we assumed (${count})`,
+      assumptionsIntro:
+        "These are about the replacement itself, not your household: standard efficiency figures, not something you told us.",
     },
 
     savings: {
@@ -714,6 +717,27 @@ export const en = {
       `We assumed your electric water heater is ${pct}% efficient.`,
     electricityUseModelled: (kwh: number) =>
       `We assumed your yearly electricity use is about ${kwh} kWh, based on a typical household's usage plus your hot water and cooling, since you did not give a bill.`,
+  },
+
+  /** Same idea as `assumptions` above, for `alternativeHeating.ts`'s typed
+   *  descriptors: one modelling choice per line, said in the language on
+   *  screen, for the "What we assumed" section under Step 2. */
+  alternativeAssumptions: {
+    usefulHeatCarriedOver: (kwhPerYear: string) =>
+      `We assumed this replacement needs to deliver the same ${kwhPerYear} kWh a year of heat your coal system delivers today: a building needs the same warmth no matter what makes it.`,
+    pelletEfficiencyAndPrice: (pct: number, pricePerTonne: string) =>
+      `We assumed a pellet boiler that is ${pct}% efficient, burning pellets priced at ${pricePerTonne} per tonne.`,
+    heatPumpCop: (
+      optionName: string,
+      cop: number,
+      pricePerKwh: string,
+      tariffLabel: string,
+    ) =>
+      `We assumed a ${optionName.toLowerCase()} running at COP ${cop.toFixed(1)} (each kWh of electricity delivers ${cop.toFixed(1)} kWh of heat), priced at your ${tariffLabel} tariff rate of ${pricePerKwh}/kWh.`,
+    pvMarginalPricing: (pct: number) =>
+      `Because you have solar, we assumed ${pct}% of this heat pump's extra electricity draw is covered directly by your panels; the rest is priced at what it actually changes your bill by, not a flat rate.`,
+    carriedOverFromBaseline:
+      "Water heating and electricity & cooling are carried over unchanged from what you are paying today: this replacement only changes space heating.",
   },
 
   grantWarnings: {

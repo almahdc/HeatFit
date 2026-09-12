@@ -70,8 +70,36 @@ export const ALTERNATIVE_HEATING_IDS: AlternativeHeatingId[] = [
   "pellet",
 ];
 
+/**
+ * Every assumption behind one option's numbers, said plainly enough for a
+ * household to read : not "missing data filled in" the way
+ * `BaselineAssumption` is (nothing here is optional or answer-dependent),
+ * but the modelling choices this file always makes for that option and PV
+ * state, since the household never entered a COP or a self-consumption
+ * share themselves.
+ */
+export type AlternativeHeatingAssumption =
+  | { code: "usefulHeatCarriedOver"; kwhPerYear: number }
+  | {
+      code: "pelletEfficiencyAndPrice";
+      efficiencyPct: number;
+      pricePerTonnePln: number;
+    }
+  | {
+      code: "heatPumpCop";
+      id: "airToAirHp" | "airToWaterHp";
+      cop: number;
+      pricePerKwh: number;
+      tariff: ElectricityTariffCase;
+    }
+  | { code: "pvMarginalPricing"; selfConsumedSharePct: number }
+  | { code: "carriedOverFromBaseline" };
+
 export interface AlternativeHeatingCost {
   id: AlternativeHeatingId;
+
+  /** Said plainly, for the "What we assumed" section on screen. */
+  assumptions: AlternativeHeatingAssumption[];
 
   /** What the replacement itself burns or draws, space heating only. */
   fuelPerYear: number;
@@ -124,6 +152,9 @@ export function calculateAlternativeHeatingCost(
   let fuelUnit: "kWh" | "t";
   let spaceHeatingPlnPerYear: number;
   let pvSavingsOnSpaceHeatingPlnPerYear = 0;
+  const assumptions: AlternativeHeatingAssumption[] = [
+    { code: "usefulHeatCarriedOver", kwhPerYear: usefulHeatKwh },
+  ];
 
   if (id === "pellet") {
     // Combustion efficiency below one: input = useful heat / efficiency.
@@ -133,6 +164,11 @@ export function calculateAlternativeHeatingCost(
     fuelPerYear = tonnes;
     fuelUnit = "t";
     spaceHeatingPlnPerYear = tonnes * spec.plnPerUnit + spec.fixedPlnPerYear;
+    assumptions.push({
+      code: "pelletEfficiencyAndPrice",
+      efficiencyPct: Math.round(spec.efficiency * 100),
+      pricePerTonnePln: spec.plnPerUnit,
+    });
   } else {
     // Heat pump COP above one, same formula: input = useful heat / COP.
     const fuelKey: S.SheetFuel =
@@ -158,7 +194,23 @@ export function calculateAlternativeHeatingCost(
 
     spaceHeatingPlnPerYear = marginalCost;
     pvSavingsOnSpaceHeatingPlnPerYear = flatCost - marginalCost;
+
+    assumptions.push({
+      code: "heatPumpCop",
+      id,
+      cop: spec.efficiency,
+      pricePerKwh: price,
+      tariff: electricityTariff,
+    });
+    if (hasPvPanels) {
+      assumptions.push({
+        code: "pvMarginalPricing",
+        selfConsumedSharePct: Math.round(S.SHEET_PV.shareUsedDirectly * 100),
+      });
+    }
   }
+
+  assumptions.push({ code: "carriedOverFromBaseline" });
 
   const waterHeatingPlnPerYear = baseline.cost.waterHeatingPlnPerYear;
   const electricityAndCoolingPlnPerYear =
@@ -173,6 +225,7 @@ export function calculateAlternativeHeatingCost(
 
   return {
     id,
+    assumptions,
     fuelPerYear,
     fuelUnit,
     spaceHeatingPlnPerYear,

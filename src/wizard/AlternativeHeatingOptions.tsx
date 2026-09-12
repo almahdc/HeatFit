@@ -34,6 +34,7 @@ import {
 import {
   ALTERNATIVE_HEATING_IDS,
   calculateAlternativeHeatingCost,
+  type AlternativeHeatingAssumption,
   type AlternativeHeatingId,
 } from "../engines/alternativeHeating";
 import {
@@ -78,6 +79,12 @@ const zlRange = (low: number, high: number) => `${zl(low)}–${zl(high)}`;
 
 const kwh = (n: number) =>
   Math.round(n).toLocaleString("pl-PL").replace(/\xa0/g, " ");
+
+const plnPerKwh = (n: number) =>
+  `${n.toLocaleString("pl-PL", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).replace(/\xa0/g, " ")} zł`;
 
 const OPTION_ICON: Record<AlternativeHeatingId, LucideIcon> = {
   airToAirHp: Wind,
@@ -129,6 +136,34 @@ function grantWarningText(t: Dictionary, w: GrantWarning): string {
       );
     case "solarPvPaused":
       return t.grantWarnings.solarPvPaused(zl(w.capPln));
+  }
+}
+
+/** A typed descriptor from alternativeHeating.ts, said in the language on screen. */
+function alternativeAssumptionText(
+  t: Dictionary,
+  a: AlternativeHeatingAssumption,
+): string {
+  const aa = t.alternativeAssumptions;
+  switch (a.code) {
+    case "usefulHeatCarriedOver":
+      return aa.usefulHeatCarriedOver(kwh(a.kwhPerYear));
+    case "pelletEfficiencyAndPrice":
+      return aa.pelletEfficiencyAndPrice(
+        a.efficiencyPct,
+        zl(a.pricePerTonnePln),
+      );
+    case "heatPumpCop":
+      return aa.heatPumpCop(
+        t.alternatives.options[a.id].name,
+        a.cop,
+        plnPerKwh(a.pricePerKwh),
+        t.options.electricityTariff[a.tariff].label,
+      );
+    case "pvMarginalPricing":
+      return aa.pvMarginalPricing(a.selfConsumedSharePct);
+    case "carriedOverFromBaseline":
+      return aa.carriedOverFromBaseline;
   }
 }
 
@@ -406,6 +441,22 @@ export function AlternativeHeatingOptions({
             unit={t.baseline.perYear}
           />
         </dl>
+
+        {result.assumptions.length > 0 && (
+          <details className="rounded-[14px] border border-line bg-[#fbfaf8] p-4">
+            <summary className="cursor-pointer text-[13px] font-semibold text-ink-soft">
+              {c.assumptionsSummary(result.assumptions.length)}
+            </summary>
+            <p className="mt-3 text-[13px] text-ink-soft">
+              {c.assumptionsIntro}
+            </p>
+            <ul className="mt-3 flex list-disc flex-col gap-2 pl-4 text-[13px] text-ink-soft">
+              {result.assumptions.map((a, i) => (
+                <li key={i}>{alternativeAssumptionText(t, a)}</li>
+              ))}
+            </ul>
+          </details>
+        )}
       </Block>
 
       {/* Block 3: the plain delta against the baseline. */}

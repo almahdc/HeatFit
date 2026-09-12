@@ -430,6 +430,9 @@ export const pl: Dictionary = {
       waterHeating: "Podgrzewanie wody",
       unchanged: "Bez zmian względem dziś",
       electricityAndCooling: "Prąd i chłodzenie",
+      assumptionsSummary: (count: number) => `Co założyliśmy (${count})`,
+      assumptionsIntro:
+        "Dotyczą samej wymiany, nie Twojego gospodarstwa domowego: to standardowe wskaźniki sprawności, a nie coś, co nam podałeś.",
     },
 
     savings: {
@@ -708,6 +711,24 @@ export const pl: Dictionary = {
       `Założyliśmy, że Twój elektryczny podgrzewacz wody ma sprawność ${pct}%.`,
     electricityUseModelled: (kwh: number) =>
       `Założyliśmy roczne zużycie prądu na około ${kwh} kWh, na podstawie zużycia typowego gospodarstwa domowego plus Twojej ciepłej wody i chłodzenia, ponieważ nie podałeś rachunku.`,
+  },
+
+  alternativeAssumptions: {
+    usefulHeatCarriedOver: (kwhPerYear: string) =>
+      `Założyliśmy, że ta wymiana musi dostarczyć tyle samo ${kwhPerYear} kWh ciepła rocznie, ile dziś dostarcza Twój kocioł węglowy: budynek potrzebuje tego samego ciepła bez względu na to, co je wytwarza.`,
+    pelletEfficiencyAndPrice: (pct: number, pricePerTonne: string) =>
+      `Założyliśmy kocioł na pellet o sprawności ${pct}%, spalający pellet w cenie ${pricePerTonne} za tonę.`,
+    heatPumpCop: (
+      optionName: string,
+      cop: number,
+      pricePerKwh: string,
+      tariffLabel: string,
+    ) =>
+      `Założyliśmy ${optionName.toLowerCase()} pracującą przy COP ${cop.toFixed(1)} (każda kWh prądu daje ${cop.toFixed(1)} kWh ciepła), wycenioną wg Twojej taryfy ${tariffLabel} po ${pricePerKwh}/kWh.`,
+    pvMarginalPricing: (pct: number) =>
+      `Ponieważ masz fotowoltaikę, założyliśmy, że ${pct}% dodatkowego prądu tej pompy ciepła pokrywają bezpośrednio Twoje panele; reszta jest wyceniona wg tego, o ile faktycznie zmienia Twój rachunek, a nie wg stawki płaskiej.`,
+    carriedOverFromBaseline:
+      "Podgrzewanie wody oraz prąd i chłodzenie pozostają bez zmian względem tego, co płacisz dziś: ta wymiana zmienia tylko ogrzewanie pomieszczeń.",
   },
 
   grantWarnings: {
