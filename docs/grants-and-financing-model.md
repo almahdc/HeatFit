@@ -175,19 +175,22 @@ the gap widens with the term : which is backwards from how the sheet behaves:
 
 _(40 000 zł net, no grant. `npm run verify:financing` prints this table.)_
 
-`loan.ts` implements the sheet's formula **as the default**, because
-reproducing the sheet is what makes these numbers checkable against it : the
-same rule `baseline.ts` follows. But it computes the annuity on every result
-too, so the gap is measured rather than assumed away, and
-`REPAYMENT_METHOD` switches which one the UI shows in one line.
+`loan.ts` still implements the sheet's formula (`sheetMonthlyPln`, always
+computed), because reproducing the sheet is what makes the transcription
+checkable against it : the same rule `baseline.ts` follows. But `annuity` is
+what the product now shows.
 
-**This needs a decision.** On the default 5-year term the gap is 11% and
-arguably tolerable. On the 15-year term the product would be understating a
-household's monthly commitment by 76%, which is squarely the "marketing
-calculator" failure mode the rest of this codebase is written against. The
-options are: switch `REPAYMENT_METHOD` to `annuity` and accept that the
-numbers no longer tie to the sheet, change the sheet, or drop the 15-year
-option.
+**Decided.** On the 15-year term the sheet's formula understated a
+household's monthly commitment by 76% against what a bank would actually
+charge : squarely the "marketing calculator" failure mode the rest of this
+codebase is written against. `REPAYMENT_METHOD` is set to `annuity`, so the
+UI shows the real amortising payment on all three terms, including 15 years,
+which stays offered. The trade-off accepted: `loan.monthlyRepaymentPln` no
+longer ties to the sheet's own `final` tab figure for the 10- and 15-year
+rows; `npm run verify:financing`'s sheet-transcription anchor now pins
+`sheetMonthlyPln` explicitly (via `method: "sheetSimpleInterest"`) rather than
+the product's live default, so that check still verifies the transcription
+rather than the UI's current choice.
 
 ## What is deliberately not here
 
@@ -227,8 +230,10 @@ at all and every check would still have passed.
 
 ## Open questions
 
-1. **Simple interest vs. annuity**, above. The one that most needs a decision.
-2. **Every persona is blocked by the scope gate**, above.
+1. ~~Simple interest vs. annuity~~, above. Decided: `REPAYMENT_METHOD` is
+   `annuity`.
+2. ~~Every persona is blocked by the scope gate~~, above. Resolved:
+   `heatingIfInsulated` now feeds the real numbers, flagged as conditional.
 3. **Which air/water line to claim.** The subsidies tab annotates H3
    (increased efficiency class, 14 080 / 24 640 / 35 200) as "the default
    HeatFit air-to-water line" and that is what `grants.ts` uses. The

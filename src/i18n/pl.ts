@@ -535,17 +535,20 @@ export const pl: Dictionary = {
       loanRepayment: "Rata kredytu",
       loanRepaymentSub: (amount: string, years: number, pct: number) =>
         `${amount} na ${years} lat przy ${pct}%`,
+      breakdownLabel: "Zobacz podział kosztów",
       perMonth: "miesięcznie",
       heading: "Rzeczywisty koszt miesięczny",
-      whileRepaying: "miesięcznie w czasie spłaty",
+      whileRepaying: (years: number) =>
+        `miesięcznie, przez najbliższe ${years} lat`,
+      fromYear: (year: number) => `miesięcznie, od ${year}`,
       comparison: (
-        amount: string,
-        cheaper: boolean,
+        duringAmount: string,
+        duringCheaper: boolean,
+        afterAmount: string,
+        afterCheaper: boolean,
         baseline: string,
-        afterLoan: string,
-        years: number,
       ) =>
-        `${cheaper ? "Wciąż " : ""}${amount}/miesiąc ${cheaper ? "taniej niż" : "więcej niż"} ${baseline}, które płacisz dziś za węgiel. Spada do ${afterLoan}/miesiąc, gdy kredyt zostanie spłacony za ${years} lat.`,
+        `To ${duringAmount}/miesiąc ${duringCheaper ? "taniej niż" : "więcej niż"} ${baseline}, które płacisz dziś za węgiel, w czasie spłaty kredytu. Po jego spłacie robi się to ${afterAmount}/miesiąc ${afterCheaper ? "taniej niż" : "więcej niż"} węgiel.`,
     },
   },
 
@@ -750,7 +753,7 @@ export const pl: Dictionary = {
     heatSourceNotEligibleAloneSummary: (spaceHeatPerM2: number) =>
       `Wymaga ocieplenia, przy około ${spaceHeatPerM2} kWh/m²/rok`,
     heatSourceNotEligibleAloneBody: (requiredEndState: string) =>
-      `Czyste Powietrze nie sfinansuje tu samej wymiany źródła ciepła. Dotacja i kredyt poniżej zakładają, że ocieplenie się odbędzie, osiągając: ${requiredEndState}, i że potwierdzi to audyt energetyczny. HeatFit jeszcze tego nie wycenia: skonsultuj się z instalatorem lub audytorem, albo daj nam znać w formularzu niżej na stronie, jeśli chcesz, żebyśmy to zrobili.`,
+      `Czyste Powietrze nie sfinansuje tu samej wymiany źródła ciepła. Dotacja i kredyt poniżej zakładają, że ocieplenie się odbędzie, osiągając: ${requiredEndState}, i że potwierdzi to audyt energetyczny. Nie musisz sam tego ogarniać: daj nam znać w formularzu niżej na stronie, a sprawdzimy ten szacunek i powiemy dokładnie, co robić dalej.`,
     solarPvPaused: (cap: string) =>
       `Kwota za fotowoltaikę wynika ze stawki PV z arkusza. Zakładka dotacji odnotowuje wsparcie PV prowadzone przez przydomowemagazyny.gov.pl, z limitem ${cap}, i oznacza ten program jako WSTRZYMANY: traktuj tę pozycję orientacyjnie, a nie jako pewne pieniądze.`,
     requiredEndState: {

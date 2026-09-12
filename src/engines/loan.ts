@@ -41,8 +41,14 @@ export type RepaymentMethod = "sheetSimpleInterest" | "annuity";
 /**
  * Which method the product shows. `sheetSimpleInterest` reproduces the sheet's
  * `final` tab exactly; `annuity` is what a bank would actually charge.
+ *
+ * Set to `annuity` by product decision: the sheet's formula understates the
+ * 15-year term by 76% against a real loan (see docs/grants-and-financing-model.md),
+ * which is the "marketing calculator" failure mode this product is otherwise
+ * written against. Figures now no longer tie to the sheet's `final` tab for
+ * the 10- and 15-year terms; that is the accepted trade-off.
  */
-export const REPAYMENT_METHOD: RepaymentMethod = "sheetSimpleInterest";
+export const REPAYMENT_METHOD: RepaymentMethod = "annuity";
 
 export interface LoanTerms {
   years: number;

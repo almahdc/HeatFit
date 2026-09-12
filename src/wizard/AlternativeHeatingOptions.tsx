@@ -1,4 +1,5 @@
 import {
+  ArrowRight,
   Banknote,
   CalendarDays,
   ChevronDown,
@@ -377,6 +378,7 @@ export function AlternativeHeatingOptions({
   const trueCost = trueMonthlyCost(result.totalPlnPerMonth, loan);
   const baselineMonthly = baseline.cost.totalPlnPerYear / 12;
   const trueSaving = baselineMonthly - trueCost.truePlnPerMonth;
+  const afterLoanSaving = baselineMonthly - trueCost.afterLoanPlnPerMonth;
 
   const c = t.alternatives.compare;
   const TR = t.alternatives.taxRelief;
@@ -804,28 +806,6 @@ export function AlternativeHeatingOptions({
           />
         </div>
 
-        {taxRelief.cashBackPln > 0 && (
-          <dl className="divide-y divide-line border-y border-line">
-            <Line
-              icon={ReceiptText}
-              label={TR.lineLabel}
-              sub={
-                taxRelief.cappedOut
-                  ? TR.cappedSub(
-                      zl(taxRelief.capPln),
-                      Math.round(TAX_RATE_VALUE[taxRate] * 100),
-                    )
-                  : TR.lineSub(
-                      Math.round(TAX_RATE_VALUE[taxRate] * 100),
-                      zl(taxRelief.deductionBasePln),
-                    )
-              }
-              value={taxRelief.cashBackPln}
-              unit={TR.unit}
-            />
-          </dl>
-        )}
-
         <div className="rounded-[16px] border border-savings bg-savings-tint p-5">
           <p className="text-[12px] font-semibold uppercase tracking-wider text-savings-700">
             {TR.finalNetCost}
@@ -844,6 +824,27 @@ export function AlternativeHeatingOptions({
         </div>
 
         <WhyNote summary={TR.noteSummary}>
+          {taxRelief.cashBackPln > 0 && (
+            <dl className="-mx-3.5 mb-2 divide-y divide-line border-y border-line px-3.5">
+              <Line
+                icon={ReceiptText}
+                label={TR.lineLabel}
+                sub={
+                  taxRelief.cappedOut
+                    ? TR.cappedSub(
+                        zl(taxRelief.capPln),
+                        Math.round(TAX_RATE_VALUE[taxRate] * 100),
+                      )
+                    : TR.lineSub(
+                        Math.round(TAX_RATE_VALUE[taxRate] * 100),
+                        zl(taxRelief.deductionBasePln),
+                      )
+                }
+                value={taxRelief.cashBackPln}
+                unit={TR.unit}
+              />
+            </dl>
+          )}
           <p>{TR.note}</p>
           <p className="mt-2">
             {TR.capAndIncomeNote(
@@ -877,49 +878,67 @@ export function AlternativeHeatingOptions({
           />
         </div>
 
-        <dl className="divide-y divide-line border-y border-line">
-          <Line
-            icon={Wallet}
-            label={t.alternatives.trueCost.runningCost}
-            sub={t.alternatives.trueCost.runningCostSub(
-              option.name.toLowerCase(),
-              addSolar,
-            )}
-            value={trueCost.runningPlnPerMonth}
-            unit={t.alternatives.trueCost.perMonth}
-          />
-          <Line
-            icon={Receipt}
-            label={t.alternatives.trueCost.loanRepayment}
-            sub={t.alternatives.trueCost.loanRepaymentSub(
-              zl(loan.netCapexPln),
-              terms.years,
-              Math.round(terms.annualInterest * 100),
-            )}
-            value={trueCost.capexPlnPerMonth}
-            unit={t.alternatives.trueCost.perMonth}
-          />
-        </dl>
+        <CollapsibleBreakdown label={t.alternatives.trueCost.breakdownLabel}>
+          <dl className="divide-y divide-line">
+            <Line
+              icon={Wallet}
+              label={t.alternatives.trueCost.runningCost}
+              sub={t.alternatives.trueCost.runningCostSub(
+                option.name.toLowerCase(),
+                addSolar,
+              )}
+              value={trueCost.runningPlnPerMonth}
+              unit={t.alternatives.trueCost.perMonth}
+            />
+            <Line
+              icon={Receipt}
+              label={t.alternatives.trueCost.loanRepayment}
+              sub={t.alternatives.trueCost.loanRepaymentSub(
+                zl(loan.netCapexPln),
+                terms.years,
+                Math.round(terms.annualInterest * 100),
+              )}
+              value={trueCost.capexPlnPerMonth}
+              unit={t.alternatives.trueCost.perMonth}
+            />
+          </dl>
+        </CollapsibleBreakdown>
 
         <div className="rounded-[16px] border border-savings bg-savings-tint p-5">
           <p className="text-[12px] font-semibold uppercase tracking-wider text-savings-700/80">
             {t.alternatives.trueCost.heading}
           </p>
-          <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <span className="text-[28px] font-bold leading-none tracking-tight text-savings-700">
-              {zl(trueCost.truePlnPerMonth)}
-            </span>
-            <span className="text-[15px] font-medium text-savings-700/80">
-              {t.alternatives.trueCost.whileRepaying}
-            </span>
+          <div className="mt-2 flex flex-wrap items-center gap-3">
+            <div>
+              <span className="text-[26px] font-bold leading-none tracking-tight text-savings-700">
+                {zl(trueCost.truePlnPerMonth)}
+              </span>
+              <p className="mt-1 text-[12.5px] font-medium text-savings-700/80">
+                {t.alternatives.trueCost.whileRepaying(terms.years)}
+              </p>
+            </div>
+            <ArrowRight
+              className="h-4 w-4 shrink-0 text-savings-700/50"
+              aria-hidden
+            />
+            <div>
+              <span className="text-[26px] font-bold leading-none tracking-tight text-savings-700">
+                {zl(trueCost.afterLoanPlnPerMonth)}
+              </span>
+              <p className="mt-1 text-[12.5px] font-medium text-savings-700/80">
+                {t.alternatives.trueCost.fromYear(
+                  new Date().getFullYear() + terms.years,
+                )}
+              </p>
+            </div>
           </div>
-          <p className="mt-1.5 text-[13.5px] text-savings-700/80">
+          <p className="mt-3 text-[13.5px] text-savings-700/80">
             {t.alternatives.trueCost.comparison(
               zl(Math.abs(trueSaving)),
               trueSaving >= 0,
+              zl(Math.abs(afterLoanSaving)),
+              afterLoanSaving >= 0,
               zl(baselineMonthly),
-              zl(trueCost.afterLoanPlnPerMonth),
-              terms.years,
             )}
           </p>
         </div>

@@ -319,9 +319,13 @@ check(
 const loan = calculateLoan({
   grossCapexPln: SHEET_ROW.totalCapex,
   grantPln: SHEET_ROW.grant,
-  // The engine's own default, not a term re-stated here: the sheet's live
-  // formula points at its 5-year row, so this pins that too.
+  // The engine's own default term, not re-stated here: the sheet's live
+  // formula points at its 5-year row, so this pins that too. The method is
+  // pinned explicitly to the sheet's formula, independent of whichever
+  // REPAYMENT_METHOD the product currently shows, because this check anchors
+  // the transcription itself, not the UI's current choice.
   terms: DEFAULT_LOAN_TERMS,
+  method: "sheetSimpleInterest",
 });
 check("net capex", SHEET_ROW.netCapex, loan.netCapexPln);
 check(
