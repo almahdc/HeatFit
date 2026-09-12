@@ -179,7 +179,7 @@ which is the thing that separates this tool from every other Polish calculator.
 `heatedAreaM2` itself, however, is not always the household's own stated
 number. The wizard asks for total floor area, then whether the whole house is
 heated; if not, it asks which part isn't (one whole floor / some rooms /
-basement or garage only) and applies a fixed reduction — see
+basement or garage only) and applies a fixed reduction: see
 `computeHeatedAreaM2` and `UNHEATED_PORTION_REDUCTION` in
 [`src/wizard/householdCases.ts`](../src/wizard/householdCases.ts). Those
 percentages are working assumptions (marked `// VERIFY`), not measured, and

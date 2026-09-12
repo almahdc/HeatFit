@@ -1,4 +1,3 @@
-import { useState } from "react";
 import {
   Banknote,
   CalendarDays,
@@ -49,7 +48,6 @@ import {
 } from "../engines/grants";
 import {
   calculateTaxRelief,
-  DEFAULT_TAX_RATE,
   TAX_RATES,
   TAX_RATE_VALUE,
   TAX_RELIEF_CAP_PLN,
@@ -59,11 +57,12 @@ import {
 import {
   calculateLoan,
   trueMonthlyCost,
+  loanTermsForYears,
   LOAN_OPTIONS,
-  DEFAULT_LOAN_TERMS,
 } from "../engines/loan";
 import * as S from "../data/sheet.constants";
 import type { Baseline } from "../engines/baseline";
+import { isSilesianPostalCode } from "../engines/regulatoryDeadlines";
 import type { ElectricityTariffCase } from "./householdCases";
 import { useT } from "../i18n";
 import type { Dictionary } from "../i18n";
@@ -146,6 +145,18 @@ export function AlternativeHeatingOptions({
   baseline,
   electricityTariff,
   hasPvPanels,
+  postalCode,
+  districtHeatingAvailable,
+  selected,
+  onSelectedChange,
+  addSolar,
+  onAddSolarChange,
+  tier,
+  onTierChange,
+  loanYears,
+  onLoanYearsChange,
+  taxRate,
+  onTaxRateChange,
 }: {
   baseline: Baseline;
   electricityTariff: ElectricityTariffCase;
@@ -159,26 +170,41 @@ export function AlternativeHeatingOptions({
    * is a real, unmade decision, so Block 4 offers it as a distinct add-on.
    */
   hasPvPanels: boolean;
+  /** Location & current-heating answers, read only for the pellet + district
+   *  heating warning below - see the note where it's rendered. */
+  postalCode: string;
+  districtHeatingAvailable: boolean;
+  /**
+   * The five selections below used to be local state. They are lifted to the
+   * parent (App.tsx) and passed down as controlled props so the PDF report
+   * (see ../pdf/generateReportPdf.ts), built from the financials screen's
+   * current selections, can read exactly what is on screen rather than a
+   * second, independently-defaulted guess.
+   */
+  selected: AlternativeHeatingId;
+  onSelectedChange: (id: AlternativeHeatingId) => void;
+  /** Only offered, and only meaningful, when the household has no PV yet :
+   *  see the toggle itself below. Persists across switching between options,
+   *  since "would you add solar" is a question about the project, not about
+   *  any one option. */
+  addSolar: boolean;
+  onAddSolarChange: (value: boolean) => void;
+  /** Never collected by the wizard, and deliberately not asked for as a złoty
+   *  figure : the household picks the band their income falls in. Basic is
+   *  the default because it is the least generous, so nothing is ever
+   *  overstated by a household that has not touched this. */
+  tier: IncomeTier;
+  onTierChange: (tier: IncomeTier) => void;
+  loanYears: string;
+  onLoanYearsChange: (years: string) => void;
+  /** Like the grant tier above, this starts at the least generous of the two
+   *  scale rates, so nothing is overstated for a household that never
+   *  touches it. We do not ask what anyone earns; the bracket is all this
+   *  needs. */
+  taxRate: TaxRate;
+  onTaxRateChange: (rate: TaxRate) => void;
 }) {
   const t = useT();
-  const [selected, setSelected] = useState<AlternativeHeatingId>("airToAirHp");
-  // Only offered, and only meaningful, when the household has no PV yet :
-  // see the toggle itself below. Persists across switching between options,
-  // since "would you add solar" is a question about the project, not about
-  // any one option.
-  const [addSolar, setAddSolar] = useState(false);
-  // Never collected by the wizard, and deliberately not asked for as a złoty
-  // figure : the household picks the band their income falls in. Basic is the
-  // default because it is the least generous, so nothing is ever overstated by
-  // a household that has not touched this.
-  const [tier, setTier] = useState<IncomeTier>("basic");
-  const [loanYears, setLoanYears] = useState<string>(
-    String(DEFAULT_LOAN_TERMS.years),
-  );
-  // Like the grant tier above, this starts at the least generous of the two
-  // scale rates, so nothing is overstated for a household that never touches
-  // it. We do not ask what anyone earns; the bracket is all this needs.
-  const [taxRate, setTaxRate] = useState<TaxRate>(DEFAULT_TAX_RATE);
 
   // True PV already existing counts on its own; toggling the add-on counts
   // the same way running-cost-wise : a panel is a panel, whichever screen it
@@ -240,6 +266,16 @@ export function AlternativeHeatingOptions({
   const Icon = OPTION_ICON[selected];
   const saving = result.savingsPlnPerYear >= 0;
 
+  // Silesia's anti-smog resolution bans solid-fuel heating - a pellet boiler
+  // included - wherever district heating already reaches the property (§8
+  // reads "instalacje na paliwo stałe" broadly, not just the coal boiler
+  // being replaced). Outside Silesia we cannot say a gmina has the same rule,
+  // only that some do, so the warning below hedges instead of asserting it.
+  const showDistrictHeatingPelletWarning =
+    selected === "pellet" && districtHeatingAvailable;
+  const districtHeatingPelletWarningIsSilesia =
+    isSilesianPostalCode(postalCode);
+
   // The grant is claimed against the gross figure Block 4 is showing, so
   // "gross minus grant is net" holds for a household reading down the page.
   const grant = calculateGrant({
@@ -249,9 +285,7 @@ export function AlternativeHeatingOptions({
     tier,
     spaceHeatPerM2: baseline.energy.spaceHeatPerM2,
   });
-  const terms =
-    LOAN_OPTIONS.find((o) => String(o.years) === loanYears) ??
-    DEFAULT_LOAN_TERMS;
+  const terms = loanTermsForYears(loanYears);
   const loan = calculateLoan({
     grossCapexPln: capexTotal.midPln,
     grantPln: grant.totalGrantPln,
@@ -276,7 +310,7 @@ export function AlternativeHeatingOptions({
           <IconCardGroup
             columns={3}
             value={selected}
-            onChange={setSelected}
+            onChange={onSelectedChange}
             options={cardOptions}
           />
           <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
@@ -295,6 +329,20 @@ export function AlternativeHeatingOptions({
 
         <p className="text-[14.5px] text-ink-soft">{option.description}</p>
 
+        {showDistrictHeatingPelletWarning && (
+          <div className="flex items-start gap-2.5 rounded-[12px] border border-yellow-200 bg-yellow-50 px-3.5 py-2.5">
+            <TriangleAlert
+              className="mt-0.5 h-4 w-4 shrink-0 text-yellow-700"
+              aria-hidden
+            />
+            <p className="text-[13px] leading-snug text-yellow-800">
+              {districtHeatingPelletWarningIsSilesia
+                ? c.districtHeatingPelletWarningSilesia
+                : c.districtHeatingPelletWarningOther}
+            </p>
+          </div>
+        )}
+
         {/*
           Only offered when the household has no PV yet : a household that
           already has it has nothing to toggle. Everything below reacts live:
@@ -309,7 +357,7 @@ export function AlternativeHeatingOptions({
               kwh(solarAddOn.productionKwhPerYear),
             )}
             checked={addSolar}
-            onChange={setAddSolar}
+            onChange={onAddSolarChange}
           />
         )}
 
@@ -520,7 +568,7 @@ export function AlternativeHeatingOptions({
           <IconCardGroup
             columns={3}
             value={tier}
-            onChange={setTier}
+            onChange={onTierChange}
             options={S.INCOME_TIERS.map((tierId) => ({
               value: tierId,
               label: t.alternatives.grants.tiers[tierId],
@@ -610,7 +658,7 @@ export function AlternativeHeatingOptions({
           <IconCardGroup
             columns={4}
             value={taxRate}
-            onChange={setTaxRate}
+            onChange={onTaxRateChange}
             options={TAX_RATES.map((rate) => ({
               value: rate,
               label: TR.rates[rate].label,
@@ -679,7 +727,7 @@ export function AlternativeHeatingOptions({
           <IconCardGroup
             columns={3}
             value={loanYears}
-            onChange={setLoanYears}
+            onChange={onLoanYearsChange}
             options={LOAN_OPTIONS.map((loanOption) => ({
               value: String(loanOption.years),
               label: t.alternatives.trueCost.years(loanOption.years),

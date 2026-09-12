@@ -11,7 +11,7 @@ const num = (n: number) =>
   Math.round(n).toLocaleString("pl-PL").replace(/ /g, " ");
 
 /** A typed descriptor from baseline.ts, said in the language on screen. */
-function assumptionText(t: Dictionary, a: BaselineAssumption): string {
+export function assumptionText(t: Dictionary, a: BaselineAssumption): string {
   switch (a.code) {
     case "coalGradeAssumed":
       return t.assumptions.coalGradeAssumed(a.fuel);

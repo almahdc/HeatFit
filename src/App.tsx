@@ -10,6 +10,12 @@ import { RegulatoryCountdownCard } from "./wizard/RegulatoryCountdownCard";
 import { EarlyAccessBlock } from "./wizard/EarlyAccessBlock";
 import { StepEyebrow } from "./wizard/FormPrimitives";
 import { calculateUserBaseline } from "./engines/baseline";
+import type { AlternativeHeatingId } from "./engines/alternativeHeating";
+import type { IncomeTier } from "./engines/grants";
+import { DEFAULT_TAX_RATE, type TaxRate } from "./engines/taxRelief";
+import { DEFAULT_LOAN_TERMS } from "./engines/loan";
+import { buildReportSnapshot } from "./pdf/reportSnapshot";
+import { DownloadReportButton } from "./pdf/DownloadReportButton";
 import { StyleTile } from "./StyleTile";
 import { useScrollToTopOnChange } from "./hooks/useScrollToTopOnChange";
 import { I18nProvider, LanguageToggle, useT } from "./i18n";
@@ -81,6 +87,20 @@ function FinancialsPlaceholder({
   const t = useT();
   const s = t.summary;
 
+  // The financials screen's own live selections: which replacement, solar
+  // add-on, income tier, loan term and tax rate the household currently has
+  // picked. Owned here rather than inside AlternativeHeatingOptions so the
+  // PDF report (see EarlyAccessBlock's reportSnapshot prop below) can be
+  // built from exactly what is on screen, not a second, independent guess.
+  const [selectedHeating, setSelectedHeating] =
+    useState<AlternativeHeatingId>("airToAirHp");
+  const [addSolar, setAddSolar] = useState(false);
+  const [tier, setTier] = useState<IncomeTier>("basic");
+  const [loanYears, setLoanYears] = useState<string>(
+    String(DEFAULT_LOAN_TERMS.years),
+  );
+  const [taxRate, setTaxRate] = useState<TaxRate>(DEFAULT_TAX_RATE);
+
   return (
     <div className="mx-auto w-full lg:w-1/2 lg:min-w-[600px] xl:max-w-[820px] px-4 py-8">
       <div className="mb-6 flex items-center justify-between gap-3">
@@ -104,6 +124,19 @@ function FinancialsPlaceholder({
       */}
       {(() => {
         const baseline = calculateUserBaseline("", household);
+        const reportSnapshot = buildReportSnapshot({
+          postalCode: assessment.location.postalCode,
+          household,
+          baseline,
+          electricityTariff: household.electricityTariff,
+          selection: {
+            heatingId: selectedHeating,
+            addSolar,
+            tier,
+            loanYears,
+            taxRate,
+          },
+        });
         return (
           <div className="flex flex-col gap-6">
             <BaselineSummary baseline={baseline} />
@@ -116,9 +149,21 @@ function FinancialsPlaceholder({
               baseline={baseline}
               electricityTariff={household.electricityTariff}
               hasPvPanels={household.hasPvPanels}
+              postalCode={assessment.location.postalCode}
+              districtHeatingAvailable={household.districtHeatingAvailable}
+              selected={selectedHeating}
+              onSelectedChange={setSelectedHeating}
+              addSolar={addSolar}
+              onAddSolarChange={setAddSolar}
+              tier={tier}
+              onTierChange={setTier}
+              loanYears={loanYears}
+              onLoanYearsChange={setLoanYears}
+              taxRate={taxRate}
+              onTaxRateChange={setTaxRate}
             />
 
-            <EarlyAccessBlock />
+            <EarlyAccessBlock reportSnapshot={reportSnapshot} />
 
             <section className="rounded-[20px] border border-line bg-white p-6 shadow-block">
               <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-[10px] bg-chip text-ink-soft">
@@ -129,6 +174,10 @@ function FinancialsPlaceholder({
                 {s.title}
               </h2>
               <p className="mt-2 text-base text-ink-soft">{s.subtitle}</p>
+
+              <div className="mt-4">
+                <DownloadReportButton reportSnapshot={reportSnapshot} />
+              </div>
 
               {postalCodeIssue(assessment.location.postalCode) && (
                 <div className="mt-4 flex items-start gap-2 rounded-lg bg-yellow-50 p-3 border border-yellow-200">

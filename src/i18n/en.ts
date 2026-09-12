@@ -381,6 +381,10 @@ export const en = {
         "One option at a time, so the comparison stays honest. This step is energy cost only: solar, grants and financing each get a step of their own below.",
       fieldLabel: "Replacement option",
       bestValueBadge: "Biggest saving",
+      districtHeatingPelletWarningSilesia:
+        "Silesia's anti-smog resolution bans solid-fuel heating - including pellet boilers - wherever district heating is available.",
+      districtHeatingPelletWarningOther:
+        "Some other regions restrict solid fuel where district heating is available too. Worth checking with your gmina before committing to a pellet boiler.",
       addSolarLabel: "Add solar to this project",
       addSolarSublabel: (price: string, kwh: string) =>
         `+${price} for a ${kwh} kWh/year array`,
@@ -619,6 +623,12 @@ export const en = {
       emailName: "Name",
       emailContact: "Phone or email",
       emailNote: "Note",
+      pdfHint:
+        "We've put together a PDF report of your numbers. A copy goes to our team automatically, and you can keep your own below.",
+      downloadPdf: "Download PDF report",
+      pdfGenerating: "Preparing your PDF...",
+      pdfFailed:
+        "We couldn't put your PDF together just now, but your request still went through.",
     },
     disclaimer:
       "Note: You are signing up for early access. HeatFit is currently in development and not yet fully operational: we will reach out as soon as we launch!",
@@ -688,6 +698,119 @@ export const en = {
       1: "must stay below 80 kWh/m²/y",
       2: "heat source only: no increase. With thermal modernisation: max 80 and at least a 40% reduction",
       3: "max 140 kWh/m²/y and at least a 40% reduction",
+    },
+  },
+
+  /**
+   * The downloadable PDF report: src/pdf/generateReportPdf.ts. Its own
+   * namespace because a printed document reads differently from a screen
+   * (no icons, no colour-only cues, longer-lived), even though a lot of the
+   * numbers it shows are the same ones baseline/alternatives already price.
+   */
+  report: {
+    filename: "heating_estimation.pdf",
+    docTitle: "Heating Replacement Estimate",
+    docSubtitle:
+      "A personal summary of your numbers, prepared by HeatFit from your own answers.",
+    generatedOn: (date: string) => `Generated on ${date}`,
+    preparedFor: (postalCode: string) => `Prepared for ${postalCode}`,
+    preparedForWithRegion: (postalCode: string, region: string) =>
+      `Prepared for ${postalCode}, ${region}`,
+    confidential:
+      "For your personal use. An estimate only, not a binding offer or a guarantee of financing or grant approval.",
+    pageFooter: (page: number, total: number) => `Page ${page} of ${total}`,
+    contactFooter: (email: string) => `Questions? ${email}`,
+
+    sections: {
+      executiveSummary: "Executive summary",
+      yourDetails: "Your details",
+      runningCosts: "Running cost comparison",
+      financialBreakdown: "Financial breakdown",
+      assumptions: "Key assumptions & data sources",
+    },
+
+    /** Generic download error, used wherever a PDF is generated outside the
+     *  contact-form flow (e.g. the "For your records" section), where
+     *  earlyAccess.modal.pdfFailed's "your request still went through" line
+     *  would not make sense. */
+    downloadError: "We couldn't generate the PDF just now. Please try again.",
+
+    verdict: {
+      currentSpend: (monthly: string, yearly: string) =>
+        `You are currently spending ${monthly}/month (${yearly}/year) heating with coal.`,
+      bestOption: (option: string) =>
+        `On running cost alone, the best option for your household is the ${option}.`,
+      saving: (option: string, monthly: string, yearly: string) =>
+        `Switching to the ${option} would save you about ${monthly}/month (${yearly}/year) against coal.`,
+      costing: (option: string, monthly: string, yearly: string) =>
+        `On today's numbers, the ${option} would cost about ${monthly}/month (${yearly}/year) more than coal.`,
+      netCostLine: (net: string) =>
+        `After the Czyste Powietrze grant and the thermal modernisation tax relief, your estimated final out-of-pocket cost is ${net}.`,
+      trueCostLine: (monthly: string, years: number) =>
+        `Financed over ${years} years, your true monthly cost (running cost plus loan repayment) is about ${monthly}.`,
+    },
+
+    details: {
+      location: "Location",
+      postalCode: "Postal code",
+      region: "Region (voivodeship)",
+      building: "Building",
+      currentHeating: "Current heating & fuel",
+      electricityWater: "Electricity & water",
+      yourSelections: "Your selections for this report",
+      selectedOption: "Replacement option considered",
+      addSolar: "Solar add-on included",
+      incomeLevel: "Income level used",
+      loanTerm: "Loan term used",
+      taxRateUsed: "Income tax rate used",
+    },
+
+    runningCostsTable: {
+      columnBaseline: "Coal (today)",
+      columnWithoutPv: "No PV",
+      columnWithPv: "With PV",
+      rowSpaceHeating: "Space heating",
+      rowWaterHeating: "Water heating",
+      rowElectricityAndCooling: "Electricity & cooling",
+      rowTotalPerYear: "Total / year",
+      rowTotalPerMonth: "Total / month",
+      rowSavingsPerYear: "Savings vs. coal / year",
+      note: 'Water heating and electricity & cooling are carried over unchanged from your baseline: only the space heating source changes. "With PV" prices the same option as if the household already had solar panels feeding the same electricity meter.',
+    },
+
+    financials: {
+      optionLabel: (option: string) => `For: ${option}`,
+      grossCapex: "Gross capex (turnkey, incl. VAT)",
+      grant: "Czyste Powietrze grant",
+      netCapex: "Net capex, after grant",
+      taxRelief: "Tax relief (Ulga Termomodernizacyjna)",
+      finalNetCost: "Final net cost, after grant and tax relief",
+      loanAmount: (years: number, pct: number) =>
+        `Loan on the remaining balance (${years} yr at ${pct}%)`,
+      monthlyLoanRepayment: "Monthly loan repayment",
+      runningCostPerMonth: "Running cost / month",
+      trueMonthlyCost: "True monthly cost while repaying",
+      afterLoanMonthlyCost: "Monthly cost once the loan is repaid",
+    },
+
+    assumptions: {
+      intro:
+        "Every figure above follows directly from the answers you gave and the reference data below. Nothing here is a quote: actual installer, bank and programme terms will vary.",
+      yourAnswers: "Assumptions made about your household",
+      noAssumptions: "No assumptions were needed: every input came from you.",
+      referenceData: "Reference data & sources",
+      baselineModel:
+        "Baseline running cost reproduces HeatFit's price_calculator reference sheet: coal energy content and boiler efficiency by class, hot water and electricity modelling.",
+      capexSource: (source: string) =>
+        `Equipment & installation pricing: ${source}`,
+      grantProgramme:
+        "Grant: Czyste Powietrze programme, subsidies table, sheet line(s) as noted above.",
+      zum: (url: string) =>
+        `Heat pumps and pellet boilers must be listed on the official ZUM database to qualify: ${url}`,
+      taxReliefRule: (cap: string, years: number) =>
+        `Tax relief: art. 26h of the Polish PIT act. Capped at ${cap} per taxpayer across all thermal modernisation work; any unused part carries forward up to ${years} years. Assumes taxable income is high enough to absorb the deduction.`,
+      loanTerms:
+        "Loan repayment: simple interest charged once over the full term, per HeatFit's reference sheet, not a compounded bank annuity.",
     },
   },
 };

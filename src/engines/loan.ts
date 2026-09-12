@@ -146,3 +146,15 @@ export const LOAN_OPTIONS: LoanTerms[] = S.SHEET_LOAN_OPTIONS;
 export const DEFAULT_LOAN_TERMS: LoanTerms = S.SHEET_LOAN_OPTIONS.find(
   (o) => o.years === S.SHEET_DEFAULT_LOAN_YEARS,
 )!;
+
+/**
+ * The term matching a loan-term control's string value (IconCardGroup only
+ * deals in strings), or the default when nothing matches - same fallback the
+ * UI itself uses before anything has been touched.
+ */
+export function loanTermsForYears(loanYearsValue: string): LoanTerms {
+  return (
+    LOAN_OPTIONS.find((o) => String(o.years) === loanYearsValue) ??
+    DEFAULT_LOAN_TERMS
+  );
+}

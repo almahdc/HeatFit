@@ -21,7 +21,7 @@ import {
   type IconCardOption,
 } from "./FormPrimitives";
 import { AssessmentState, initialAssessmentState } from "./assessmentTypes";
-import { CONTACT_EMAIL } from "./EarlyAccessBlock";
+import { CONTACT_EMAIL } from "../constants";
 import {
   CurrentHeatingSection,
   ElectricityWaterSection,

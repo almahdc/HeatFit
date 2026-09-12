@@ -1,10 +1,12 @@
 import { useState } from "react";
-import { Loader2, UserRound, X } from "lucide-react";
+import { FileDown, Loader2, UserRound, X } from "lucide-react";
+import type { jsPDF } from "jspdf";
 import { StepEyebrow } from "./FormPrimitives";
-import { useT } from "../i18n";
+import { useI18n } from "../i18n";
 import type { Dictionary } from "../i18n";
-
-export const CONTACT_EMAIL = "heatfit.hello@gmail.com";
+import { CONTACT_EMAIL } from "../constants";
+import { generateReportText } from "../pdf/generateReportText";
+import type { ReportSnapshot } from "../pdf/reportSnapshot";
 
 /** Formspree form endpoint, created at formspree.io and pointed at
  *  heatfit.hello@gmail.com. Unset in an environment without one configured
@@ -36,15 +38,35 @@ interface Submission {
   note: string;
 }
 
+/** The PDF report generated for this submission: kept around so the success
+ *  state can offer it as a direct download, independently of whether the
+ *  API delivery below succeeded. */
+interface GeneratedReport {
+  doc: jsPDF;
+  filename: string;
+}
+
 /**
  * Posts the form to Formspree in the background. Formspree's AJAX contract
  * (https://help.formspree.io/hc/en-us/articles/360055613373) is a plain JSON
  * POST with an Accept header; no SDK needed. `_subject` is one of their
  * recognised special fields and sets the email's subject line.
+ *
+ * The full PDF report travels as the PLAIN TEXT of the `report` field, which
+ * Formspree renders straight into the email body below the other fields -
+ * not as a file attachment. File uploads are a paid Formspree feature: a
+ * submission carrying one is rejected outright (400 "File Uploads Not
+ * Permitted") on a plan without it, which was failing the household's whole
+ * contact request along with the attachment. Text has no such limit, so a
+ * copy of the report reaches heatfit.hello@gmail.com automatically on every
+ * plan. See generateReportText.ts. The household's own copy is still the
+ * "Download PDF report" button, since a downloadable PDF is worth more to a
+ * person than a wall of text.
  */
 async function submitToFormEndpoint(
   t: Dictionary,
   { intent, name, contact, note }: Submission,
+  reportText: string,
 ): Promise<boolean> {
   const ea = t.earlyAccess;
   const res = await fetch(FORM_ENDPOINT!, {
@@ -59,6 +81,7 @@ async function submitToFormEndpoint(
       name: name.trim(),
       contact: contact.trim(),
       note: note.trim(),
+      report: reportText,
     }),
   });
   return res.ok;
@@ -89,8 +112,15 @@ function submitViaMailto(
  * leaving the app; only when no endpoint is configured does it fall back to
  * handing off to the visitor's mail client.
  */
-export function EarlyAccessBlock() {
-  const t = useT();
+export function EarlyAccessBlock({
+  reportSnapshot,
+}: {
+  /** The financials screen's current numbers, frozen for the PDF report
+   *  (see pdf/reportSnapshot.ts). Built fresh at submit time so it reflects
+   *  whichever replacement/solar/tier/loan/tax choices are on screen then. */
+  reportSnapshot: ReportSnapshot;
+}) {
+  const { t, lang } = useI18n();
   const ea = t.earlyAccess;
 
   const [modal, setModal] = useState<ModalState>("closed");
@@ -104,6 +134,10 @@ export function EarlyAccessBlock() {
   const [deliveredVia, setDeliveredVia] = useState<"api" | "mailto" | null>(
     null,
   );
+  // Built once per submit attempt (see submit() below), so the success state
+  // can offer a "Download PDF report" button independently of whether the
+  // API delivery above it succeeded. Null only when generation itself threw.
+  const [report, setReport] = useState<GeneratedReport | null>(null);
 
   // Deliberately no scroll-to-top here: this modal opens over content the
   // household is already looking at (an in-place choice, not a navigation
@@ -127,6 +161,7 @@ export function EarlyAccessBlock() {
     setContact("");
     setNote("");
     setDeliveredVia(null);
+    setReport(null);
   };
 
   const submit = async () => {
@@ -137,6 +172,31 @@ export function EarlyAccessBlock() {
 
     const submission: Submission = { intent, name, contact, note };
 
+    // Built fresh for this submission rather than once up front, so a
+    // household that lingers over the form and changes a step-6 selection
+    // (loan term, tax rate, ...) before sending still gets a report that
+    // matches. generateReportText has no heavy dependencies (see its own
+    // comment), so building it is not expected to fail the way PDF
+    // generation below can.
+    const reportText = generateReportText(t, lang, reportSnapshot);
+
+    // The downloadable copy for the success state below, kept separate from
+    // reportText above: jsPDF (plus the embedded DejaVu Sans fonts it needs
+    // for Polish diacritics) is a multi-megabyte dependency most visitors
+    // never trigger, so it is dynamically imported here rather than pulled
+    // into the app's main bundle by a top-level import. Failing must not
+    // block the contact request itself - the household still gets matched
+    // with the team, just without a PDF to download afterwards.
+    let generated: GeneratedReport | null = null;
+    try {
+      const { generateReportPdf } = await import("../pdf/generateReportPdf");
+      const { doc, filename } = generateReportPdf(t, lang, reportSnapshot);
+      generated = { doc, filename };
+    } catch {
+      generated = null;
+    }
+    setReport(generated);
+
     if (!FORM_ENDPOINT) {
       submitViaMailto(t, submission);
       setDeliveredVia("mailto");
@@ -146,7 +206,7 @@ export function EarlyAccessBlock() {
 
     setModal("submitting");
     try {
-      const ok = await submitToFormEndpoint(t, submission);
+      const ok = await submitToFormEndpoint(t, submission, reportText);
       if (!ok) throw new Error("Formspree responded with a non-2xx status");
       setDeliveredVia("api");
       setModal("success");
@@ -242,11 +302,32 @@ export function EarlyAccessBlock() {
             </div>
 
             {modal === "success" ? (
-              <p className="text-[14.5px] text-ink-soft">
-                {deliveredVia === "mailto"
-                  ? ea.modal.successBodyMailtoFallback(CONTACT_EMAIL)
-                  : ea.modal.successBody}
-              </p>
+              <div className="flex flex-col gap-3">
+                <p className="text-[14.5px] text-ink-soft">
+                  {deliveredVia === "mailto"
+                    ? ea.modal.successBodyMailtoFallback(CONTACT_EMAIL)
+                    : ea.modal.successBody}
+                </p>
+                {report ? (
+                  <>
+                    <p className="text-[13px] text-ink-soft">
+                      {ea.modal.pdfHint}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => report.doc.save(report.filename)}
+                      className="flex items-center justify-center gap-2 rounded-xl border border-accent-tint2 bg-accent-tint px-6 py-3 text-[14.5px] font-semibold text-accent-600 transition-colors hover:bg-accent-tint2 active:scale-[0.99]"
+                    >
+                      <FileDown className="h-4 w-4" aria-hidden />
+                      {ea.modal.downloadPdf}
+                    </button>
+                  </>
+                ) : (
+                  <p className="text-[13px] text-ink-soft/80">
+                    {ea.modal.pdfFailed}
+                  </p>
+                )}
+              </div>
             ) : (
               <form
                 className="flex flex-col gap-4"

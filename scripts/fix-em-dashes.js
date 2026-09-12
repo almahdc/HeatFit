@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Repo style convention: " — " (space, em dash, space) reads as ": " instead.
+ * Repo style convention: ": " (space, em dash, space) reads as ": " instead.
  *
  * Runs over every git-tracked source/doc file (extensions below), skipping
  * generated files like package-lock.json. Wired up as a SessionStart hook in
@@ -18,7 +18,7 @@ import path from "node:path";
 // paths, so reading/writing them only works once we're standing there.
 process.chdir(path.dirname(path.dirname(fileURLToPath(import.meta.url))));
 
-const EM_DASH_PATTERN = / — /g;
+const EM_DASH_PATTERN = /: /g;
 
 const TEXT_EXTENSIONS = new Set([
   "ts",
@@ -51,7 +51,7 @@ function main() {
     try {
       content = readFileSync(file, "utf8");
     } catch {
-      continue; // unreadable — skip rather than guess
+      continue; // unreadable: skip rather than guess
     }
 
     if (!EM_DASH_PATTERN.test(content)) continue;

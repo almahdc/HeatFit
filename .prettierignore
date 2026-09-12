@@ -1,0 +1,5 @@
+# Auto-generated base64 font data for the PDF report (see src/pdf/generateReportPdf.ts).
+# Not hand-edited, and large enough that Prettier's TS printer stack-overflows
+# trying to format the concatenated string literal.
+src/pdf/fonts/DejaVuSans-normal.ts
+src/pdf/fonts/DejaVuSans-bold.ts

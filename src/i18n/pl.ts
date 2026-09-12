@@ -377,6 +377,10 @@ export const pl: Dictionary = {
         "Jedna opcja naraz, żeby porównanie pozostało uczciwe. Ten krok to sam koszt energii: fotowoltaika, dotacje i finansowanie mają niżej własne kroki.",
       fieldLabel: "Opcja wymiany",
       bestValueBadge: "Największa oszczędność",
+      districtHeatingPelletWarningSilesia:
+        "Uchwała antysmogowa dla woj. śląskiego zakazuje ogrzewania na paliwo stałe - w tym kotłów na pellet - tam, gdzie dostępne jest ciepło systemowe.",
+      districtHeatingPelletWarningOther:
+        "Inne województwa też mogą ograniczać paliwo stałe tam, gdzie dostępne jest ciepło systemowe. Warto to sprawdzić w swojej gminie przed wyborem kotła na pellet.",
       addSolarLabel: "Dodaj fotowoltaikę do tej inwestycji",
       addSolarSublabel: (price: string, kwh: string) =>
         `+${price} za instalację ${kwh} kWh/rok`,
@@ -617,6 +621,12 @@ export const pl: Dictionary = {
       emailName: "Imię i nazwisko",
       emailContact: "Telefon lub e-mail",
       emailNote: "Wiadomość",
+      pdfHint:
+        "Przygotowaliśmy raport PDF z Twoimi liczbami. Kopia trafia automatycznie do naszego zespołu, a swój egzemplarz możesz pobrać poniżej.",
+      downloadPdf: "Pobierz raport PDF",
+      pdfGenerating: "Przygotowujemy Twój PDF...",
+      pdfFailed:
+        "Nie udało się teraz przygotować PDF-a, ale Twoje zgłoszenie i tak zostało wysłane.",
     },
     disclaimer:
       "Uwaga: zapisujesz się na wczesny dostęp. HeatFit jest obecnie w budowie i nie działa jeszcze w pełni: odezwiemy się, gdy tylko wystartujemy!",
@@ -680,6 +690,109 @@ export const pl: Dictionary = {
       1: "poniżej 80 kWh/m²/rok",
       2: "samo źródło ciepła: bez wzrostu. Z termomodernizacją: maks. 80 i co najmniej 40% redukcji",
       3: "maks. 140 kWh/m²/rok i co najmniej 40% redukcji",
+    },
+  },
+
+  report: {
+    filename: "szacunek_grzewczy.pdf",
+    docTitle: "Szacunek wymiany ogrzewania",
+    docSubtitle:
+      "Osobiste podsumowanie Twoich liczb, przygotowane przez HeatFit na podstawie Twoich odpowiedzi.",
+    generatedOn: (date: string) => `Wygenerowano ${date}`,
+    preparedFor: (postalCode: string) => `Przygotowano dla: ${postalCode}`,
+    preparedForWithRegion: (postalCode: string, region: string) =>
+      `Przygotowano dla: ${postalCode}, woj. ${region}`,
+    confidential:
+      "Do Twojego osobistego użytku. To tylko szacunek, a nie wiążąca oferta ani gwarancja finansowania czy przyznania dotacji.",
+    pageFooter: (page: number, total: number) => `Strona ${page} z ${total}`,
+    contactFooter: (email: string) => `Pytania? ${email}`,
+
+    sections: {
+      executiveSummary: "Podsumowanie",
+      yourDetails: "Twoje dane",
+      runningCosts: "Porównanie kosztów eksploatacji",
+      financialBreakdown: "Rozbicie finansowe",
+      assumptions: "Kluczowe założenia i źródła danych",
+    },
+
+    downloadError: "Nie udało się teraz wygenerować PDF-a. Spróbuj ponownie.",
+
+    verdict: {
+      currentSpend: (monthly: string, yearly: string) =>
+        `Obecnie wydajesz ${monthly}/miesiąc (${yearly}/rok) na ogrzewanie węglem.`,
+      bestOption: (option: string) =>
+        `Patrząc tylko na koszt eksploatacji, najlepszą opcją dla Twojego gospodarstwa jest: ${option}.`,
+      saving: (option: string, monthly: string, yearly: string) =>
+        `Przejście na: ${option} pozwoliłoby zaoszczędzić około ${monthly}/miesiąc (${yearly}/rok) względem węgla.`,
+      costing: (option: string, monthly: string, yearly: string) =>
+        `Przy dzisiejszych cenach opcja: ${option} kosztowałaby około ${monthly}/miesiąc (${yearly}/rok) więcej niż węgiel.`,
+      netCostLine: (net: string) =>
+        `Po dotacji z Czystego Powietrza i uldze termomodernizacyjnej Twój szacowany ostateczny koszt z własnej kieszeni to ${net}.`,
+      trueCostLine: (monthly: string, years: number) =>
+        `Przy finansowaniu rozłożonym na ${years} lat Twój rzeczywisty koszt miesięczny (eksploatacja plus rata kredytu) wynosi około ${monthly}.`,
+    },
+
+    details: {
+      location: "Lokalizacja",
+      postalCode: "Kod pocztowy",
+      region: "Region (województwo)",
+      building: "Budynek",
+      currentHeating: "Obecne ogrzewanie i paliwo",
+      electricityWater: "Prąd i ciepła woda",
+      yourSelections: "Wybory przyjęte w tym raporcie",
+      selectedOption: "Rozważana opcja wymiany",
+      addSolar: "Uwzględniono dodatkową fotowoltaikę",
+      incomeLevel: "Przyjęty poziom dochodów",
+      loanTerm: "Przyjęty okres kredytowania",
+      taxRateUsed: "Przyjęta stawka podatku dochodowego",
+    },
+
+    runningCostsTable: {
+      columnBaseline: "Węgiel (dzisiaj)",
+      columnWithoutPv: "Bez PV",
+      columnWithPv: "Z PV",
+      rowSpaceHeating: "Ogrzewanie pomieszczeń",
+      rowWaterHeating: "Podgrzewanie wody",
+      rowElectricityAndCooling: "Prąd i chłodzenie",
+      rowTotalPerYear: "Razem / rok",
+      rowTotalPerMonth: "Razem / miesiąc",
+      rowSavingsPerYear: "Oszczędność względem węgla / rok",
+      note: "Podgrzewanie wody oraz prąd i chłodzenie są przeniesione bez zmian z Twojego stanu wyjściowego: zmienia się tylko źródło ogrzewania pomieszczeń. Kolumna „z PV” wycenia tę samą opcję tak, jakby gospodarstwo miało już panele słoneczne podłączone do tego samego licznika.",
+    },
+
+    financials: {
+      optionLabel: (option: string) => `Dla opcji: ${option}`,
+      grossCapex: "Koszt brutto (pod klucz, z VAT)",
+      grant: "Dotacja Czyste Powietrze",
+      netCapex: "Koszt netto, po dotacji",
+      taxRelief: "Ulga podatkowa (ulga termomodernizacyjna)",
+      finalNetCost: "Ostateczny koszt netto, po dotacji i uldze",
+      loanAmount: (years: number, pct: number) =>
+        `Kredyt na pozostałą kwotę (${years} lat przy ${pct}%)`,
+      monthlyLoanRepayment: "Miesięczna rata kredytu",
+      runningCostPerMonth: "Koszt eksploatacji / miesiąc",
+      trueMonthlyCost: "Rzeczywisty koszt miesięczny w trakcie spłaty",
+      afterLoanMonthlyCost: "Koszt miesięczny po spłacie kredytu",
+    },
+
+    assumptions: {
+      intro:
+        "Każda liczba powyżej wynika bezpośrednio z odpowiedzi, których udzieliłeś, oraz z danych referencyjnych poniżej. Żadna z nich nie jest ofertą: rzeczywiste warunki instalatora, banku i programu mogą się różnić.",
+      yourAnswers: "Założenia przyjęte dla Twojego gospodarstwa",
+      noAssumptions:
+        "Nie trzeba było przyjmować żadnych założeń: każda dana pochodzi od Ciebie.",
+      referenceData: "Dane referencyjne i źródła",
+      baselineModel:
+        "Koszt eksploatacji stanu wyjściowego odtwarza referencyjny arkusz price_calculator HeatFit: zawartość energii w węglu i sprawność kotła wg klasy, model ciepłej wody i zużycia prądu.",
+      capexSource: (source: string) => `Wycena urządzenia i montażu: ${source}`,
+      grantProgramme:
+        "Dotacja: program Czyste Powietrze, tabela dofinansowania, wiersz(e) arkusza jak podano wyżej.",
+      zum: (url: string) =>
+        `Pompy ciepła i kotły na pellet muszą znajdować się w oficjalnej bazie ZUM, aby się kwalifikować: ${url}`,
+      taxReliefRule: (cap: string, years: number) =>
+        `Ulga podatkowa: art. 26h ustawy o PIT. Limit ${cap} na podatnika za wszystkie prace termomodernizacyjne; niewykorzystaną część można rozliczać jeszcze przez ${years} lat. Zakłada się, że dochód podlegający opodatkowaniu jest wystarczająco wysoki, by pokryć odliczenie.`,
+      loanTerms:
+        "Rata kredytu: odsetki proste naliczone jednorazowo za cały okres, zgodnie z arkuszem referencyjnym HeatFit, a nie jako kredyt annuitetowy z banku.",
     },
   },
 };
