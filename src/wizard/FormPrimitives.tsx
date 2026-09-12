@@ -348,6 +348,30 @@ export function ToggleCard({
   checked: boolean;
   onChange: (v: boolean) => void;
 }) {
+  const iconBox = (
+    <div
+      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] ${
+        checked ? "bg-accent text-white" : "bg-chip text-ink-soft"
+      }`}
+    >
+      <Icon className="h-[18px] w-[18px]" aria-hidden />
+    </div>
+  );
+
+  const toggle = (
+    <span
+      className={`relative h-6 w-10 shrink-0 rounded-full transition-colors ${
+        checked ? "bg-accent" : "bg-line"
+      }`}
+    >
+      <span
+        className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
+          checked ? "translate-x-4" : "translate-x-0.5"
+        }`}
+      />
+    </span>
+  );
+
   return (
     <button
       type="button"
@@ -360,30 +384,24 @@ export function ToggleCard({
           : "border-line shadow-card hover:border-ink-soft/30"
       }`}
     >
-      <div className="flex w-full items-start justify-between">
-        <div
-          className={`flex h-9 w-9 items-center justify-center rounded-[10px] ${
-            checked ? "bg-accent text-white" : "bg-chip text-ink-soft"
-          }`}
-        >
-          <Icon className="h-[18px] w-[18px]" aria-hidden />
+      {sublabel ? (
+        <>
+          <div className="flex w-full items-start justify-between">
+            {iconBox}
+            {toggle}
+          </div>
+          <div>
+            <p className="text-[15px] font-semibold text-ink">{label}</p>
+            <p className="text-[13px] text-ink-soft">{sublabel}</p>
+          </div>
+        </>
+      ) : (
+        <div className="flex w-full items-center gap-3">
+          {iconBox}
+          <p className="flex-1 text-[15px] font-semibold text-ink">{label}</p>
+          {toggle}
         </div>
-        <span
-          className={`relative h-6 w-10 shrink-0 rounded-full transition-colors ${
-            checked ? "bg-accent" : "bg-line"
-          }`}
-        >
-          <span
-            className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform ${
-              checked ? "translate-x-4" : "translate-x-0.5"
-            }`}
-          />
-        </span>
-      </div>
-      <div>
-        <p className="text-[15px] font-semibold text-ink">{label}</p>
-        {sublabel && <p className="text-[13px] text-ink-soft">{sublabel}</p>}
-      </div>
+      )}
     </button>
   );
 }

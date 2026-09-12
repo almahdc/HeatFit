@@ -398,19 +398,19 @@ export const pl: Dictionary = {
       czystePowietrze: {
         label: "Objęte Czystym Powietrzem",
         detail:
-          "Wszystkie trzy opcje to rozwiązania finansowane przez program krajowy. Ile przysługuje właśnie Twojemu gospodarstwu, liczymy w kroku 5, na podstawie Twoich danych.",
+          "Wszystkie trzy opcje to rozwiązania finansowane przez program krajowy.",
       },
       zum: {
         label: "Tylko urządzenia z listy ZUM",
         detail:
-          "Dotacja obejmuje wyłącznie sprzęt z oficjalnej rządowej listy ZUM. Link znajdziesz niżej, żeby sprawdzić konkretny model, zanim się na niego zdecydujesz.",
+          "Dotacja obejmuje wyłącznie sprzęt z oficjalnej rządowej listy ZUM.",
       },
     },
 
     compare: {
       title: "Porównaj wymianę",
       subtitle:
-        "Jedna opcja naraz, żeby porównanie pozostało uczciwe. Ten krok to sam koszt energii: fotowoltaika, dotacje i finansowanie mają niżej własne kroki.",
+        "Ten krok to sam koszt energii: fotowoltaika, dotacje i finansowanie mają niżej własne kroki.",
       fieldLabel: "Opcja wymiany",
       bestValueBadge: "Największa oszczędność",
       districtHeatingPelletWarningSilesia:
@@ -418,8 +418,6 @@ export const pl: Dictionary = {
       districtHeatingPelletWarningOther:
         "Inne województwa też mogą ograniczać paliwo stałe tam, gdzie dostępne jest ciepło systemowe. Warto to sprawdzić w swojej gminie przed wyborem kotła na pellet.",
       addSolarLabel: "Dodaj fotowoltaikę do tej inwestycji",
-      addSolarSublabel: (price: string, kwh: string) =>
-        `+${price} za instalację ${kwh} kWh/rok`,
       newOutflow: (name: string) => `${name}: nowy roczny wydatek`,
       perMonth: "miesięcznie",
       perYearAndEfficiency: (amount: string, efficiency: string) =>

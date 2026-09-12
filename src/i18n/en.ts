@@ -401,20 +401,19 @@ export const en = {
     trust: {
       czystePowietrze: {
         label: "Czyste Powietrze eligible",
-        detail:
-          "All three are measures the national programme funds. What your household specifically qualifies for is worked out in step 5, from your own numbers.",
+        detail: "The national programme funds all three of these.",
       },
       zum: {
         label: "ZUM-listed devices only",
         detail:
-          "The grant covers only equipment on the government's official ZUM list. We link it below, so you can check a model before you commit to it.",
+          "The grant covers only equipment on the government's official ZUM list.",
       },
     },
 
     compare: {
       title: "Compare a replacement",
       subtitle:
-        "One option at a time, so the comparison stays honest. This step is energy cost only: solar, grants and financing each get a step of their own below.",
+        "This step is energy cost only: solar, grants and financing each get a step of their own below.",
       fieldLabel: "Replacement option",
       bestValueBadge: "Biggest saving",
       districtHeatingPelletWarningSilesia:
@@ -422,8 +421,6 @@ export const en = {
       districtHeatingPelletWarningOther:
         "Some other regions restrict solid fuel where district heating is available too. Worth checking with your gmina before committing to a pellet boiler.",
       addSolarLabel: "Add solar to this project",
-      addSolarSublabel: (price: string, kwh: string) =>
-        `+${price} for a ${kwh} kWh/year array`,
       newOutflow: (name: string) => `${name}: new yearly outflow`,
       perMonth: "per month",
       perYearAndEfficiency: (amount: string, efficiency: string) =>

@@ -352,10 +352,6 @@ export function AlternativeHeatingOptions({
           <ToggleCard
             icon={Sun}
             label={c.addSolarLabel}
-            sublabel={c.addSolarSublabel(
-              zl(solarAddOn.capexPln),
-              kwh(solarAddOn.productionKwhPerYear),
-            )}
             checked={addSolar}
             onChange={onAddSolarChange}
           />
