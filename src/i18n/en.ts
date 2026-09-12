@@ -321,7 +321,7 @@ export const en = {
       `${value} kWh/year ${over ? "more" : "less"}`,
     gapAfter: " than we would expect from your answers. ",
     gapReasonOver:
-      "That usually means an electric heater, an immersion tank, or a workshop we have not asked about yet.",
+      "That usually means something electric we have not asked about yet: a space heater, an immersion tank, or a workshop.",
     gapReasonUnderWaterOrCooling:
       "That usually means our hot water or cooling estimate is too generous for your household.",
     gapReasonUnderBaseline:
@@ -330,6 +330,34 @@ export const en = {
     assumptionsSummary: (count: number) => `What we assumed (${count})`,
     assumptionsIntro:
       "We take the coal you provided, the energy contained in that grade, and how much of it your boiler class actually converts into heat. Hot water and the rest of the meter are estimated from the national average.",
+    whyCoalAccuracySummary: "Why these could be off",
+    coalAccuracyIntro: (
+      reference: string,
+      actual: string,
+      comparison: string,
+    ) =>
+      `We'd typically expect a building like yours to need around ${reference} kWh/m²/year of space heat. Yours comes out at ${actual} kWh/m²/year${comparison}. Here's what that figure assumes:`,
+    coalAccuracyComparisonHigh: (pct: number) => `, ${pct}% higher than that`,
+    coalAccuracyComparisonLow: (pct: number) => `, ${pct}% lower than that`,
+    coalAccuracyComparisonClose: () => " — in line with that",
+    coalAccuracyBoiler: (pct: number, classLabel: string, ageSuffix: string) =>
+      `Boiler efficiency: assumed ${pct}% for your ${classLabel} boiler${ageSuffix}. An older or poorly maintained unit often runs below this.`,
+    coalAccuracyBoilerAge: (year: number, age: number) =>
+      `, installed in ${year} (${age} yr old)`,
+    coalAccuracyCoal: (
+      tonnes: string,
+      kwhPerTonne: string,
+      fuelLabel: string,
+      pct: number,
+      resultKwh: string,
+    ) =>
+      `Coal energy: about ${tonnes} t of ${fuelLabel} at ${kwhPerTonne} kWh/t, burned at ${pct}% efficiency ≈ ${resultKwh} kWh delivered. Quality varies even within a declared grade.`,
+    coalAccuracyInsulationNone: (label: string) =>
+      `Insulation: you told us ${label}. A likely factor if the real number runs higher than this.`,
+    coalAccuracyInsulationStandard: (label: string) =>
+      `Insulation: you told us ${label}. A moderate factor: real losses could run a bit higher.`,
+    coalAccuracyInsulationVeryGood: (label: string) =>
+      `Insulation: you told us ${label}. Well insulated, unlikely to be adding to this number.`,
     whyConditionSummary: "Why this number decides so much",
     whyConditionBody:
       "kWh/m²/year is your building's condition in one figure: the heat it needs per square metre. Czyste Powietrze uses the same measure. Above 140, the programme will not fund a heat source on its own without insulation work, and only above 140 does the highest funding level open up. Nothing is scored behind the scenes: this is the number, and step 5 shows exactly what it means for your grant.",

@@ -1,6 +1,5 @@
 import { useState } from "react";
 import {
-  AlertTriangle,
   Check,
   Droplets,
   Flame,
@@ -18,15 +17,24 @@ import type {
   BaselineCostOverrides,
   EditableBaselineCostField,
 } from "../engines/baseline";
+import type { BoilerClass, InsulationLevel } from "./householdCases";
 import { StepEyebrow, WhyNote } from "./FormPrimitives";
 import { useT } from "../i18n";
 import type { Dictionary } from "../i18n";
+import { DEFAULT_CONDITION_KWH_PER_M2 } from "../data/sheet.constants";
+
+/** Beyond this, the gap is worth naming rather than folded into "in line". */
+const CONDITION_COMPARISON_THRESHOLD_PCT = 10;
 
 const zl = (n: number) =>
   `${Math.round(n).toLocaleString("pl-PL").replace(/ /g, " ")} zł`;
 
 const num = (n: number) =>
   Math.round(n).toLocaleString("pl-PL").replace(/ /g, " ");
+
+/** Coal tonnage keeps a decimal (3.5 t), unlike the whole-number kWh figures. */
+const tonnes = (n: number) =>
+  n.toLocaleString("pl-PL", { maximumFractionDigits: 2 });
 
 /** A typed descriptor from baseline.ts, said in the language on screen. */
 export function assumptionText(t: Dictionary, a: BaselineAssumption): string {
@@ -72,6 +80,9 @@ export function BaselineSummary({
   baseline,
   overrides,
   onOverrideChange,
+  insulation,
+  boilerClass,
+  boilerYear,
 }: {
   baseline: Baseline;
   overrides: BaselineCostOverrides;
@@ -79,9 +90,13 @@ export function BaselineSummary({
     field: EditableBaselineCostField,
     value: number | null,
   ) => void;
+  /** For the "why these could be off" note: not part of the baseline model itself. */
+  insulation: InsulationLevel;
+  boilerClass: BoilerClass;
+  boilerYear: number | "";
 }) {
   const t = useT();
-  const { cost, energy, electricity } = baseline;
+  const { cost, energy } = baseline;
 
   const [editingField, setEditingField] =
     useState<EditableBaselineCostField | null>(null);
@@ -118,6 +133,48 @@ export function BaselineSummary({
   ];
 
   const hasOverrides = Object.keys(overrides).length > 0;
+
+  // "Why these could be off": the coal/boiler/insulation facts a household
+  // can sanity-check against their own experience, not part of the baseline
+  // model's own output.
+  const boilerAgeYears =
+    typeof boilerYear === "number"
+      ? new Date().getFullYear() - boilerYear
+      : null;
+  const boilerAgeSuffix =
+    boilerAgeYears !== null
+      ? t.baseline.coalAccuracyBoilerAge(boilerYear as number, boilerAgeYears)
+      : "";
+  const insulationLabel = t.options.insulation[insulation].label;
+  const insulationSentence =
+    insulation === "none"
+      ? t.baseline.coalAccuracyInsulationNone(insulationLabel)
+      : insulation === "veryGood"
+        ? t.baseline.coalAccuracyInsulationVeryGood(insulationLabel)
+        : t.baseline.coalAccuracyInsulationStandard(insulationLabel);
+
+  // Validation: is the coal-derived building condition figure plausible?
+  // DEFAULT_CONDITION_KWH_PER_M2 is the sheet's own worked-example house, a
+  // neutral reference sitting mid-band on the Czyste Powietrze scope gate
+  // (80-140) - not this household's number, just something to sanity-check
+  // it against.
+  const conditionPctDiff =
+    ((energy.spaceHeatPerM2 - DEFAULT_CONDITION_KWH_PER_M2) /
+      DEFAULT_CONDITION_KWH_PER_M2) *
+    100;
+  const conditionComparison =
+    conditionPctDiff > CONDITION_COMPARISON_THRESHOLD_PCT
+      ? t.baseline.coalAccuracyComparisonHigh(Math.round(conditionPctDiff))
+      : conditionPctDiff < -CONDITION_COMPARISON_THRESHOLD_PCT
+        ? t.baseline.coalAccuracyComparisonLow(
+            Math.round(Math.abs(conditionPctDiff)),
+          )
+        : t.baseline.coalAccuracyComparisonClose();
+  const coalAccuracyIntro = t.baseline.coalAccuracyIntro(
+    num(DEFAULT_CONDITION_KWH_PER_M2),
+    energy.spaceHeatPerM2.toFixed(0),
+    conditionComparison,
+  );
 
   const startEdit = (
     field: EditableBaselineCostField,
@@ -306,48 +363,32 @@ export function BaselineSummary({
         />
       </div>
 
+      <WhyNote summary={t.baseline.whyCoalAccuracySummary}>
+        <p>{coalAccuracyIntro}</p>
+        <ul className="mt-2 flex list-disc flex-col gap-1.5 pl-4">
+          <li>
+            {t.baseline.coalAccuracyBoiler(
+              energy.boilerEfficiencyPct,
+              t.options.boilerClassInline[boilerClass],
+              boilerAgeSuffix,
+            )}
+          </li>
+          <li>
+            {t.baseline.coalAccuracyCoal(
+              tonnes(energy.coalTonnesPerSeason),
+              num(energy.coalKwhPerTonne),
+              energy.coalFuel.toLowerCase(),
+              energy.boilerEfficiencyPct,
+              num(energy.coalHeatDeliveredKwh),
+            )}
+          </li>
+          <li>{insulationSentence}</li>
+        </ul>
+      </WhyNote>
+
       <WhyNote summary={t.baseline.whyConditionSummary}>
         {t.baseline.whyConditionBody}
       </WhyNote>
-
-      {/*
-        The bill and the model rarely agree, and the difference is information,
-        not an error. Shown only when it is big enough to mean something.
-      */}
-      {electricity.gapKwh !== null &&
-        Math.abs(electricity.gapKwh) > 500 &&
-        (() => {
-          const over = electricity.gapKwh! > 0;
-          // Hot water and cooling are the only two things our estimate adds on
-          // top of a flat "everything else" baseline. If neither contributed
-          // any kWh, they cannot be why a smaller-than-expected bill looks low
-          // - the flat baseline itself, sized for a typical household, is the
-          // only thing left that could be. Blaming hot water or cooling here
-          // would point at the wrong number.
-          const modelIncludedWaterOrCooling =
-            energy.waterElectricityKwh > 0 || energy.coolingElectricityKwh > 0;
-          return (
-            <details className="mt-5 rounded-[14px] border border-line bg-[#fbfaf8] p-4">
-              <summary className="cursor-pointer text-[13px] font-semibold text-ink-soft">
-                {t.baseline.gapBefore}
-                {t.baseline.gapAmount(num(Math.abs(electricity.gapKwh!)), over)}
-                {t.baseline.gapAfter}
-                <AlertTriangle
-                  className="ml-1.5 inline-block h-4 w-4 shrink-0 -translate-y-px align-middle text-ink-soft/70"
-                  aria-hidden
-                />
-              </summary>
-              <p className="mt-3 text-[13px] text-ink-soft">
-                {over
-                  ? t.baseline.gapReasonOver
-                  : modelIncludedWaterOrCooling
-                    ? t.baseline.gapReasonUnderWaterOrCooling
-                    : t.baseline.gapReasonUnderBaseline}
-                {t.baseline.gapClosing}
-              </p>
-            </details>
-          );
-        })()}
 
       {baseline.assumptions.length > 0 && (
         <details className="mt-5 rounded-[14px] border border-line bg-[#fbfaf8] p-4">

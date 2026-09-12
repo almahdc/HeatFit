@@ -75,6 +75,17 @@ export interface BaselineEnergy {
   /** Useful heat the coal boiler actually delivered, kWh/y. */
   coalHeatDeliveredKwh: number;
   /**
+   * The three inputs `coalHeatDeliveredKwh` is built from, echoed back so the
+   * UI can show the formula rather than just its result (see
+   * BaselineSummary's "why these could be off" note). `coalFuel` is the
+   * sheet's own row name, not the wizard's coal-type id.
+   */
+  coalTonnesPerSeason: number;
+  coalKwhPerTonne: number;
+  coalFuel: S.SheetFuel;
+  /** The efficiency actually used, whether from a known class or the sheet's flat fallback. */
+  boilerEfficiencyPct: number;
+  /**
    * Hot water drawn off, litres/y: the full tap volume, not blended down.
    * `waterEnergyKwh` is the one that reflects `HOT_WATER_BLEND_FACTOR`.
    */
@@ -535,6 +546,12 @@ export function calculateBaseline(input: BaselineInputs): Baseline {
   return {
     energy: {
       coalHeatDeliveredKwh,
+      coalTonnesPerSeason: input.coalTonnesPerSeason,
+      coalKwhPerTonne: S.SHEET_FUELS[fuel].kwhPerUnit,
+      coalFuel: fuel,
+      boilerEfficiencyPct: Math.round(
+        (efficiency ?? S.SHEET_FUELS[fuel].efficiency) * 100,
+      ),
       hotWaterLitresPerYear: litres,
       waterEnergyKwh: waterEnergy,
       waterEnergyFromCoalKwh,

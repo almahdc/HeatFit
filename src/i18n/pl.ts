@@ -316,7 +316,7 @@ export const pl: Dictionary = {
       `${value} kWh/rok ${over ? "więcej" : "mniej"}`,
     gapAfter: " niż wynikałoby z Twoich odpowiedzi. ",
     gapReasonOver:
-      "Zwykle oznacza to grzejnik elektryczny, bojler z grzałką albo warsztat, o który jeszcze nie zapytaliśmy.",
+      "Zwykle oznacza to coś elektrycznego, o co jeszcze nie zapytaliśmy: grzejnik elektryczny, bojler z grzałką albo warsztat.",
     gapReasonUnderWaterOrCooling:
       "Zwykle oznacza to, że nasze oszacowanie ciepłej wody lub chłodzenia jest zbyt hojne jak na Twoje gospodarstwo domowe.",
     gapReasonUnderBaseline:
@@ -326,6 +326,34 @@ export const pl: Dictionary = {
     assumptionsSummary: (count: number) => `Co założyliśmy (${count})`,
     assumptionsIntro:
       "Bierzemy węgiel, który podałeś, energię zawartą w tym sortymencie i to, ile z niej Twoja klasa kotła naprawdę zamienia w ciepło. Ciepłą wodę i resztę licznika szacujemy na podstawie średniej krajowej.",
+    whyCoalAccuracySummary: "Dlaczego te liczby mogą się różnić",
+    coalAccuracyIntro: (
+      reference: string,
+      actual: string,
+      comparison: string,
+    ) =>
+      `Dla takiego budynku zwykle spodziewalibyśmy się około ${reference} kWh/m²/rok na ogrzewanie. U Ciebie wychodzi ${actual} kWh/m²/rok${comparison}. Oto, co zakłada ta liczba:`,
+    coalAccuracyComparisonHigh: (pct: number) => `, o ${pct}% więcej`,
+    coalAccuracyComparisonLow: (pct: number) => `, o ${pct}% mniej`,
+    coalAccuracyComparisonClose: () => " — zgodnie z tą wartością",
+    coalAccuracyBoiler: (pct: number, classLabel: string, ageSuffix: string) =>
+      `Sprawność kotła: założyliśmy ${pct}% dla Twojego kotła ${classLabel}${ageSuffix}. Starszy lub gorzej utrzymany kocioł często działa poniżej tej wartości.`,
+    coalAccuracyBoilerAge: (year: number, age: number) =>
+      `, zainstalowanego w ${year} r. (${age} lat)`,
+    coalAccuracyCoal: (
+      tonnes: string,
+      kwhPerTonne: string,
+      fuelLabel: string,
+      pct: number,
+      resultKwh: string,
+    ) =>
+      `Energia węgla: około ${tonnes} t węgla ${fuelLabel} przy ${kwhPerTonne} kWh/t, spalanego ze sprawnością ${pct}% ≈ ${resultKwh} kWh dostarczonego ciepła. Jakość węgla różni się nawet w obrębie tego samego sortymentu.`,
+    coalAccuracyInsulationNone: (label: string) =>
+      `Izolacja: podałeś ${label}. To prawdopodobny czynnik, jeśli rzeczywista liczba jest wyższa niż ta.`,
+    coalAccuracyInsulationStandard: (label: string) =>
+      `Izolacja: podałeś ${label}. Umiarkowany czynnik: rzeczywiste straty mogą być nieco wyższe.`,
+    coalAccuracyInsulationVeryGood: (label: string) =>
+      `Izolacja: podałeś ${label}. Dobrze zaizolowany budynek, mało prawdopodobne, by to on podnosił tę liczbę.`,
     whyConditionSummary: "Dlaczego ta liczba tyle znaczy",
     whyConditionBody:
       "kWh/m²/rok to stan Twojego budynku w jednej liczbie: ile ciepła potrzebuje na metr kwadratowy. Czyste Powietrze posługuje się tą samą miarą. Powyżej 140 program nie sfinansuje samego źródła ciepła bez termomodernizacji i dopiero powyżej 140 otwiera się najwyższy poziom dofinansowania. Nic nie jest punktowane po cichu: to jest ta liczba, a krok 5 pokazuje dokładnie, co oznacza dla Twojej dotacji.",

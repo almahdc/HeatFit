@@ -170,6 +170,9 @@ function FinancialsPlaceholder({
               baseline={baseline}
               overrides={costOverrides}
               onOverrideChange={handleCostOverrideChange}
+              insulation={household.insulation}
+              boilerClass={household.boilerClass}
+              boilerYear={household.boilerYear}
             />
             <RegulatoryCountdownCard
               postalCode={assessment.location.postalCode}
