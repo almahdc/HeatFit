@@ -406,6 +406,103 @@ export function electricityCost(
   return imported - exported;
 }
 
+/**
+ * What ADDING `addedKwh` to a household's existing meter reading changes its
+ * electricity bill by, PV netted : the household's real consumption
+ * (measured if there is a bill, modelled otherwise) is the "existing" side,
+ * so this always answers "what does this NEW load cost on TOP of what's
+ * already there", never a flat per-kWh guess. Zero PV collapses this to
+ * `addedKwh x price` exactly.
+ *
+ * Shared by every place a replacement option adds new electric load to the
+ * same one meter `calculateBaseline` already priced : a heat pump's own
+ * space-heating draw, and hot water that used to ride on a coal boiler now
+ * being met by an electric boiler or the heat pump instead.
+ */
+export function marginalElectricityCost(
+  baseline: Baseline,
+  tariff: S.SheetTariff,
+  hasPv: boolean,
+  addedKwh: number,
+): number {
+  const existingKwh =
+    baseline.electricity.measuredKwh ?? baseline.electricity.modelledKwh;
+  return (
+    electricityCost(existingKwh + addedKwh, tariff, hasPv) -
+    electricityCost(existingKwh, tariff, hasPv)
+  );
+}
+
+/**
+ * Water-heating and electricity-and-cooling lines, re-priced for a household
+ * that has swapped its coal boiler for one of the replacement options : under
+ * a hypothetical tariff/PV state, so Step 2's dynamic-tariff / add-solar
+ * toggles land here too, instead of reading these two lines verbatim off a
+ * baseline that was priced with the household's real, saved answers.
+ *
+ * The part of hot water already on the household's electric meter
+ * (`waterElectricityKwh`) keeps its usage exactly as the baseline modelled
+ * it, same as `electricityAndCoolingPlnPerYear` : only its price moves.
+ *
+ * The part that used to ride on the COAL boiler (`waterEnergyFromCoalKwh`,
+ * nonzero for "coal, all year" and the coal-winter share of "electric
+ * summer, coal winter") cannot stay coal-fired once that boiler is gone : it
+ * is priced here as a plain electric boiler taking over, the same fixture
+ * the household already uses for the rest of its hot water. That is a new
+ * load on the meter that was not part of the baseline's own consumption
+ * figure, so it is priced at its own PV-netted MARGIN on top of the
+ * household's existing usage, the same treatment `alternativeHeating.ts`
+ * gives a heat pump's own new space-heating draw. See
+ * `coalWaterAsElectricBoilerPlnPerYear` on the return value if a caller
+ * wants to show this slice on its own, e.g. to compare it against running
+ * that same hot water through the new heat pump instead (cheaper, per its
+ * own COP, but not this fixture).
+ *
+ * The space heating line does not go through here: once the fuel changes,
+ * its own kWh and price are no longer the baseline's to give.
+ */
+export function waterAndElectricityAfterSwap(
+  baseline: Baseline,
+  tariff: S.SheetTariff,
+  hasPv: boolean,
+): {
+  electricityPlnPerYear: number;
+  waterHeatingPlnPerYear: number;
+  electricityAndCoolingPlnPerYear: number;
+  coalWaterAsElectricBoilerPlnPerYear: number;
+} {
+  const existingKwh =
+    baseline.electricity.measuredKwh ?? baseline.electricity.modelledKwh;
+  const electricityPlnPerYear = electricityCost(existingKwh, tariff, hasPv);
+
+  const elecWaterShare =
+    baseline.electricity.modelledKwh > 0
+      ? baseline.energy.waterElectricityKwh / baseline.electricity.modelledKwh
+      : 0;
+
+  const coalWaterAsElectricBoilerKwh =
+    baseline.energy.waterEnergyFromCoalKwh / S.ELECTRIC_BOILER_EFFICIENCY;
+  const coalWaterAsElectricBoilerPlnPerYear =
+    coalWaterAsElectricBoilerKwh > 0
+      ? marginalElectricityCost(
+          baseline,
+          tariff,
+          hasPv,
+          coalWaterAsElectricBoilerKwh,
+        )
+      : 0;
+
+  return {
+    electricityPlnPerYear,
+    waterHeatingPlnPerYear:
+      electricityPlnPerYear * elecWaterShare +
+      coalWaterAsElectricBoilerPlnPerYear,
+    electricityAndCoolingPlnPerYear:
+      electricityPlnPerYear * (1 - elecWaterShare),
+    coalWaterAsElectricBoilerPlnPerYear,
+  };
+}
+
 // --- the whole baseline in one call -----------------------------------------
 
 export function calculateBaseline(input: BaselineInputs): Baseline {

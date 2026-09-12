@@ -85,14 +85,125 @@ describe("calculateAlternativeHeatingCost", () => {
     expect(g12.spaceHeatingPlnPerYear).toBeLessThan(g11.spaceHeatingPlnPerYear);
   });
 
-  it("carries the baseline's water heating and electricity lines over unchanged", () => {
+  it("matches the baseline's electricity & cooling line when tariff and PV are unchanged", () => {
     const result = calculateAlternativeHeatingCost("pellet", baseline, "G11");
-    expect(result.waterHeatingPlnPerYear).toBe(
-      baseline.cost.waterHeatingPlnPerYear,
-    );
     expect(result.electricityAndCoolingPlnPerYear).toBe(
       baseline.cost.electricityAndCoolingPlnPerYear,
     );
+  });
+
+  it("re-homes coal-heated water onto a plain electric boiler once the coal boiler is replaced", () => {
+    // Teresa's hot water is 100% coal today. Once that boiler is gone, this
+    // model assumes a plain electric boiler takes over: pricier per kWh than
+    // coal, so this line should rise even with nothing else about her usage
+    // changed, and it should no longer match the baseline's coal-priced figure.
+    const result = calculateAlternativeHeatingCost("pellet", baseline, "G11");
+    const expected =
+      (baseline.energy.waterEnergyFromCoalKwh / S.ELECTRIC_BOILER_EFFICIENCY) *
+      S.SHEET_ELECTRICITY_PRICE.Standard;
+    expect(result.waterHeatingPlnPerYear).toBeCloseTo(expected, 6);
+    expect(result.waterHeatingPlnPerYear).toBeGreaterThan(
+      baseline.cost.waterHeatingPlnPerYear,
+    );
+  });
+
+  it("flags the coal-to-electric water heating switch as an assumption, with a cheaper heat-pump alternative", () => {
+    const pellet = calculateAlternativeHeatingCost("pellet", baseline, "G11");
+    const pelletAssumption = pellet.assumptions.find(
+      (a) => a.code === "coalWaterHeatingSwitchesToElectric",
+    );
+    expect(pelletAssumption).toBeDefined();
+    if (pelletAssumption?.code === "coalWaterHeatingSwitchesToElectric") {
+      expect(pelletAssumption.heatPumpPlnPerYear).toBeNull();
+    }
+
+    const airToWater = calculateAlternativeHeatingCost(
+      "airToWaterHp",
+      baseline,
+      "G11",
+    );
+    const hpAssumption = airToWater.assumptions.find(
+      (a) => a.code === "coalWaterHeatingSwitchesToElectric",
+    );
+    expect(hpAssumption).toBeDefined();
+    if (hpAssumption?.code === "coalWaterHeatingSwitchesToElectric") {
+      expect(hpAssumption.heatPumpPlnPerYear).not.toBeNull();
+      // Running it through the heat pump's own (lower) DHW efficiency should
+      // cost less than the plain electric boiler fallback.
+      expect(hpAssumption.heatPumpPlnPerYear!).toBeLessThan(
+        hpAssumption.electricBoilerPlnPerYear,
+      );
+    }
+  });
+
+  it("does not flag the coal-to-electric switch for a household with no coal-heated water", () => {
+    const electricWaterInputs = {
+      ...teresaInputs,
+      waterHeating: "electricBoilerNew" as const,
+    };
+    const electricWaterBaseline = calculateBaseline(electricWaterInputs);
+    const result = calculateAlternativeHeatingCost(
+      "pellet",
+      electricWaterBaseline,
+      "G11",
+    );
+    expect(
+      result.assumptions.some(
+        (a) => a.code === "coalWaterHeatingSwitchesToElectric",
+      ),
+    ).toBe(false);
+  });
+
+  it("re-prices electricity & cooling when switching to the dynamic tariff", () => {
+    // Baseline stays on G11; the option is run as if the household switched.
+    // Teresa's water heating is entirely coal-fired, so only the electric
+    // "electricity & cooling" line has any price to move here.
+    const g11 = calculateAlternativeHeatingCost("pellet", baseline, "G11");
+    const g12 = calculateAlternativeHeatingCost("pellet", baseline, "G12");
+    expect(g12.electricityAndCoolingPlnPerYear).toBeLessThan(
+      g11.electricityAndCoolingPlnPerYear,
+    );
+  });
+
+  it("re-prices electricity & cooling when adding solar", () => {
+    // Baseline has no PV; the option is run as if solar were added.
+    const withoutPv = calculateAlternativeHeatingCost(
+      "pellet",
+      baseline,
+      "G11",
+      undefined,
+      false,
+    );
+    const withPv = calculateAlternativeHeatingCost(
+      "pellet",
+      baseline,
+      "G11",
+      undefined,
+      true,
+    );
+    expect(withPv.electricityAndCoolingPlnPerYear).not.toBe(
+      withoutPv.electricityAndCoolingPlnPerYear,
+    );
+  });
+
+  it("re-prices water heating too, for a household whose hot water is electric", () => {
+    const electricWaterInputs = {
+      ...teresaInputs,
+      waterHeating: "electricBoilerNew" as const,
+      electricityBillPlnPerMonth: undefined,
+    };
+    const electricWaterBaseline = calculateBaseline(electricWaterInputs);
+    const g11 = calculateAlternativeHeatingCost(
+      "pellet",
+      electricWaterBaseline,
+      "G11",
+    );
+    const g12 = calculateAlternativeHeatingCost(
+      "pellet",
+      electricWaterBaseline,
+      "G12",
+    );
+    expect(g12.waterHeatingPlnPerYear).toBeLessThan(g11.waterHeatingPlnPerYear);
   });
 
   it("sums its own three lines to its own total, without losing or inventing money", () => {

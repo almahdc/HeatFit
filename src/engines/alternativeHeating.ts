@@ -11,11 +11,16 @@
  * Deliberately narrow, the same way `baseline.ts` is narrow:
  *
  *   - Only the space heating fuel changes. Hot water and "everything else on
- *     the meter" (lighting, appliances, cooling) are carried over from the
- *     baseline unchanged. A heat pump swap in real life might also replace the
- *     water heater; that is a real question, but a different one from "what
- *     does the space heating alone cost", and folding it in here would hide
- *     which number moved. See docs/alternative-heating-model.md.
+ *     the meter" (lighting, appliances, cooling) keep the baseline's USAGE
+ *     (which kWh went to the immersion tank vs everything else), but are
+ *     re-priced at whatever tariff/PV this option is run at : both of them
+ *     sit on the same electricity meter a dynamic-tariff switch or an added
+ *     panel repriced, so they cannot stay frozen at the household's real,
+ *     saved answers while the space heating line reacts to the Step-2
+ *     toggles. A heat pump swap in real life might also replace the water
+ *     heater; that is a real question, but a different one from "what does
+ *     the space heating alone cost", and folding it in here would hide which
+ *     number moved. See docs/alternative-heating-model.md.
  *   - No capex, no financing, no subsidy. Those layer on top of this number
  *     later; they do not change it. PV running-cost netting is the one
  *     exception: see below.
@@ -50,7 +55,7 @@
  */
 
 import * as S from "../data/sheet.constants";
-import { electricityCost } from "./baseline";
+import { marginalElectricityCost, waterAndElectricityAfterSwap } from "./baseline";
 import type { Baseline } from "./baseline";
 import type { ElectricityTariffCase } from "../wizard/householdCases";
 
@@ -94,7 +99,13 @@ export type AlternativeHeatingAssumption =
     }
   | { code: "pvMarginalPricing"; selfConsumedSharePct: number }
   | { code: "dynamicTariffHabitShift" }
-  | { code: "carriedOverFromBaseline" };
+  | { code: "carriedOverFromBaseline" }
+  | {
+      code: "coalWaterHeatingSwitchesToElectric";
+      electricBoilerPlnPerYear: number;
+      /** null when this option has no modelled water-heating mode (pellet). */
+      heatPumpPlnPerYear: number | null;
+    };
 
 export interface AlternativeHeatingCost {
   id: AlternativeHeatingId;
@@ -115,7 +126,11 @@ export interface AlternativeHeatingCost {
    */
   pvSavingsOnSpaceHeatingPlnPerYear: number;
 
-  /** Carried over from the baseline, unchanged by this swap. */
+  /**
+   * Same usage as the baseline, re-priced at this option's tariff/PV : moves
+   * with the Step-2 dynamic-tariff/solar toggles, even though the fuel
+   * behind them did not change.
+   */
   waterHeatingPlnPerYear: number;
   electricityAndCoolingPlnPerYear: number;
 
@@ -156,6 +171,7 @@ export function calculateAlternativeHeatingCost(
   hasPvPanels: boolean = false,
   dynamicTariffSwitched: boolean = false,
 ): AlternativeHeatingCost {
+  const tariff = S.TARIFF_FROM_WIZARD[electricityTariff];
   let fuelPerYear: number;
   let fuelUnit: "kWh" | "t";
   let spaceHeatingPlnPerYear: number;
@@ -187,18 +203,18 @@ export function calculateAlternativeHeatingCost(
     fuelUnit = "kWh";
 
     const price = electricityPricePerKwh(electricityTariff);
-    const tariff = S.TARIFF_FROM_WIZARD[electricityTariff];
     const flatCost = kwh * price;
 
     // This new draw shares the household's one meter with everything else,
     // so it is priced as what adding it changes the household's total
     // electricity bill by: not as if it were its own separate, unpaneled
     // connection.
-    const existingKwh =
-      baseline.electricity.measuredKwh ?? baseline.electricity.modelledKwh;
-    const marginalCost =
-      electricityCost(existingKwh + kwh, tariff, hasPvPanels) -
-      electricityCost(existingKwh, tariff, hasPvPanels);
+    const marginalCost = marginalElectricityCost(
+      baseline,
+      tariff,
+      hasPvPanels,
+      kwh,
+    );
 
     spaceHeatingPlnPerYear = marginalCost;
     pvSavingsOnSpaceHeatingPlnPerYear = flatCost - marginalCost;
@@ -223,9 +239,47 @@ export function calculateAlternativeHeatingCost(
 
   assumptions.push({ code: "carriedOverFromBaseline" });
 
-  const waterHeatingPlnPerYear = baseline.cost.waterHeatingPlnPerYear;
-  const electricityAndCoolingPlnPerYear =
-    baseline.cost.electricityAndCoolingPlnPerYear;
+  // Same usage as the baseline (how many kWh went to the immersion tank vs
+  // everything else on the meter), re-priced at the tariff/PV this option is
+  // actually being run at : a dynamic-tariff switch or an added panel changes
+  // what those existing kWh cost, even though this file only swaps the space
+  // heating fuel. Whatever hot water used to ride on the COAL boiler has
+  // nowhere left to go once that boiler is removed, so it is re-homed onto a
+  // plain electric boiler here, same as the rest of the household's hot
+  // water already runs on.
+  const {
+    waterHeatingPlnPerYear,
+    electricityAndCoolingPlnPerYear,
+    coalWaterAsElectricBoilerPlnPerYear,
+  } = waterAndElectricityAfterSwap(baseline, tariff, hasPvPanels);
+
+  // If there was a coal share to re-home, say so : and if this option's own
+  // heat source could plausibly take over that hot water too (a heat pump,
+  // via its own lower DHW-mode efficiency; not pellet, which has no modelled
+  // water-heating figure), say what that would cost instead, so the
+  // household can see the cheaper path even though it isn't the one priced
+  // above.
+  if (baseline.energy.waterEnergyFromCoalKwh > 0) {
+    let heatPumpPlnPerYear: number | null = null;
+    if (id !== "pellet") {
+      const dhwFuelKey: S.SheetFuel =
+        id === "airToAirHp" ? "air-to-air HP water" : "air-to-water HP water";
+      const dhwSpec = S.SHEET_FUELS[dhwFuelKey];
+      const coalWaterAsHeatPumpKwh =
+        baseline.energy.waterEnergyFromCoalKwh / dhwSpec.efficiency;
+      heatPumpPlnPerYear = marginalElectricityCost(
+        baseline,
+        tariff,
+        hasPvPanels,
+        coalWaterAsHeatPumpKwh,
+      );
+    }
+    assumptions.push({
+      code: "coalWaterHeatingSwitchesToElectric",
+      electricBoilerPlnPerYear: coalWaterAsElectricBoilerPlnPerYear,
+      heatPumpPlnPerYear,
+    });
+  }
 
   const totalPlnPerYear =
     spaceHeatingPlnPerYear +

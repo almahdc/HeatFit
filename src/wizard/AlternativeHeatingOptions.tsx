@@ -169,6 +169,19 @@ function alternativeAssumptionText(
       return aa.dynamicTariffHabitShift;
     case "carriedOverFromBaseline":
       return aa.carriedOverFromBaseline;
+    case "coalWaterHeatingSwitchesToElectric": {
+      const cheaperPct =
+        a.heatPumpPlnPerYear !== null && a.electricBoilerPlnPerYear > 0
+          ? Math.round(
+              (1 - a.heatPumpPlnPerYear / a.electricBoilerPlnPerYear) * 100,
+            )
+          : null;
+      return aa.coalWaterHeatingSwitchesToElectric(
+        zl(a.electricBoilerPlnPerYear),
+        a.heatPumpPlnPerYear !== null ? zl(a.heatPumpPlnPerYear) : null,
+        cheaperPct,
+      );
+    }
   }
 }
 

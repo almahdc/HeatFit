@@ -420,7 +420,7 @@ export const en = {
       fuelUnitKwh: "kWh of electricity",
       fuelUnitTonnes: "tonnes of pellets",
       waterHeating: "Water heating",
-      unchanged: "Unchanged from today",
+      unchanged: "Same usage as today",
       electricityAndCooling: "Electricity & cooling",
       breakdownLabel: "See the cost breakdown",
       assumptionsSummary: (count: number) => `What we assumed (${count})`,
@@ -735,7 +735,15 @@ export const en = {
     dynamicTariffHabitShift:
       "We assumed you shift most of this heating's electricity use to off-peak hours to actually get that price.",
     carriedOverFromBaseline:
-      "Water heating and electricity & cooling are carried over unchanged from what you are paying today: this replacement only changes space heating.",
+      "Water heating and electricity & cooling keep the same usage as today: this replacement only changes space heating. If you switch tariff or add solar above, the price behind those two lines updates too, since they run on the same electricity meter.",
+    coalWaterHeatingSwitchesToElectric: (
+      electricBoilerPlnPerYear: string,
+      heatPumpPlnPerYear: string | null,
+      cheaperPct: number | null,
+    ) =>
+      heatPumpPlnPerYear !== null && cheaperPct !== null
+        ? `Some of your hot water currently rides along on your coal boiler. Since it's being replaced, we assumed that share switches to a plain electric boiler, like the rest of your hot water already uses: about ${electricBoilerPlnPerYear}/year. Running it through this heat pump instead would typically cost about ${heatPumpPlnPerYear}/year, ${cheaperPct}% less, though that means adding a dedicated water-heating device, which isn't included in this project's cost.`
+        : `Some of your hot water currently rides along on your coal boiler. Since it's being replaced, we assumed that share switches to a plain electric boiler, like the rest of your hot water already uses: about ${electricBoilerPlnPerYear}/year. We haven't modelled switching it onto the pellet boiler itself.`,
   },
 
   grantWarnings: {
@@ -830,7 +838,7 @@ export const en = {
       rowTotalPerYear: "Total / year",
       rowTotalPerMonth: "Total / month",
       rowSavingsPerYear: "Savings vs. coal / year",
-      note: 'Water heating and electricity & cooling are carried over unchanged from your baseline: only the space heating source changes. "With PV" prices the same option as if the household already had solar panels feeding the same electricity meter.',
+      note: 'Water heating and electricity & cooling keep your baseline\'s usage: only the space heating source changes. Their price still reflects the tariff and PV state of each column, since they run on the same electricity meter. "With PV" prices the same option as if the household already had solar panels feeding that meter.',
     },
 
     financials: {

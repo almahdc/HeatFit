@@ -417,7 +417,7 @@ export const pl: Dictionary = {
       fuelUnitKwh: "kWh prądu",
       fuelUnitTonnes: "ton pelletu",
       waterHeating: "Podgrzewanie wody",
-      unchanged: "Bez zmian względem dziś",
+      unchanged: "To samo zużycie co dziś",
       electricityAndCooling: "Prąd i chłodzenie",
       breakdownLabel: "Zobacz podział kosztów",
       assumptionsSummary: (count: number) => `Co założyliśmy (${count})`,
@@ -725,7 +725,15 @@ export const pl: Dictionary = {
     dynamicTariffHabitShift:
       "Założyliśmy, że przesuniesz większość zużycia prądu tego ogrzewania na godziny poza szczytem, by faktycznie uzyskać tę cenę.",
     carriedOverFromBaseline:
-      "Podgrzewanie wody oraz prąd i chłodzenie pozostają bez zmian względem tego, co płacisz dziś: ta wymiana zmienia tylko ogrzewanie pomieszczeń.",
+      "Podgrzewanie wody oraz prąd i chłodzenie zachowują to samo zużycie co dziś: ta wymiana zmienia tylko ogrzewanie pomieszczeń. Jeśli powyżej zmienisz taryfę lub dodasz fotowoltaikę, cena stojąca za tymi dwiema pozycjami też się zaktualizuje, bo działają na tym samym liczniku prądu.",
+    coalWaterHeatingSwitchesToElectric: (
+      electricBoilerPlnPerYear: string,
+      heatPumpPlnPerYear: string | null,
+      cheaperPct: number | null,
+    ) =>
+      heatPumpPlnPerYear !== null && cheaperPct !== null
+        ? `Część Twojej ciepłej wody jest dziś podgrzewana przy okazji przez kocioł węglowy. Ponieważ jest on wymieniany, założyliśmy, że ta część przechodzi na zwykły bojler elektryczny, tak jak reszta Twojej ciepłej wody już dziś: to około ${electricBoilerPlnPerYear}/rok. Podgrzewanie jej tą pompą ciepła zamiast bojlera kosztowałoby zwykle około ${heatPumpPlnPerYear}/rok, czyli o ${cheaperPct}% mniej, ale to oznacza dodanie osobnego urządzenia do podgrzewania wody, którego koszt nie jest ujęty w tym projekcie.`
+        : `Część Twojej ciepłej wody jest dziś podgrzewana przy okazji przez kocioł węglowy. Ponieważ jest on wymieniany, założyliśmy, że ta część przechodzi na zwykły bojler elektryczny, tak jak reszta Twojej ciepłej wody już dziś: to około ${electricBoilerPlnPerYear}/rok. Nie modelowaliśmy przeniesienia jej na kocioł na pellet.`,
   },
 
   grantWarnings: {
@@ -809,7 +817,7 @@ export const pl: Dictionary = {
       rowTotalPerYear: "Razem / rok",
       rowTotalPerMonth: "Razem / miesiąc",
       rowSavingsPerYear: "Oszczędność względem węgla / rok",
-      note: "Podgrzewanie wody oraz prąd i chłodzenie są przeniesione bez zmian z Twojego stanu wyjściowego: zmienia się tylko źródło ogrzewania pomieszczeń. Kolumna „z PV” wycenia tę samą opcję tak, jakby gospodarstwo miało już panele słoneczne podłączone do tego samego licznika.",
+      note: "Podgrzewanie wody oraz prąd i chłodzenie zachowują zużycie z Twojego stanu wyjściowego: zmienia się tylko źródło ogrzewania pomieszczeń. Ich cena nadal odzwierciedla taryfę i stan PV danej kolumny, bo działają na tym samym liczniku prądu. Kolumna „z PV” wycenia tę samą opcję tak, jakby gospodarstwo miało już panele słoneczne podłączone do tego licznika.",
     },
 
     financials: {
