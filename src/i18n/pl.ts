@@ -395,19 +395,6 @@ export const pl: Dictionary = {
       },
     },
 
-    trust: {
-      czystePowietrze: {
-        label: "Objęte Czystym Powietrzem",
-        detail:
-          "Wszystkie trzy opcje to rozwiązania finansowane przez program krajowy.",
-      },
-      zum: {
-        label: "Tylko urządzenia z listy ZUM",
-        detail:
-          "Dotacja obejmuje wyłącznie sprzęt z oficjalnej rządowej listy ZUM.",
-      },
-    },
-
     compare: {
       title: "Porównaj wymianę",
       subtitle:

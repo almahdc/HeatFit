@@ -43,28 +43,6 @@ export function StepEyebrow({ children }: { children: ReactNode }) {
   );
 }
 
-/** A verified-status pill: what a programme actually recognises, said plainly
- *  enough that it can be checked rather than taken on faith. */
-export function TrustBadge({
-  icon: Icon,
-  label,
-  detail,
-}: {
-  icon: LucideIcon;
-  label: string;
-  detail: string;
-}) {
-  return (
-    <div className="flex items-start gap-2.5 rounded-[12px] border border-accent-tint2 bg-accent-tint px-3 py-2.5">
-      <Icon className="mt-0.5 h-4 w-4 shrink-0 text-accent-600" aria-hidden />
-      <div>
-        <p className="text-[13px] font-semibold text-accent-600">{label}</p>
-        <p className="text-[12px] leading-snug text-accent-600/80">{detail}</p>
-      </div>
-    </div>
-  );
-}
-
 /**
  * "Why does this matter?" disclosure.
  *

@@ -12,7 +12,6 @@ import {
   Receipt,
   ReceiptText,
   Percent,
-  BadgeCheck,
   ShieldCheck,
   Sun,
   TrendingDown,
@@ -31,7 +30,6 @@ import {
   FieldLabel,
   IconCardGroup,
   ToggleCard,
-  TrustBadge,
 } from "./FormPrimitives";
 import {
   ALTERNATIVE_HEATING_IDS,
@@ -376,18 +374,6 @@ export function AlternativeHeatingOptions({
             onChange={onSelectedChange}
             options={cardOptions}
           />
-          <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-            <TrustBadge
-              icon={BadgeCheck}
-              label={t.alternatives.trust.czystePowietrze.label}
-              detail={t.alternatives.trust.czystePowietrze.detail}
-            />
-            <TrustBadge
-              icon={ShieldCheck}
-              label={t.alternatives.trust.zum.label}
-              detail={t.alternatives.trust.zum.detail}
-            />
-          </div>
         </div>
 
         <p className="text-[14.5px] text-ink-soft">{option.description}</p>

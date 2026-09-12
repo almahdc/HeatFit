@@ -399,18 +399,6 @@ export const en = {
       },
     },
 
-    trust: {
-      czystePowietrze: {
-        label: "Czyste Powietrze eligible",
-        detail: "The national programme funds all three of these.",
-      },
-      zum: {
-        label: "ZUM-listed devices only",
-        detail:
-          "The grant covers only equipment on the government's official ZUM list.",
-      },
-    },
-
     compare: {
       title: "Compare a replacement",
       subtitle:
