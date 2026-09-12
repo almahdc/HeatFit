@@ -407,7 +407,7 @@ export const pl: Dictionary = {
         "Inne województwa też mogą ograniczać paliwo stałe tam, gdzie dostępne jest ciepło systemowe. Warto to sprawdzić w swojej gminie przed wyborem kotła na pellet.",
       addSolarLabel: "Dodaj fotowoltaikę do tej inwestycji",
       switchToDynamicLabel: "Przejdź na taryfę dynamiczną",
-      newOutflow: (name: string) => `${name}: nowy roczny wydatek`,
+      newOutflow: (name: string) => `${name}`,
       perMonth: "miesięcznie",
       perYearAndEfficiency: (amount: string, efficiency: string) =>
         `${amount} rocznie · ${efficiency}`,

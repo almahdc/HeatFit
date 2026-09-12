@@ -411,7 +411,7 @@ export const en = {
         "Some other regions restrict solid fuel where district heating is available too. Worth checking with your gmina before committing to a pellet boiler.",
       addSolarLabel: "Add solar to this project",
       switchToDynamicLabel: "Switch to a dynamic tariff",
-      newOutflow: (name: string) => `${name}: new yearly outflow`,
+      newOutflow: (name: string) => `${name}`,
       perMonth: "per month",
       perYearAndEfficiency: (amount: string, efficiency: string) =>
         `${amount} per year · ${efficiency}`,
