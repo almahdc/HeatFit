@@ -1,5 +1,14 @@
 import { useState } from "react";
-import { FileDown, Loader2, UserRound, X } from "lucide-react";
+import {
+  FileDown,
+  Gift,
+  Layers,
+  Loader2,
+  Receipt,
+  UserRound,
+  X,
+  type LucideIcon,
+} from "lucide-react";
 import type { jsPDF } from "jspdf";
 import { StepEyebrow } from "./FormPrimitives";
 import { useI18n } from "../i18n";
@@ -16,24 +25,28 @@ const FORM_ENDPOINT = import.meta.env.VITE_FORM_ENDPOINT;
 
 type ModalState = "closed" | "open" | "submitting" | "success" | "error";
 
-/** Each value prop doubles as its own CTA, so a click carries which one the
- *  household actually wants, rather than one generic "get in touch". */
-type Intent = "installers" | "grant" | "financing" | "insulation";
+/** What this block always delivers, said as one CTA rather than a set of
+ *  separate buttons: grant, financing and insulation are one bundled ask,
+ *  because a household comes here for "best price and financing", not to
+ *  pick between them. The installer introduction is the one genuinely
+ *  optional add-on, so it is a checkbox inside the form instead. */
+type IncludedItem = "grant" | "financing" | "insulation";
 
-const INTENT_EMOJI: Record<Intent, string> = {
-  installers: "🛠️",
-  grant: "📜",
-  financing: "🏦",
-  insulation: "🧱",
+const INCLUDED_ICON: Record<IncludedItem, LucideIcon> = {
+  grant: Gift,
+  financing: Receipt,
+  insulation: Layers,
 };
 
-const INTENTS: Intent[] = ["installers", "grant", "financing", "insulation"];
+const INCLUDED_ITEMS: IncludedItem[] = ["grant", "financing", "insulation"];
 
-const intentLabel = (t: Dictionary, intent: Intent) =>
-  `${INTENT_EMOJI[intent]} ${t.earlyAccess.valueProps[intent].title}`;
+const interestLabel = (t: Dictionary, wantsInstaller: boolean) =>
+  wantsInstaller
+    ? t.earlyAccess.modal.interestWithInstaller
+    : t.earlyAccess.modal.interestFinancing;
 
 interface Submission {
-  intent: Intent | null;
+  wantsInstaller: boolean;
   name: string;
   contact: string;
   note: string;
@@ -66,7 +79,7 @@ interface GeneratedReport {
  */
 async function submitToFormEndpoint(
   t: Dictionary,
-  { intent, name, contact, note }: Submission,
+  { wantsInstaller, name, contact, note }: Submission,
   reportText: string,
 ): Promise<boolean> {
   const ea = t.earlyAccess;
@@ -78,7 +91,7 @@ async function submitToFormEndpoint(
     },
     body: JSON.stringify({
       _subject: ea.modal.emailSubject,
-      intent: intent ? intentLabel(t, intent) : "",
+      intent: interestLabel(t, wantsInstaller),
       name: name.trim(),
       contact: contact.trim(),
       note: note.trim(),
@@ -92,12 +105,12 @@ async function submitToFormEndpoint(
  *  than a submission that quietly goes nowhere. */
 function submitViaMailto(
   t: Dictionary,
-  { intent, name, contact, note }: Submission,
+  { wantsInstaller, name, contact, note }: Submission,
 ): void {
   const ea = t.earlyAccess;
   const subject = encodeURIComponent(ea.modal.emailSubject);
   const bodyLines = [
-    intent ? `${ea.modal.emailInterest}: ${intentLabel(t, intent)}` : null,
+    `${ea.modal.emailInterest}: ${interestLabel(t, wantsInstaller)}`,
     `${ea.modal.emailName}: ${name.trim()}`,
     `${ea.modal.emailContact}: ${contact.trim()}`,
     note.trim() ? `${ea.modal.emailNote}: ${note.trim()}` : null,
@@ -107,11 +120,15 @@ function submitViaMailto(
 }
 
 /**
- * The conversion block: three value props: each one its own button: and a
- * contact form behind them. Submitting posts straight to Formspree in the
- * background (see submitToFormEndpoint) and shows a success state without
- * leaving the app; only when no endpoint is configured does it fall back to
- * handing off to the visitor's mail client.
+ * The conversion block: one CTA delivering on the promise made in welcome
+ * ("Find Your Lowest Price & Best Financing"): grant, financing and
+ * insulation are shown as what's included, not as separate buttons to choose
+ * between, since a household doesn't come here to pick one. The installer
+ * introduction is the one genuinely optional add-on, so it is a checkbox
+ * inside the form rather than its own CTA. Submitting posts straight to
+ * Formspree in the background (see submitToFormEndpoint) and shows a success
+ * state without leaving the app; only when no endpoint is configured does it
+ * fall back to handing off to the visitor's mail client.
  */
 export function EarlyAccessBlock({
   reportSnapshot,
@@ -125,7 +142,7 @@ export function EarlyAccessBlock({
   const ea = t.earlyAccess;
 
   const [modal, setModal] = useState<ModalState>("closed");
-  const [intent, setIntent] = useState<Intent | null>(null);
+  const [wantsInstaller, setWantsInstaller] = useState(false);
   const [name, setName] = useState("");
   const [contact, setContact] = useState("");
   const [note, setNote] = useState("");
@@ -149,14 +166,11 @@ export function EarlyAccessBlock({
   const showForm =
     modal === "open" || modal === "submitting" || modal === "error";
 
-  const openModal = (selected: Intent) => {
-    setIntent(selected);
-    setModal("open");
-  };
+  const openModal = () => setModal("open");
 
   const closeModal = () => {
     setModal("closed");
-    setIntent(null);
+    setWantsInstaller(false);
     setAttempted(false);
     setName("");
     setContact("");
@@ -171,7 +185,7 @@ export function EarlyAccessBlock({
       return;
     }
 
-    const submission: Submission = { intent, name, contact, note };
+    const submission: Submission = { wantsInstaller, name, contact, note };
 
     // Built fresh for this submission rather than once up front, so a
     // household that lingers over the form and changes a step-6 selection
@@ -231,31 +245,32 @@ export function EarlyAccessBlock({
         {ea.reviewNote}
       </p>
 
-      <ul className="mt-5 flex flex-col gap-3">
-        {INTENTS.map((id) => {
-          const { title, description } = ea.valueProps[id];
+      <ul className="mt-5 grid grid-cols-3 gap-3">
+        {INCLUDED_ITEMS.map((id) => {
+          const Icon = INCLUDED_ICON[id];
           return (
-            <li key={id}>
-              <button
-                type="button"
-                onClick={() => openModal(id)}
-                className="flex w-full items-start gap-3 rounded-[14px] border border-line bg-[#fbfaf8] p-4 text-left transition-all duration-150 hover:border-accent/60 hover:bg-accent-tint active:scale-[0.99]"
-              >
-                <span
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-chip text-[18px]"
-                  aria-hidden
-                >
-                  {INTENT_EMOJI[id]}
-                </span>
-                <div>
-                  <p className="text-[15px] font-semibold text-ink">{title}</p>
-                  <p className="text-[13px] text-ink-soft">{description}</p>
-                </div>
-              </button>
+            <li
+              key={id}
+              className="flex flex-col items-center gap-2 rounded-[14px] border border-line bg-[#fbfaf8] p-3.5 text-center"
+            >
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-chip text-ink-soft">
+                <Icon className="h-[18px] w-[18px]" aria-hidden />
+              </span>
+              <p className="text-[12.5px] font-semibold leading-snug text-ink">
+                {ea.included[id]}
+              </p>
             </li>
           );
         })}
       </ul>
+
+      <button
+        type="button"
+        onClick={openModal}
+        className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-accent px-6 py-3.5 text-[15px] font-semibold text-white shadow-cta transition-colors hover:bg-accent-600 active:scale-[0.99]"
+      >
+        {ea.cta}
+      </button>
 
       <p className="mt-4 text-[12.5px] leading-relaxed text-ink-soft/80">
         {ea.disclaimer}
@@ -278,16 +293,9 @@ export function EarlyAccessBlock({
                   {modal === "success" ? ea.modal.successTitle : ea.modal.title}
                 </h3>
                 {showForm && (
-                  <>
-                    <p className="mt-1 text-[13.5px] text-ink-soft">
-                      {ea.modal.subtitle}
-                    </p>
-                    {intent && (
-                      <span className="mt-2 inline-flex items-center rounded-full bg-accent-tint px-2.5 py-1 text-[12px] font-semibold text-accent-600">
-                        {ea.modal.regarding(intentLabel(t, intent))}
-                      </span>
-                    )}
-                  </>
+                  <p className="mt-1 text-[13.5px] text-ink-soft">
+                    {ea.modal.subtitle}
+                  </p>
                 )}
               </div>
               {modal !== "submitting" && (
@@ -385,6 +393,24 @@ export function EarlyAccessBlock({
                     </p>
                   )}
                 </div>
+
+                <label className="flex items-start gap-2.5 rounded-[14px] border border-line bg-[#fbfaf8] p-3.5">
+                  <input
+                    type="checkbox"
+                    disabled={modal === "submitting"}
+                    checked={wantsInstaller}
+                    onChange={(e) => setWantsInstaller(e.target.checked)}
+                    className="mt-0.5 h-4 w-4 shrink-0 accent-accent"
+                  />
+                  <span>
+                    <span className="block text-[13.5px] font-semibold text-ink">
+                      {ea.installerCheckbox}
+                    </span>
+                    <span className="mt-0.5 block text-[12.5px] text-ink-soft">
+                      {ea.installerCheckboxHint}
+                    </span>
+                  </span>
+                </label>
 
                 <div>
                   <label className="mb-1.5 block text-[12px] font-semibold uppercase tracking-wider text-ink-soft">

@@ -604,38 +604,25 @@ export const en = {
   },
 
   earlyAccess: {
-    title: "A real person takes it from here",
+    title: "Your best price and financing, delivered",
     subtitle:
-      "You have the numbers. The next part is where most households get stuck, and it is the part we do with you rather than hand you a list and wish you luck.",
-    reviewNote:
-      "Whichever you pick, it starts the same way. Before anyone contacts you, someone at HeatFit reads through the audit you just completed: your building, your figures, your constraints.",
-    valueProps: {
-      installers: {
-        title: "We match you with vetted local installers",
-        description:
-          "We check who genuinely works in your area and introduce you personally. Not a directory, not a list of numbers to ring.",
-      },
-      grant: {
-        title: "We handle the Czyste Powietrze paperwork with you",
-        description:
-          "A person walks your application through, so funding does not slip away on a technicality or a missed deadline.",
-      },
-      financing: {
-        title: "We line up green financing with partner banks",
-        description:
-          "If you would rather spread the cost, we bring you loan options already matched to this specific job.",
-      },
-      insulation: {
-        title: "We can help you price the insulation work",
-        description:
-          "HeatFit does not estimate insulation yet, but if your building needs it to qualify for a grant, tell us and we will help you get it scoped.",
-      },
+      "You have your numbers. Say the word and we handle the grant, the financing, and insulation if you need it.",
+    reviewNote: "A person at HeatFit reviews your numbers before reaching out.",
+    included: {
+      grant: "Grant paperwork",
+      financing: "Matched financing",
+      insulation: "Insulation, if needed",
     },
+    installerCheckbox: "Also connect me with a vetted local installer",
+    installerCheckboxHint: "We vet installers near you and introduce you personally.",
+    cta: "Get my plan",
     modal: {
-      title: "Get early access",
+      title: "Get your plan",
       subtitle:
         "Leave your details and we'll reach out personally once HeatFit opens its doors.",
-      regarding: (topic: string) => `Regarding: ${topic}`,
+      interestFinancing: "Financing, grants & insulation",
+      interestWithInstaller:
+        "Financing, grants & insulation, plus an installer introduction",
       nameLabel: "Name",
       namePlaceholder: "e.g., Jan Kowalski",
       contactLabel: "Phone or email",

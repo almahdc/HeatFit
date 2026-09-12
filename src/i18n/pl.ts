@@ -602,38 +602,27 @@ export const pl: Dictionary = {
   },
 
   earlyAccess: {
-    title: "Dalej przejmuje to człowiek",
+    title: "Twoja najlepsza cena i finansowanie, załatwione",
     subtitle:
-      "Masz już liczby. Teraz zaczyna się część, na której większość gospodarstw utyka, i tę część robimy razem z Tobą, zamiast wręczyć Ci listę i życzyć powodzenia.",
+      "Masz już swoje liczby. Powiedz słowo, a zajmiemy się dotacją, finansowaniem i ociepleniem, jeśli go potrzebujesz.",
     reviewNote:
-      "Cokolwiek wybierzesz, zaczyna się tak samo. Zanim ktokolwiek się z Tobą skontaktuje, ktoś z zespołu HeatFit przegląda audyt, który właśnie wypełniłeś: Twój budynek, Twoje liczby, Twoje ograniczenia.",
-    valueProps: {
-      installers: {
-        title: "Dobieramy sprawdzonych lokalnych instalatorów",
-        description:
-          "Sprawdzamy, kto naprawdę pracuje w Twojej okolicy, i przedstawiamy Cię osobiście. To nie katalog ani lista numerów do obdzwonienia.",
-      },
-      grant: {
-        title: "Przechodzimy z Tobą przez formalności Czystego Powietrza",
-        description:
-          "Człowiek prowadzi Twój wniosek, żeby dofinansowanie nie przepadło przez drobiazg albo przegapiony termin.",
-      },
-      financing: {
-        title: "Układamy zielone finansowanie z bankami partnerskimi",
-        description:
-          "Jeśli wolisz rozłożyć koszt, przynosimy opcje kredytu już dopasowane do tej konkretnej inwestycji.",
-      },
-      insulation: {
-        title: "Pomożemy wycenić ocieplenie",
-        description:
-          "HeatFit nie wycenia jeszcze ocieplenia, ale jeśli Twój budynek go potrzebuje, żeby zakwalifikować się do dotacji, daj nam znać, a pomożemy to wycenić.",
-      },
+      "Ktoś z zespołu HeatFit przegląda Twoje liczby, zanim się odezwiemy.",
+    included: {
+      grant: "Formalności dotacyjne",
+      financing: "Dopasowane finansowanie",
+      insulation: "Ocieplenie, jeśli trzeba",
     },
+    installerCheckbox: "Połącz mnie też ze sprawdzonym lokalnym instalatorem",
+    installerCheckboxHint:
+      "Sprawdzamy instalatorów w Twojej okolicy i przedstawiamy Cię osobiście.",
+    cta: "Chcę mój plan",
     modal: {
-      title: "Zapisz się na wczesny dostęp",
+      title: "Odbierz swój plan",
       subtitle:
         "Zostaw swoje dane, a odezwiemy się osobiście, gdy tylko HeatFit ruszy.",
-      regarding: (topic: string) => `Dotyczy: ${topic}`,
+      interestFinancing: "Finansowanie, dotacje i ocieplenie",
+      interestWithInstaller:
+        "Finansowanie, dotacje i ocieplenie, plus kontakt z instalatorem",
       nameLabel: "Imię i nazwisko",
       namePlaceholder: "np. Jan Kowalski",
       contactLabel: "Telefon lub e-mail",
