@@ -104,8 +104,17 @@ The most consequential rule in the programme is not an amount:
 Above 140 kWh/m²/y, Czyste Powietrze **will not fund a new heat source on its
 own**. The building has to be insulated in the same project, to at least a 40%
 cut and a maximum of 140. The sheet flags this row CRITICAL, and it is the one
-place this model refuses to pay out rather than quietly producing a grant a
-household would apply for and be refused.
+place this model refuses to pay out `heating` as real money a household could
+apply for and be refused.
+
+It does not go dark, though: `calculateGrant` also returns
+`heatingIfInsulated`, the same line priced at the household's chosen tier, so
+the UI can show what the grant *could* be once insulation happens, clearly
+marked "not yet confirmed" and never folded into `totalGrantPln`. HeatFit
+still does not price the insulation work itself or claim to know the audit's
+result: that estimate is the one number this model is willing to show ahead
+of an audit, everything else about the insulation project is left to an
+installer or auditor.
 
 It bands on `baseline.energy.spaceHeatPerM2`, which `baseline.ts` already
 describes as "the number the Czyste Powietrze scope gate bands on, so it is
@@ -113,12 +122,10 @@ the single most consequential output here".
 
 > **Every one of the four personas is in band 3.** Grandma Krysia 193,
 > Grandpa Janek 243, Mrs. Teresa 207, Mr. Marek 222 kWh/m²/y. So on today's
-> baseline model, none of them can claim anything for a heat pump alone, and
-> Block 5 correctly shows zero with an explanation for all four. That is not a
-> bug in this engine : it is the honest consequence of modelling badly
-> insulated coal houses : but it does mean the grant path is never exercised
-> by a demo, and it makes "insulate first" the real answer for these
-> households. Worth deciding what the product should do about that.
+> baseline model, none of them can claim anything for a heat pump alone : that
+> is the honest consequence of modelling badly insulated coal houses. Block 5
+> now shows all four the `heatingIfInsulated` estimate instead of a dead end,
+> with the warning explaining why it is not counted yet.
 
 The same band is the only one where the highest tier exists, so a household
 below 140 that has selected "highest" is clamped down to "increased" with a

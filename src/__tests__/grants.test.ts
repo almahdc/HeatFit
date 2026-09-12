@@ -20,9 +20,11 @@ describe("scope gate", () => {
     expect(scopeBandFor(400).projectType).toBe(3);
   });
 
-  it("pays nothing for a heat-source-only project above 140 kWh/m²/y", () => {
-    // The single most consequential rule in the programme. A tool that quietly
-    // paid out here would send a household to be refused.
+  it("offers no unconditional heat-source-only grant above 140 kWh/m²/y", () => {
+    // The single most consequential rule in the programme. `heating` is the
+    // grant claimable without any further work, and it must stay null here:
+    // a tool that quietly claimed it eligible would send a household to be
+    // refused.
     const out = calculateGrant({
       optionId: "airToWaterHp",
       heatingCapexPln: 40000,
@@ -31,10 +33,25 @@ describe("scope gate", () => {
     });
     expect(out.heatSourceEligible).toBe(false);
     expect(out.heating).toBeNull();
-    expect(out.totalGrantPln).toBe(0);
     expect(
       out.warnings.some((w) => w.code === "heatSourceNotEligibleAlone"),
     ).toBe(true);
+  });
+
+  it("still prices what insulating would unlock, and counts it in the total", () => {
+    // By product decision this estimate DOES flow into totalGrantPln (see the
+    // file header): a household planning the project gets one number, not a
+    // dead zero and a separate footnote. heatSourceEligible is what callers
+    // must check to know the number depends on insulation happening.
+    const out = calculateGrant({
+      optionId: "airToWaterHp",
+      heatingCapexPln: 40000,
+      tier: "highest",
+      spaceHeatPerM2: 180,
+    });
+    expect(out.heatingIfInsulated).not.toBeNull();
+    expect(out.heatingIfInsulated!.amountPln).toBeGreaterThan(0);
+    expect(out.totalGrantPln).toBe(out.heatingIfInsulated!.amountPln);
   });
 
   it("clamps the highest tier down below 140, where it does not exist", () => {

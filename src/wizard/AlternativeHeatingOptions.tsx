@@ -1,6 +1,7 @@
 import {
   Banknote,
   CalendarDays,
+  ChevronDown,
   Coins,
   Droplets,
   ExternalLink,
@@ -132,9 +133,12 @@ function grantWarningText(t: Dictionary, w: GrantWarning): string {
     case "highestTierUnavailable":
       return t.grantWarnings.highestTierUnavailable(w.spaceHeatPerM2);
     case "heatSourceNotEligibleAlone":
-      return t.grantWarnings.heatSourceNotEligibleAlone(
-        w.spaceHeatPerM2,
-        t.grantWarnings.requiredEndState[w.projectType],
+      return (
+        t.grantWarnings.heatSourceNotEligibleAloneSummary(w.spaceHeatPerM2) +
+        " " +
+        t.grantWarnings.heatSourceNotEligibleAloneBody(
+          t.grantWarnings.requiredEndState[w.projectType],
+        )
       );
     case "solarPvPaused":
       return t.grantWarnings.solarPvPaused(zl(w.capPln));
@@ -673,15 +677,43 @@ export function AlternativeHeatingOptions({
           />
         </div>
 
-        {grant.warnings.map((warning) => (
-          <div
-            key={warning.code}
-            className="flex gap-3 rounded-[14px] border border-line bg-[#fbfaf8] p-4 text-[13.5px] text-ink-soft"
-          >
-            <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
-            <p>{grantWarningText(t, warning)}</p>
-          </div>
-        ))}
+        {grant.warnings.map((warning) =>
+          warning.code === "heatSourceNotEligibleAlone" ? (
+            <details
+              key={warning.code}
+              className="group rounded-[12px] border border-yellow-200 bg-yellow-50 px-3.5 py-2.5"
+            >
+              <summary className="flex cursor-pointer list-none items-start gap-2 text-[13px] font-semibold text-yellow-800 [&::-webkit-details-marker]:hidden">
+                <TriangleAlert
+                  className="mt-0.5 h-4 w-4 shrink-0 text-yellow-700"
+                  aria-hidden
+                />
+                <span className="flex-1">
+                  {t.grantWarnings.heatSourceNotEligibleAloneSummary(
+                    warning.spaceHeatPerM2,
+                  )}
+                </span>
+                <ChevronDown
+                  className="mt-0.5 h-4 w-4 shrink-0 text-yellow-700/70 transition-transform group-open:rotate-180"
+                  aria-hidden
+                />
+              </summary>
+              <p className="mt-2 pl-6 text-[13px] leading-snug text-yellow-800">
+                {t.grantWarnings.heatSourceNotEligibleAloneBody(
+                  t.grantWarnings.requiredEndState[warning.projectType],
+                )}
+              </p>
+            </details>
+          ) : (
+            <div
+              key={warning.code}
+              className="flex gap-3 rounded-[14px] border border-line bg-[#fbfaf8] p-4 text-[13.5px] text-ink-soft"
+            >
+              <TriangleAlert className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+              <p>{grantWarningText(t, warning)}</p>
+            </div>
+          ),
+        )}
 
         {(grant.heating || grant.solar) && (
           <dl className="divide-y divide-line border-y border-line">
@@ -723,9 +755,17 @@ export function AlternativeHeatingOptions({
         )}
 
         <div className="rounded-[16px] border border-accent-tint2 bg-accent-tint p-5">
-          <p className="text-[12px] font-semibold uppercase tracking-wider text-accent-600/80">
-            {t.alternatives.grants.netCapex}
-          </p>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <p className="text-[12px] font-semibold uppercase tracking-wider text-accent-600/80">
+              {t.alternatives.grants.netCapex}
+            </p>
+            {!grant.heatSourceEligible && grant.heatingIfInsulated && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-yellow-100 px-2 py-0.5 text-[11px] font-semibold text-yellow-800">
+                <TriangleAlert className="h-3 w-3" aria-hidden />
+                {t.alternatives.grants.assumesInsulationTag}
+              </span>
+            )}
+          </div>
           <div className="mt-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
             <span className="text-[28px] font-bold leading-none tracking-tight text-accent-600">
               {zl(loan.netCapexPln)}

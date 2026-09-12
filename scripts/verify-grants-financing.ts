@@ -130,7 +130,9 @@ for (const optionId of Object.keys(LINE_FOR) as AlternativeHeatingId[]) {
 
 // --- the scope gate ---------------------------------------------------------
 
-rule("Scope gate: above 140 kWh/m²/y a heat-source-only project gets nothing");
+rule(
+  "Scope gate: above 140 kWh/m²/y, a heat source alone gets no unconditional grant",
+);
 
 for (const [demand, expectType] of [
   [79, 1],
@@ -152,8 +154,17 @@ const blocked = calculateGrant({
   tier: "highest",
   spaceHeatPerM2: 180,
 });
-check("grant at 180 kWh/m²/y, heat source alone", 0, blocked.totalGrantPln);
-console.log(`    >>> ${blocked.warnings[0]}`);
+checkText(
+  "unconditional heating grant at 180 kWh/m²/y",
+  "null",
+  String(blocked.heating),
+);
+check(
+  "total grant at 180 kWh/m²/y assumes insulation happens",
+  blocked.heatingIfInsulated?.amountPln ?? 0,
+  blocked.totalGrantPln,
+);
+console.log(`    >>> ${blocked.warnings[0]?.code}`);
 
 const clamped = calculateGrant({
   optionId: "airToWaterHp",

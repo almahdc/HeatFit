@@ -18,15 +18,16 @@ type ModalState = "closed" | "open" | "submitting" | "success" | "error";
 
 /** Each value prop doubles as its own CTA, so a click carries which one the
  *  household actually wants, rather than one generic "get in touch". */
-type Intent = "installers" | "grant" | "financing";
+type Intent = "installers" | "grant" | "financing" | "insulation";
 
 const INTENT_EMOJI: Record<Intent, string> = {
   installers: "🛠️",
   grant: "📜",
   financing: "🏦",
+  insulation: "🧱",
 };
 
-const INTENTS: Intent[] = ["installers", "grant", "financing"];
+const INTENTS: Intent[] = ["installers", "grant", "financing", "insulation"];
 
 const intentLabel = (t: Dictionary, intent: Intent) =>
   `${INTENT_EMOJI[intent]} ${t.earlyAccess.valueProps[intent].title}`;

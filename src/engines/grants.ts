@@ -18,14 +18,23 @@
  * "you have hit the ceiling" and "the programme pays 40%" lead a household to
  * completely different next moves.
  *
- * --- The gate that pays nothing ---------------------------------------------
+ * --- The gate that pays nothing (without insulation) -------------------------
  *
  * The single most consequential rule in the whole programme is not an amount.
  * Above 140 kWh/m²/y of pre-project demand, a heat-source-only project is NOT
  * ELIGIBLE AT ALL. The building has to be insulated as well, to at least a 40%
- * cut. HeatFit models heat-source swaps and nothing else, so for a household in
- * that band the honest answer is zero, plus an explanation : not a grant they
- * would apply for and be refused.
+ * cut. HeatFit models heat-source swaps and nothing else, so `heating` (a
+ * grant claimable without any further work) stays null there.
+ *
+ * `heatingIfInsulated` carries what the same line would pay once insulation
+ * happens and an energy audit confirms the reduction. By product decision
+ * this DOES flow into `totalGrantPln`, `loan.ts` and the true-monthly-cost
+ * math, on the view that a household planning this project needs one number
+ * to plan around rather than two. That makes insulation load-bearing for the
+ * numbers shown, not optional detail, so every caller surfacing this result
+ * must say so plainly: see `heatSourceEligible` and the
+ * `heatSourceNotEligibleAlone` warning, which the UI is expected to make hard
+ * to miss (not a quiet footnote) precisely because the money now depends on it.
  *
  * That band is also the only one where the highest tier exists. A household
  * below 140 kWh/m²/y cannot reach it however low their income is, so a tier
@@ -87,7 +96,16 @@ export interface GrantResult {
   /** False when a heat-source-only project cannot claim in this band at all. */
   heatSourceEligible: boolean;
   heating: GrantLine | null;
+  /**
+   * Set only when `heatSourceEligible` is false: what the heating line would
+   * pay once the household adds insulation and an energy audit confirms the
+   * required reduction. This estimate IS folded into `totalGrantPln` (see the
+   * file header), so `heatSourceEligible === false` is the signal the UI must
+   * act on to keep that condition visible.
+   */
+  heatingIfInsulated: GrantLine | null;
   solar: GrantLine | null;
+  /** heating (or heatingIfInsulated, if that's all there is) + solar. */
   totalGrantPln: number;
   /** Things the household must be told. Rendered by the dictionary. */
   warnings: GrantWarning[];
@@ -177,16 +195,18 @@ export function calculateGrant({
   }
 
   const heatSourceEligible = band.heatSourceAloneEligible;
+  const line = S.SHEET_GRANT_LINES[GRANT_LINE_FOR_OPTION[optionId]]!;
   let heating: GrantLine | null = null;
+  let heatingIfInsulated: GrantLine | null = null;
 
   if (!heatSourceEligible) {
+    heatingIfInsulated = claim(line, heatingCapexPln, tier);
     warnings.push({
       code: "heatSourceNotEligibleAlone",
       spaceHeatPerM2: Math.round(spaceHeatPerM2),
       projectType: band.projectType,
     });
   } else {
-    const line = S.SHEET_GRANT_LINES[GRANT_LINE_FOR_OPTION[optionId]]!;
     heating = claim(line, heatingCapexPln, tier);
   }
 
@@ -214,8 +234,11 @@ export function calculateGrant({
     band,
     heatSourceEligible,
     heating,
+    heatingIfInsulated,
     solar,
-    totalGrantPln: (heating?.amountPln ?? 0) + (solar?.amountPln ?? 0),
+    totalGrantPln:
+      (heating?.amountPln ?? heatingIfInsulated?.amountPln ?? 0) +
+      (solar?.amountPln ?? 0),
     warnings,
   };
 }

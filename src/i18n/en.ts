@@ -492,6 +492,7 @@ export const en = {
         `${pct}% of ${cost} (sheet line ${line})`,
       solarRateOf: (pct: number, cost: string) => `${pct}% of ${cost}`,
       offThePrice: "off the price",
+      assumesInsulationTag: "Assumes insulation",
       netCapex: "Net capex, after grants",
       leftToPay: "left to pay",
       netCapexDetail: (gross: string, grants: string) =>
@@ -620,6 +621,11 @@ export const en = {
         title: "We line up green financing with partner banks",
         description:
           "If you would rather spread the cost, we bring you loan options already matched to this specific job.",
+      },
+      insulation: {
+        title: "We can help you price the insulation work",
+        description:
+          "HeatFit does not estimate insulation yet, but if your building needs it to qualify for a grant, tell us and we will help you get it scoped.",
       },
     },
     modal: {
@@ -750,11 +756,10 @@ export const en = {
   grantWarnings: {
     highestTierUnavailable: (spaceHeatPerM2: number) =>
       `The highest funding level is only open to buildings above 140 kWh/m²/y. This one is around ${spaceHeatPerM2}, so the increased level applies instead.`,
-    heatSourceNotEligibleAlone: (
-      spaceHeatPerM2: number,
-      requiredEndState: string,
-    ) =>
-      `At around ${spaceHeatPerM2} kWh/m²/y, Czyste Powietrze will not fund a new heat source on its own. The building has to be insulated as part of the same project, reaching ${requiredEndState}. HeatFit does not price insulation work yet, so no grant is counted here.`,
+    heatSourceNotEligibleAloneSummary: (spaceHeatPerM2: number) =>
+      `Needs insulation to qualify, at around ${spaceHeatPerM2} kWh/m²/y`,
+    heatSourceNotEligibleAloneBody: (requiredEndState: string) =>
+      `Czyste Powietrze will not fund a new heat source alone here. The grant and loan below assume insulation happens, reaching ${requiredEndState}, and that an energy audit confirms it. HeatFit does not price that work yet: talk to an installer or auditor first, or tell us in the form further down the page if you'd like us to.`,
     solarPvPaused: (cap: string) =>
       `The solar figure follows the sheet's own PV rate. The subsidies tab records PV support running through przydomowemagazyny.gov.pl, capped at ${cap}, and marks that programme PAUSED: so treat this line as indicative, not as money you can count on.`,
     /** The end state each scope band demands, said in words. */

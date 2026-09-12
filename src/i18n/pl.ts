@@ -489,6 +489,7 @@ export const pl: Dictionary = {
         `${pct}% z ${cost} (wiersz arkusza ${line})`,
       solarRateOf: (pct: number, cost: string) => `${pct}% z ${cost}`,
       offThePrice: "od ceny",
+      assumesInsulationTag: "Zakłada ocieplenie",
       netCapex: "Koszt netto, po dotacjach",
       leftToPay: "zostaje do zapłaty",
       netCapexDetail: (gross: string, grants: string) =>
@@ -618,6 +619,11 @@ export const pl: Dictionary = {
         description:
           "Jeśli wolisz rozłożyć koszt, przynosimy opcje kredytu już dopasowane do tej konkretnej inwestycji.",
       },
+      insulation: {
+        title: "Pomożemy wycenić ocieplenie",
+        description:
+          "HeatFit nie wycenia jeszcze ocieplenia, ale jeśli Twój budynek go potrzebuje, żeby zakwalifikować się do dotacji, daj nam znać, a pomożemy to wycenić.",
+      },
     },
     modal: {
       title: "Zapisz się na wczesny dostęp",
@@ -740,11 +746,10 @@ export const pl: Dictionary = {
   grantWarnings: {
     highestTierUnavailable: (spaceHeatPerM2: number) =>
       `Najwyższy poziom dofinansowania jest dostępny tylko dla budynków powyżej 140 kWh/m²/rok. Ten ma około ${spaceHeatPerM2}, więc obowiązuje poziom podwyższony.`,
-    heatSourceNotEligibleAlone: (
-      spaceHeatPerM2: number,
-      requiredEndState: string,
-    ) =>
-      `Przy około ${spaceHeatPerM2} kWh/m²/rok Czyste Powietrze nie sfinansuje samej wymiany źródła ciepła. Budynek musi zostać ocieplony w ramach tej samej inwestycji, osiągając: ${requiredEndState}. HeatFit nie wycenia jeszcze prac termomodernizacyjnych, więc nie liczymy tu żadnej dotacji.`,
+    heatSourceNotEligibleAloneSummary: (spaceHeatPerM2: number) =>
+      `Wymaga ocieplenia, przy około ${spaceHeatPerM2} kWh/m²/rok`,
+    heatSourceNotEligibleAloneBody: (requiredEndState: string) =>
+      `Czyste Powietrze nie sfinansuje tu samej wymiany źródła ciepła. Dotacja i kredyt poniżej zakładają, że ocieplenie się odbędzie, osiągając: ${requiredEndState}, i że potwierdzi to audyt energetyczny. HeatFit jeszcze tego nie wycenia: skonsultuj się z instalatorem lub audytorem, albo daj nam znać w formularzu niżej na stronie, jeśli chcesz, żebyśmy to zrobili.`,
     solarPvPaused: (cap: string) =>
       `Kwota za fotowoltaikę wynika ze stawki PV z arkusza. Zakładka dotacji odnotowuje wsparcie PV prowadzone przez przydomowemagazyny.gov.pl, z limitem ${cap}, i oznacza ten program jako WSTRZYMANY: traktuj tę pozycję orientacyjnie, a nie jako pewne pieniądze.`,
     requiredEndState: {
