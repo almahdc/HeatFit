@@ -312,6 +312,7 @@ export const en = {
     waterHeatingSub: "Hot water, however it is made",
     electricityAndCooling: "Electricity & cooling",
     electricityAndCoolingSub: "Everything else on the meter",
+    breakdownLabel: "See the cost breakdown",
     heatDelivered: "Heat delivered by your boiler",
     buildingCondition: "Building condition",
     kwhPerYear: (value: string) => `${value} kWh/year`,
@@ -432,6 +433,7 @@ export const en = {
       waterHeating: "Water heating",
       unchanged: "Unchanged from today",
       electricityAndCooling: "Electricity & cooling",
+      breakdownLabel: "See the cost breakdown",
       assumptionsSummary: (count: number) => `What we assumed (${count})`,
       assumptionsIntro:
         "These are about the replacement itself, not your household: standard efficiency figures, not something you told us.",

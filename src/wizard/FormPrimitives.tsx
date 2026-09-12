@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Check, type LucideIcon } from "lucide-react";
+import { Check, ChevronDown, type LucideIcon } from "lucide-react";
 import { useT } from "../i18n";
 
 /** Every major section: a distinct rounded block with its own header.
@@ -88,6 +88,37 @@ export function WhyNote({
       <div className="mt-2 text-[12.5px] leading-relaxed text-ink-soft">
         {children}
       </div>
+    </details>
+  );
+}
+
+/**
+ * A cost breakdown (space heating / water heating / electricity), tucked
+ * behind a native `<details>` so the household sees the one number that
+ * matters (the headline card above it) first, and can open this only if
+ * they want the split. Collapsed by default; the chevron rotates on open,
+ * on top of the browser's own disclosure triangle, so there is no missing
+ * that this is collapsible.
+ */
+export function CollapsibleBreakdown({
+  label,
+  className = "",
+  children,
+}: {
+  label: string;
+  className?: string;
+  children: ReactNode;
+}) {
+  return (
+    <details className={`group rounded-[14px] border border-line ${className}`}>
+      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3 text-[13px] font-semibold text-ink-soft [&::-webkit-details-marker]:hidden">
+        {label}
+        <ChevronDown
+          className="h-4 w-4 shrink-0 text-ink-soft/70 transition-transform group-open:rotate-180"
+          aria-hidden
+        />
+      </summary>
+      <div className="border-t border-line px-4">{children}</div>
     </details>
   );
 }

@@ -307,6 +307,7 @@ export const pl: Dictionary = {
     waterHeatingSub: "Ciepła woda, niezależnie od źródła",
     electricityAndCooling: "Prąd i chłodzenie",
     electricityAndCoolingSub: "Cała reszta na liczniku",
+    breakdownLabel: "Zobacz podział kosztów",
     heatDelivered: "Ciepło dostarczone przez kocioł",
     buildingCondition: "Stan budynku",
     kwhPerYear: (value: string) => `${value} kWh/rok`,
@@ -430,6 +431,7 @@ export const pl: Dictionary = {
       waterHeating: "Podgrzewanie wody",
       unchanged: "Bez zmian względem dziś",
       electricityAndCooling: "Prąd i chłodzenie",
+      breakdownLabel: "Zobacz podział kosztów",
       assumptionsSummary: (count: number) => `Co założyliśmy (${count})`,
       assumptionsIntro:
         "Dotyczą samej wymiany, nie Twojego gospodarstwa domowego: to standardowe wskaźniki sprawności, a nie coś, co nam podałeś.",
@@ -724,7 +726,7 @@ export const pl: Dictionary = {
       pricePerKwh: string,
       tariffLabel: string,
     ) =>
-      `Założyliśmy ${optionName.toLowerCase()} pracującą przy COP ${cop.toFixed(1)} (każda kWh prądu daje ${cop.toFixed(1)} kWh ciepła), wycenioną wg Twojej taryfy ${tariffLabel} po ${pricePerKwh}/kWh.`,
+      `${optionName}: przyjęliśmy COP ${cop.toFixed(1)} (1 kWh prądu daje ${cop.toFixed(1)} kWh ciepła), wg Twojej taryfy ${tariffLabel} po ${pricePerKwh}/kWh.`,
     pvMarginalPricing: (pct: number) =>
       `Ponieważ masz fotowoltaikę, założyliśmy, że ${pct}% dodatkowego prądu tej pompy ciepła pokrywają bezpośrednio Twoje panele; reszta jest wyceniona wg tego, o ile faktycznie zmienia Twój rachunek, a nie wg stawki płaskiej.`,
     carriedOverFromBaseline:

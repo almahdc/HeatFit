@@ -18,7 +18,7 @@ import type {
   EditableBaselineCostField,
 } from "../engines/baseline";
 import type { BoilerClass, InsulationLevel } from "./householdCases";
-import { StepEyebrow, WhyNote } from "./FormPrimitives";
+import { CollapsibleBreakdown, StepEyebrow, WhyNote } from "./FormPrimitives";
 import { useT } from "../i18n";
 import type { Dictionary } from "../i18n";
 import { DEFAULT_CONDITION_KWH_PER_M2 } from "../data/sheet.constants";
@@ -251,101 +251,105 @@ export function BaselineSummary({
 
       {/* The same total, split by what it was spent on - each line editable,
           since this is the one section of the tool a household can judge on
-          sight and may know is wrong for their own life. */}
-      <dl className="mt-5 divide-y divide-line border-y border-line">
-        {lines.map(({ field, icon: Icon, label, sub, value }) => {
-          const isOverridden = overrides[field] !== undefined;
-          const isEditing = editingField === field;
-          return (
-            <div
-              key={field}
-              className="flex items-center justify-between gap-4 py-3.5"
-            >
-              <div className="flex min-w-0 items-center gap-3">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-chip text-ink-soft">
-                  <Icon className="h-[18px] w-[18px]" aria-hidden />
-                </span>
-                <div className="min-w-0">
-                  <dt className="text-[15px] font-semibold text-ink">
-                    {label}
-                  </dt>
-                  <p className="text-[13px] text-ink-soft">
-                    {sub}
-                    {isOverridden && !isEditing && (
-                      <span className="ml-1.5 font-medium text-accent-600">
-                        · {t.baseline.editedTag}
-                      </span>
-                    )}
-                  </p>
-                </div>
-              </div>
-
-              {isEditing ? (
-                <div className="flex shrink-0 items-center gap-1">
-                  <input
-                    type="number"
-                    inputMode="decimal"
-                    min={0}
-                    autoFocus
-                    value={draft}
-                    onChange={(e) => setDraft(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") commitEdit();
-                      if (e.key === "Escape") cancelEdit();
-                    }}
-                    className="w-24 rounded-lg border border-accent/60 bg-white px-2 py-1.5 text-right text-[15px] font-bold text-ink outline-none ring-1 ring-accent/30"
-                  />
-                  <button
-                    type="button"
-                    onClick={commitEdit}
-                    aria-label={t.baseline.saveEdit}
-                    className="rounded-full p-1.5 text-savings-700 transition-colors hover:bg-savings-tint"
-                  >
-                    <Check className="h-4 w-4" aria-hidden />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={cancelEdit}
-                    aria-label={t.baseline.cancelEdit}
-                    className="rounded-full p-1.5 text-ink-soft transition-colors hover:bg-chip"
-                  >
-                    <X className="h-4 w-4" aria-hidden />
-                  </button>
-                </div>
-              ) : (
-                <dd className="flex shrink-0 items-center gap-0.5 text-right">
-                  <div>
-                    <span className="text-[16px] font-bold tabular-nums text-ink">
-                      {zl(value)}
-                    </span>
-                    <span className="block text-[12px] text-ink-soft">
-                      {t.baseline.perYear}
-                    </span>
+          sight and may know is wrong for their own life. Tucked behind a
+          disclosure so the headline number above stays the one thing a
+          household sees without having to act. */}
+      <CollapsibleBreakdown label={t.baseline.breakdownLabel} className="mt-5">
+        <dl className="divide-y divide-line">
+          {lines.map(({ field, icon: Icon, label, sub, value }) => {
+            const isOverridden = overrides[field] !== undefined;
+            const isEditing = editingField === field;
+            return (
+              <div
+                key={field}
+                className="flex items-center justify-between gap-4 py-3.5"
+              >
+                <div className="flex min-w-0 items-center gap-3">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-[10px] bg-chip text-ink-soft">
+                    <Icon className="h-[18px] w-[18px]" aria-hidden />
+                  </span>
+                  <div className="min-w-0">
+                    <dt className="text-[15px] font-semibold text-ink">
+                      {label}
+                    </dt>
+                    <p className="text-[13px] text-ink-soft">
+                      {sub}
+                      {isOverridden && !isEditing && (
+                        <span className="ml-1.5 font-medium text-accent-600">
+                          · {t.baseline.editedTag}
+                        </span>
+                      )}
+                    </p>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => startEdit(field, value)}
-                    aria-label={t.baseline.editValue}
-                    className="ml-1 rounded-full p-1.5 text-ink-soft/60 transition-colors hover:bg-chip hover:text-ink-soft"
-                  >
-                    <Pencil className="h-3.5 w-3.5" aria-hidden />
-                  </button>
-                  {isOverridden && (
+                </div>
+
+                {isEditing ? (
+                  <div className="flex shrink-0 items-center gap-1">
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      min={0}
+                      autoFocus
+                      value={draft}
+                      onChange={(e) => setDraft(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") commitEdit();
+                        if (e.key === "Escape") cancelEdit();
+                      }}
+                      className="w-24 rounded-lg border border-accent/60 bg-white px-2 py-1.5 text-right text-[15px] font-bold text-ink outline-none ring-1 ring-accent/30"
+                    />
                     <button
                       type="button"
-                      onClick={() => resetField(field)}
-                      aria-label={t.baseline.resetValue}
-                      className="rounded-full p-1.5 text-ink-soft/60 transition-colors hover:bg-chip hover:text-ink-soft"
+                      onClick={commitEdit}
+                      aria-label={t.baseline.saveEdit}
+                      className="rounded-full p-1.5 text-savings-700 transition-colors hover:bg-savings-tint"
                     >
-                      <RotateCcw className="h-3.5 w-3.5" aria-hidden />
+                      <Check className="h-4 w-4" aria-hidden />
                     </button>
-                  )}
-                </dd>
-              )}
-            </div>
-          );
-        })}
-      </dl>
+                    <button
+                      type="button"
+                      onClick={cancelEdit}
+                      aria-label={t.baseline.cancelEdit}
+                      className="rounded-full p-1.5 text-ink-soft transition-colors hover:bg-chip"
+                    >
+                      <X className="h-4 w-4" aria-hidden />
+                    </button>
+                  </div>
+                ) : (
+                  <dd className="flex shrink-0 items-center gap-0.5 text-right">
+                    <div>
+                      <span className="text-[16px] font-bold tabular-nums text-ink">
+                        {zl(value)}
+                      </span>
+                      <span className="block text-[12px] text-ink-soft">
+                        {t.baseline.perYear}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => startEdit(field, value)}
+                      aria-label={t.baseline.editValue}
+                      className="ml-1 rounded-full p-1.5 text-ink-soft/60 transition-colors hover:bg-chip hover:text-ink-soft"
+                    >
+                      <Pencil className="h-3.5 w-3.5" aria-hidden />
+                    </button>
+                    {isOverridden && (
+                      <button
+                        type="button"
+                        onClick={() => resetField(field)}
+                        aria-label={t.baseline.resetValue}
+                        className="rounded-full p-1.5 text-ink-soft/60 transition-colors hover:bg-chip hover:text-ink-soft"
+                      >
+                        <RotateCcw className="h-3.5 w-3.5" aria-hidden />
+                      </button>
+                    )}
+                  </dd>
+                )}
+              </div>
+            );
+          })}
+        </dl>
+      </CollapsibleBreakdown>
 
       {/* Highlighted rather than another plain dl row: these two numbers
           decide grant eligibility later (see WhyNote below), so they need

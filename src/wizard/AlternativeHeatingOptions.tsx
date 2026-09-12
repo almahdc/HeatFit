@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import {
   Block,
+  CollapsibleBreakdown,
   FieldLabel,
   IconCardGroup,
   ToggleCard,
@@ -81,10 +82,12 @@ const kwh = (n: number) =>
   Math.round(n).toLocaleString("pl-PL").replace(/\xa0/g, " ");
 
 const plnPerKwh = (n: number) =>
-  `${n.toLocaleString("pl-PL", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).replace(/\xa0/g, " ")} zł`;
+  `${n
+    .toLocaleString("pl-PL", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })
+    .replace(/\xa0/g, " ")} zł`;
 
 const OPTION_ICON: Record<AlternativeHeatingId, LucideIcon> = {
   airToAirHp: Wind,
@@ -413,34 +416,36 @@ export function AlternativeHeatingOptions({
           </p>
         </div>
 
-        <dl className="divide-y divide-line border-y border-line">
-          <Line
-            icon={Icon}
-            label={c.spaceHeating}
-            sub={c.fuelPerYear(
-              result.fuelPerYear < 10
-                ? result.fuelPerYear.toFixed(1)
-                : kwh(result.fuelPerYear),
-              result.fuelUnit === "kWh" ? c.fuelUnitKwh : c.fuelUnitTonnes,
-            )}
-            value={result.spaceHeatingPlnPerYear}
-            unit={t.baseline.perYear}
-          />
-          <Line
-            icon={Droplets}
-            label={c.waterHeating}
-            sub={c.unchanged}
-            value={result.waterHeatingPlnPerYear}
-            unit={t.baseline.perYear}
-          />
-          <Line
-            icon={Plug}
-            label={c.electricityAndCooling}
-            sub={c.unchanged}
-            value={result.electricityAndCoolingPlnPerYear}
-            unit={t.baseline.perYear}
-          />
-        </dl>
+        <CollapsibleBreakdown label={c.breakdownLabel}>
+          <dl className="divide-y divide-line">
+            <Line
+              icon={Icon}
+              label={c.spaceHeating}
+              sub={c.fuelPerYear(
+                result.fuelPerYear < 10
+                  ? result.fuelPerYear.toFixed(1)
+                  : kwh(result.fuelPerYear),
+                result.fuelUnit === "kWh" ? c.fuelUnitKwh : c.fuelUnitTonnes,
+              )}
+              value={result.spaceHeatingPlnPerYear}
+              unit={t.baseline.perYear}
+            />
+            <Line
+              icon={Droplets}
+              label={c.waterHeating}
+              sub={c.unchanged}
+              value={result.waterHeatingPlnPerYear}
+              unit={t.baseline.perYear}
+            />
+            <Line
+              icon={Plug}
+              label={c.electricityAndCooling}
+              sub={c.unchanged}
+              value={result.electricityAndCoolingPlnPerYear}
+              unit={t.baseline.perYear}
+            />
+          </dl>
+        </CollapsibleBreakdown>
 
         {result.assumptions.length > 0 && (
           <details className="rounded-[14px] border border-line bg-[#fbfaf8] p-4">
